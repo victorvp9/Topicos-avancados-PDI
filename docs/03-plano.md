@@ -59,6 +59,17 @@ Casador de eventos e métricas, **antes de detectar qualquer coisa**.
   Vidal-Codina (jogador + ±10 s) e Mills (tipo + 3 s) secundários. Casamento
   um-para-um, o mais próximo no tempo.
 - Precisão, revocação, F1 **e contagem absoluta** por tipo e por jogo.
+- **Medição obrigatória, com gatilho de G3: a defasagem da anotação.** Para cada
+  passe dos **três** jogos, calcular `τ = t_anotado − t_D`, onde `t_D` é o quadro
+  de **menor distância passador-bola numa janela de ±10 s** em torno do instante
+  anotado — a mesma grandeza do suplementar S3, p. 5, para comparar com os 1,5 s
+  de média e os 16 % com |τ| > 5 s da STS. Reportar média, mediana, e as frações
+  com |τ| > 1 s, > 3 s, > 5 s e > 7,5 s, por jogo.
+  **Critério escrito antes de medir: se mais de 5 % dos passes tiverem |τ| > 1 s,
+  a janela de ±1 s do D8 está contradita — PARAR e levar ao Victor (G3) antes de
+  executar qualquer detector.** A evidência que hoje sustenta o D8 é indireta
+  (distância no instante anotado, `docs/inspecao-metrica.md` §6.4); esta é a
+  direta.
 - **Testes:** (a) gabarito contra si mesmo → F1 = 1,0 em tudo, nos três
   critérios; (b) gabarito deslocado 30 s → F1 = 0 nos três; (c) deslocado 2 s →
   F1 = 0 no estrito e 1,0 no de ±10 s (prova que os critérios são distintos);
@@ -177,8 +188,14 @@ Preenche os buracos, como fazem os sistemas reais.
   `R_pz` ∈ {0,50 0,75 1,00 1,25 1,50 2,00 2,50 3,00} m, `R_dz` = max(1, `R_pz`)
   (D3).
 - `R_pz` ótimo por nível escolhido por **leave-one-game-out, 3 dobras, critério
-  escrito antes** (D4). Mesmo protocolo para `eps_c` (D9b), com a ressalva de que
-  só o jogo 3 é conjunto não visto para ele.
+  escrito antes** (D4).
+- `eps_c` segue o mesmo protocolo (D9b), mas **o resultado é de baixa confiança e
+  o rótulo acompanha o número**: o único conjunto não visto é o jogo 3, com
+  **8 escanteios de 3 cobradores** (`Player 7` ×4, `Player 5` ×2, `Player 22` ×2),
+  e 1 escanteio move a taxa em 12,5 pontos. **Reportar a curva F1(`eps_c`)
+  inteira com as contagens absolutas; não escolher um `eps_c` "ótimo" como se
+  fosse estimativa pontual.** O número limpo e principal continua sendo o teto com
+  `eps_c` = 3 m.
 - **G5 antes da rodada final:** config congelada, tag `pre-rodada-final`, **uma
   única rodada**.
 - Superfície F1, tabela final, relatório em markdown, `outputs/origem-dos-numeros.md`

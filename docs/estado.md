@@ -27,10 +27,25 @@ Atualizado: 2026-10-29
    jogadores, durante a bola morta. Reescrito.
 4. **Passe estava errado** (V16): é toda perda de posse que não é finalização nem
    cruzamento.
-5. **O critério de acerto virou estrito** (D8), porque o gabarito da Metrica é
-   frame-sincronizado e a defasagem de 1,5 s da STS não existe aqui.
+5. **O critério de acerto virou estrito** (D8), porque no instante anotado o
+   passador já está a 8 cm da bola (mediana), ao contrário da STS.
 6. **`eps_c` = 3 m dá só 56 % de teto em escanteio** (D9b). É o achado central da
    inspeção e vira um 2º parâmetro livre, com o jogo 3 reservado.
+
+## Ajustes do Victor pós-G1 (2026-10-29, sem reabrir regra)
+
+1. **Justificativa do D8 corrigida.** Eu havia justificado a janela de ±1 s por
+   `max |Start Time − Frame/25| = 0`, que só prova consistência de unidade e nada
+   diz sobre a acurácia do instante anotado. A justificativa agora é a medida do
+   D9c (passador a menos de 0,5 m da bola no quadro anotado em 96,7 % e 97,4 %,
+   mediana 0,08–0,09 m). **A regra não mudou, logo não é mudança declarada.**
+2. **Nova medição obrigatória na Fatia 2, com gatilho de G3:** distribuição de
+   `τ = t_anotado − t_D` nos passes dos 3 jogos. Se mais de 5 % tiverem
+   |τ| > 1 s, parar antes de rodar qualquer detector.
+3. **Jogo 3 contado:** 90 bolas paradas = 50 laterais, 28 tiros livres,
+   **8 escanteios**, 4 pontapés iniciais. Os 8 escanteios são de 3 cobradores,
+   6 de um só time → **ajuste de `eps_c` declarado de baixa confiança**, e o
+   rótulo acompanha o número onde ele aparecer.
 
 ## Próximo passo
 
@@ -52,7 +67,10 @@ constantes em `docs/01-definicoes.md`.
 
 - Não conferi se o `events-definitions.pdf` de `refs/` e o de
   `data/metrica-sample-data/documentation/` são o mesmo arquivo.
-- Não medi distância jogador-bola nem gatilhos no jogo 3 (reservado para `eps_c`).
+- Não medi a defasagem `τ` da anotação. É entregável da Fatia 2 e pode derrubar a
+  janela de ±1 s do D8 (G3).
+- Não medi distância jogador-bola nem gatilhos no jogo 3 — de propósito, para ele
+  seguir sendo conjunto não visto para `eps_c`. As contagens já foram feitas.
 - Não medi a distribuição de `eps_s`, `eps_v`, `eps_theta` na Metrica — é a
   Fatia 3.
 - Não baixei a SkillCorner nem o suplementar do Bassek. A calibração usa os alvos

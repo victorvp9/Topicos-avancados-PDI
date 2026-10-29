@@ -307,10 +307,20 @@ Mills dizer que segue o Vidal-Codina:
 A janela de ±10 s existe porque a anotação manual da STS vem em média **1,5 s
 atrasada**, e 16 % dos passes têm |τ| > 5 s e 8 % > 7,5 s (suplementar S3, p. 5).
 
-**Na Metrica essa defasagem não existe:** `max |Start Time − Start Frame/25| =
-0,000000` nos dois jogos, e nas bolas paradas a bola está a 0,00 m do executor
-(`docs/inspecao-metrica.md` §3 e §6.2). Com ~1000 passes por partida, ou seja um
-a cada ~6 s de jogo, ±10 s casaria o evento errado.
+**Na Metrica essa defasagem parece não existir**, e a evidência é a distância, não
+o relógio: **no próprio quadro anotado**, o passador anotado está a menos de 0,5 m
+da bola em **96,7 % e 97,4 %** dos passes, com mediana de **0,08–0,09 m**
+(`docs/inspecao-metrica.md` §6.4). A bola percorre vários metros em 1,5 s a
+qualquer velocidade de passe, o que é incompatível com 8 cm de separação mediana
+no instante anotado. Note o contraste de método: o S3 mede o **mínimo numa janela
+de ±10 s** porque, na STS, no instante anotado o passador costuma estar longe da
+bola. Somado a isso, com ~1000 passes por partida — um a cada ~6 s de jogo — uma
+janela de ±10 s casaria o evento errado.
+
+> **Não use `max |Start Time − Start Frame/25| = 0,000000` como justificativa
+> disto.** Esse fato prova só que a tabela de eventos usa a mesma grade de quadros
+> e a mesma unidade do tracking. Uma anotação atrasada 3 s satisfaria a identidade
+> exatamente. Corrigido em 2026-10-29.
 
 **Congelado no G1 (D8):**
 
@@ -318,6 +328,14 @@ a cada ~6 s de jogo, ±10 s casaria o evento errado.
   um-para-um, o mais próximo no tempo.
 - **Secundários, sempre reportados:** Vidal-Codina (jogador + ±10 s) e Mills
   (tipo + 3 s).
+
+> **A janela de ±1 s é verificada na Fatia 2, antes de rodar qualquer detector.**
+> A evidência acima é indireta: mede distância, não defasagem. A medida direta é a
+> distribuição de `τ = t_anotado − t_D`, com `t_D` o quadro de menor distância
+> passador-bola numa janela de ±10 s — deliberadamente a mesma grandeza do S3,
+> p. 5, para ser comparável aos 1,5 s da STS.
+> **Critério escrito antes de medir: se mais de 5 % dos passes tiverem
+> |τ| > 1 s, PARAR e levar ao Victor (G3).**
 
 Reclassificações do S2, p. 3, para a comparação: `fair play`, `nutmeg`,
 `backheel`, `possession loss before goal` e `bicyclekick` → **pass**;

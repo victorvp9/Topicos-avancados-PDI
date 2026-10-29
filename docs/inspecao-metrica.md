@@ -155,16 +155,44 @@ de anotação mais novo. Os subtipos do jogo 3 vêm como **lista** (`["FREE KICK
 
 ### 3.2 SET PIECE por subtipo (= gabarito de bola parada)
 
-| subtipo | jogo 1 | jogo 2 | jogo 3 |
-|---|---|---|---|
-| THROW IN | 28 | 32 | 49 (+1 RETAKEN) |
-| FREE KICK | 32 | 30 (+2 RETAKEN) | 27 indirect/direct (+1 retaken) |
-| CORNER KICK | **11** | **7** | **8** |
-| KICK OFF | 6 | 7 (+1 RETAKEN) | 4 |
-| PENALTY | 0 | 1 | 0 |
+Contado por subtipo **principal**, ignorando os modificadores `RETAKEN`,
+`INDIRECT` e `DIRECT` (que no jogo 3 vêm na mesma lista):
+
+| subtipo | jogo 1 | jogo 2 | jogo 3 | total |
+|---|---|---|---|---|
+| THROW IN | 28 | 32 | 50 | **110** |
+| FREE KICK | 32 | 32 | 28 | **92** |
+| CORNER KICK | **11** | **7** | **8** | **26** |
+| KICK OFF | 6 | 8 | 4 | **18** |
+| PENALTY | 0 | 1 | 0 | 1 |
+| **total `SET PIECE`** | 77 | 80 | 90 | 247 |
+
+Cru, com os modificadores, no jogo 3: `THROW IN` 49, `FREE KICK+INDIRECT` 26,
+`CORNER KICK` 8, `KICK OFF` 4, `DIRECT+FREE KICK` 1, `RETAKEN+THROW IN` 1,
+`FREE KICK+INDIRECT+RETAKEN` 1.
 
 Escanteio: **26 nos três jogos somados**. Confirma V6: as classes de bola parada
 são minúsculas. Um acerto move o F1 em 4 a 9 pontos.
+
+**Os 8 escanteios do jogo 3** (o único conjunto não visto para ajustar `ε_c`, ver
+§7):
+
+| período | quadro | t (s) | time | cobrador |
+|---|---|---|---|---|
+| 1 | 6449 | 257,96 | Team A | Player 7 |
+| 1 | 22782 | 911,28 | Team A | Player 7 |
+| 1 | 68306 | 2732,24 | Team A | Player 7 |
+| 2 | 87590 | 3503,60 | Team A | Player 7 |
+| 2 | 98829 | 3953,16 | Team B | Player 22 |
+| 2 | 125624 | 5024,96 | Team A | Player 5 |
+| 2 | 130320 | 5212,80 | Team A | Player 5 |
+| 2 | 141872 | 5674,88 | Team B | Player 22 |
+
+**São 8 observações de 3 cobradores, 6 delas de um só time.** Como o que `ε_c`
+mede é a posição do cobrador no instante do contato — isto é o hábito de corrida
+de aproximação dele —, as 8 não são independentes no que importa. **1 escanteio
+move a taxa em 12,5 pontos percentuais.** Daí a declaração de baixa confiança em
+`docs/decisoes.md`.
 
 ### 3.3 Tiro de meta: não é SET PIECE
 
@@ -468,13 +496,33 @@ Referência do suplementar (S3, pp. 5–6): provedor A (Track160) 99 % **exatame
 
 ### 6.5 Consequência para D8 (critério de acerto)
 
-O gabarito da Metrica é **frame-sincronizado** com o tracking
-(`|Start Time − Frame/25| = 0`), e nas bolas paradas a bola está a 0,00 m do
-executor. Não existe a defasagem de 1,5 s que o suplementar S3 mede na STS, nem
-os 16 % de passes com |τ| > 5 s. Portanto, aqui, a janela de ±10 s do critério
-oficial (suplementar S2, p. 3) é larguíssima e corre o risco de casar o evento
-errado numa sequência densa de passes (há ~1000 passes por partida, ou seja um
-passe a cada ~6 s de jogo). Recomendação em §7, D8.
+> **Argumento corrigido em 2026-10-29** (apontado pelo Victor). A versão original
+> desta seção argumentava por `|Start Time − Frame/25| = 0`. **Isso não serve**:
+> prova apenas que a tabela de eventos usa a mesma grade de quadros e a mesma
+> unidade do tracking — consistência de unidade —, e nada diz sobre a acurácia do
+> **instante** anotado. Uma anotação atrasada 3 s satisfaria a identidade
+> exatamente.
+
+A evidência válida é a de §6.4, e é de **distância**, não de relógio: **no próprio
+quadro anotado**, o passador anotado está a menos de 0,5 m da bola em 96,7 % e
+97,4 % dos passes, com mediana de 0,08–0,09 m. A bola percorre vários metros em
+1,5 s a qualquer velocidade de passe, logo 8 cm de separação mediana no instante
+anotado é incompatível com uma defasagem da ordem da que a STS exibe.
+
+O contraste de método reforça: o suplementar S3 (p. 5) mede o **mínimo numa janela
+de ±10 s** precisamente porque, na STS, no instante anotado o passador costuma
+estar longe da bola. Aqui a medição no instante anotado já dá 0,08 m.
+
+Portanto a janela de ±10 s do critério oficial (suplementar S2, p. 3) é
+larguíssima para este dataset e corre o risco de casar o evento errado numa
+sequência densa de passes (~1000 passes por partida, um a cada ~6 s de jogo).
+Recomendação em §7, D8.
+
+**Isto continua sendo evidência indireta.** A medida direta — a distribuição de
+`τ = t_anotado − t_D`, com `t_D` o quadro de menor distância passador-bola numa
+janela de ±10 s — **não foi feita** e é entregável obrigatório da Fatia 2, com
+gatilho de G3 se mais de 5 % dos passes tiverem |τ| > 1 s. Ver `docs/decisoes.md`
+e `docs/03-plano.md`, Fatia 2.
 
 ---
 
@@ -485,8 +533,8 @@ passe a cada ~6 s de jogo). Recomendação em §7, D8.
 | **D1** estado da bola | **fechada**: `NaN(bola)`. Ver §5. |
 | **D2** bola perfeita | mantida: o simulador só remove jogadores. §2.1 mostra que a Metrica é teto perfeito de jogador. |
 | **D6** loaders | **fechada**: jogo 3 legível com a biblioteca padrão. Sem `kloppy`, sem `floodlight`. §4. |
-| **D8** critério de acerto | **reaberta** por §6.5. Recomendo tornar principal o critério **estrito** (mesmo tipo, mesmo jogador, janela curta) e reportar o de ±10 s como secundário — o inverso da recomendação original. Precisa do Victor (G1). |
-| **D9** tolerâncias | **reaberta** por §6.2. `ε_t`, `ε_g`, `ε_k1`, `ε_k2` publicados servem (89–92 %). **`ε_c` = 3 m não serve** (56 %). Precisa do Victor (G1). |
+| **D8** critério de acerto | **fechada no G1**: principal = estrito (tipo + jogador + ±1 s); secundários = Vidal-Codina (±10 s) e Mills (3 s). Justificativa corrigida em §6.5. **Verificação direta da defasagem é entregável da Fatia 2, com gatilho de G3.** |
+| **D9** tolerâncias | **fechada no G1** por §6.2. `ε_t`, `ε_g`, `ε_k1`, `ε_k2` publicados servem (89–92 %). `ε_c` = 3 m fica no teto limpo **e** vira 2º parâmetro livre — com **baixa confiança declarada**: o conjunto não visto tem 8 escanteios de 3 cobradores (§3.2). |
 | **D10** critério de passe | contagens em §3.5. |
 | **novo** | o gabarito de bola parada tem de ser ancorado no **primeiro quadro em jogo**, e a linha `SET PIECE` fundida com a linha de execução seguinte. §3.4 e §6.3. |
 
@@ -494,9 +542,12 @@ passe a cada ~6 s de jogo). Recomendação em §7, D8.
 
 ## 8. O que não foi feito
 
+- **Não medi a defasagem `τ` da anotação** (o equivalente direto do S3). É
+  entregável obrigatório da Fatia 2 e pode derrubar a janela de ±1 s do D8.
 - Não comparei o `events-definitions.pdf` de `documentation/` com o de `refs/`.
-- Não medi distância jogador-bola no jogo 3 nem contei suas bolas paradas por
-  gatilho (só os totais de §3.1 e §3.2).
+- Não medi distância jogador-bola no jogo 3 nem seus gatilhos de bola parada. As
+  **contagens** do jogo 3 estão em §3.1 e §3.2; a geometria ficou de propósito
+  sem medir, para o jogo 3 continuar sendo conjunto não visto para `ε_c`.
 - Não verifiquei o mapeamento `Player` → time no XML do jogo 3 (meu parser de
   `Team` voltou vazio; é detalhe do loader, não da decisão).
 - Não medi a distribuição de `ε_s`, `ε_v`, `ε_θ` na Metrica (depende de

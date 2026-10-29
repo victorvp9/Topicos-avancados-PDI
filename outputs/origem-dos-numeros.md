@@ -122,7 +122,7 @@ Todos medidos em 2026-10-29 sobre o commit
 
 | número | onde |
 |---|---|
-| 25 Hz exatos; `max │Time − Frame/25│ = 0`; sem buraco de quadro | [dado] §2 |
+| 25 Hz exatos; `max │Time − Frame/25│ = 0`; sem buraco de quadro | [dado] §2 — **consistência de unidade apenas. Não usar como evidência de acurácia do instante anotado** (ver §6.5) |
 | sem z da bola, sem booleano vivo/morto | [dado] §2 |
 | 22 jogadores com dado em todos os quadros nos 3 jogos | [dado] §2.1 e §4 |
 | coordenadas fora de [0,1]; jogadores recortados em ±0,05 | [dado] §2.2 |
@@ -131,7 +131,9 @@ Todos medidos em 2026-10-29 sobre o commit
 | bola NaN em 39,14 % / 41,01 % / 32,22 % | [dado] §2.4 e §4 |
 | 155 / 169 sequências de NaN; mediana 7,84 / 5,08 s; máx. 131,68 / 129,80 s | [dado] §2.4 |
 | contagens por `Type` dos 3 jogos | [dado] §3.1 |
-| `SET PIECE` por subtipo; **26 escanteios nos 3 jogos** | [dado] §3.2 |
+| `SET PIECE` por subtipo nos 3 jogos: lateral 110, tiro livre 92, **escanteio 26**, pontapé inicial 18, pênalti 1 | [dado] §3.2 |
+| jogo 3: 90 bolas paradas = 50 laterais, 28 tiros livres, **8 escanteios**, 4 pontapés iniciais | [dado] §3.2 |
+| os 8 escanteios do jogo 3 são de **3 cobradores**, 6 de um só time | [dado] §3.2 |
 | `GOAL KICK` em 3 `Type`; total 22 / 16 / 11 | [dado] §3.3 |
 | `SET PIECE` sempre seguido do mesmo jogador, Δquadro mediano 0 (157 de 157) | [dado] §3.4 |
 | `Start X`/`Start Y` NaN em 0 de 77 e 0 de 80 `SET PIECE` | [dado] §3 |
@@ -154,3 +156,11 @@ Todos medidos em 2026-10-29 sobre o commit
 | teto de revocação de passe ~97 % com `R_pz` = 0,50 m e ~98 % com 1,00 m | [prev] distribuição de `docs/inspecao-metrica.md` §6.4; **não** vem de rodar o detector |
 | teto de revocação de bola parada: lateral 92 %, pontapé inicial 92 %, tiro de meta 89 %, escanteio 56 % | [prev] geometria dos gatilhos, §6.2; não inclui posse, hierarquia nem hierarquia de reserva |
 | ~96 h de CPU para a grade de exemplo (1920 execuções × 3 min) | [prev] 3 min/partida do artigo (§3, p. 9) extrapolado; **medir uma execução real antes do G4** |
+
+## Números pendentes de medição, com gatilho de portão
+
+| número | quando | gatilho |
+|---|---|---|
+| distribuição de `τ = t_anotado − t_D` (defasagem da anotação), passes dos 3 jogos | Fatia 2 | **G3 se > 5 % dos passes tiverem \|τ\| > 1 s** — derruba a janela do D8 |
+| curva F1(`eps_c`) no jogo 3 | Fatia 8 | sem gatilho, mas **baixa confiança obrigatória**: n = 8 escanteios, 3 cobradores |
+| tempo de parede de uma execução real | antes da Fatia 8 | **G4 se o orçamento passar de 2 h de CPU** |
