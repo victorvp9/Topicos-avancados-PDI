@@ -21,6 +21,9 @@ N_GABARITO = {
     "goal_kick": (22, 16, 11),
     "pass": (722, 889, 1039),
     "free_kick?": (0, 0, 0),
+    # `penalty` virou classe propria na revisao da Fatia 2 (supl. S2, p. 3):
+    # docs/inspecao-metrica.md §3.2, 1 PENALTY no jogo 2 e nenhum nos outros.
+    "penalty": (0, 1, 0),
 }
 
 
@@ -64,12 +67,37 @@ def test_contagem_absoluta_por_tipo_e_jogo(identidade):
         assert agregado == sum(esperado), tipo
 
 
-def test_identidades_das_contagens(identidade):
-    """`tp + fn = n_gabarito` e `tp_det + fp = n_detectado` em toda linha."""
+def test_estrutura_das_contagens(identidade):
+    """Assertiva ESTRUTURAL, nao verificacao: `fn` e construido como
+    `n_gabarito - tp_diag` e `fp` como `n_detectado - tp_diag`, logo as duas
+    identidades nao podem falhar por construcao. Fica so para fixar que os tres
+    contadores nunca sao negativos e que `tp_diag <= tp <= n_gabarito`.
+    Quem VERIFICA de verdade sao os dois testes de linha/coluna da matriz, em
+    tests/test_confusao.py (revisao da Fatia 2, item 8)."""
     res = identidade[0]
-    assert (res["tp"] + res["fn"] == res["n_gabarito"]).all()
-    assert (res["tp_det"] + res["fp"] == res["n_detectado"]).all()
-    assert (res["tp"] >= 0).all() and (res["fp"] >= 0).all() and (res["fn"] >= 0).all()
+    assert (res["tp_diag"] >= 0).all() and (res["fp"] >= 0).all() and (res["fn"] >= 0).all()
+    assert (res["tp_diag"] <= res["tp"]).all()
+    assert (res["tp"] <= res["n_gabarito"]).all()
+    assert (res["tp_det"] <= res["n_detectado"]).all()
+
+
+def test_em_estrito_e_mills_tp_diag_e_igual_a_tp_e_tp_det(gab, cfg):
+    """Nos dois criterios que casam por tipo, as tres contagens coincidem por
+    construcao -- conferido no dado real dos 3 jogos, com deteccoes
+    perturbadas de proposito (deslocadas 0,5 s e com um tipo trocado)."""
+    det = evaluate.deteccoes_do_gabarito(gab, "frame", cfg)
+    det = det.assign(t=det["t"] + 0.5, frame=det["frame"] + 13)
+    posicao = np.arange(len(det))
+    det.loc[(det["type"] == "throw_in") & (posicao % 3 == 0), "type"] = "corner_kick"
+    res, _ = evaluate.avaliar(gab, det.astype(evaluate.DETECTIONS), cfg)
+    for criterio in ("estrito", "mills"):
+        bloco = res[res["criterio"] == criterio]
+        assert (bloco["tp_diag"] == bloco["tp"]).all(), criterio
+        assert (bloco["tp_diag"] == bloco["tp_det"]).all(), criterio
+    # e no vidal_codina elas divergem, senao o teste acima seria vacuo
+    vidal = res[res["criterio"] == "vidal_codina"]
+    assert (vidal["tp_diag"] < vidal["tp"]).any()
+    assert (vidal["tp_diag"] < vidal["tp_det"]).any()
 
 
 def test_precisao_com_zero_deteccoes_e_nan(cfg):
@@ -149,7 +177,8 @@ def test_nan_nunca_entra_em_tp(cfg):
             & (res["type"] == "pass")
         ].iloc[0]
         assert (linha["n_gabarito"], linha["n_detectado"]) == (1, 1), criterio
-        assert (linha["tp"], linha["tp_det"], linha["fp"], linha["fn"]) == (0, 0, 1, 1), criterio
+        assert (linha["tp_diag"], linha["tp"], linha["tp_det"]) == (0, 0, 0), criterio
+        assert (linha["fp"], linha["fn"]) == (1, 1), criterio
         assert linha["f1"] == 0.0
 
 
@@ -172,7 +201,7 @@ def test_agregado_e_soma_nao_media_dos_f1(cfg):
     ].set_index("game")
     assert sel.loc[1, "f1"] == 1.0
     assert sel.loc[2, "f1"] == pytest.approx(2 / 3)  # P=1, R=0,5
-    assert sel.loc[0, "n_gabarito"] == 5 and sel.loc[0, "tp"] == 3
+    assert sel.loc[0, "n_gabarito"] == 5 and sel.loc[0, "tp_diag"] == 3
     assert sel.loc[0, "f1"] == pytest.approx(0.75)  # P=1, R=0,6 agrupados
     media = (sel.loc[1, "f1"] + sel.loc[2, "f1"]) / 2
     assert abs(sel.loc[0, "f1"] - media) > 0.05  # a media daria 0,833
@@ -184,13 +213,13 @@ def test_agregado_e_a_soma_das_contagens_dos_jogos(identidade):
     por_jogo = (
         res[res["game"] != 0]
         .groupby(["criterio", "ancora", "type"], sort=True)[
-            ["n_gabarito", "n_detectado", "tp", "tp_det", "fp", "fn"]
+            ["n_gabarito", "n_detectado", "tp_diag", "tp", "tp_det", "fp", "fn"]
         ]
         .sum()
     )
     agregado = (
         res[res["game"] == 0].set_index(["criterio", "ancora", "type"]).sort_index()[
-            ["n_gabarito", "n_detectado", "tp", "tp_det", "fp", "fn"]
+            ["n_gabarito", "n_detectado", "tp_diag", "tp", "tp_det", "fp", "fn"]
         ]
     )
     pd.testing.assert_frame_equal(por_jogo.sort_index(), agregado)

@@ -75,7 +75,8 @@ def test_gabarito_contra_si_mesmo_da_f1_1(gab, cfg, ancora):
     det = evaluate.deteccoes_do_gabarito(gab, ancora, cfg)
     res, _ = evaluate.avaliar(gab, det, cfg)
     res = res[(res["ancora"] == ancora) & (res["n_gabarito"] > 0)]
-    assert len(res) == len(CRITERIOS) * 6 * 4  # 6 tipos presentes x (3 jogos + agregado)
+    # 6 tipos nos 3 jogos + agregado, mais `penalty`, que so existe no jogo 2
+    assert len(res) == len(CRITERIOS) * (6 * 4 + 2)
     assert (res["f1"] == 1.0).all(), res[res["f1"] != 1.0]
     assert (res["fp"] == 0).all() and (res["fn"] == 0).all()
 
@@ -147,28 +148,102 @@ def test_jogador_errado(cfg):
 
 
 def test_tipo_errado(cfg):
-    """Mesmo jogador e tempo, tipo diferente: FN+FP no estrito e no mills
-    (casam por tipo); acerto no vidal_codina, na celula (anotado, detectado)."""
+    """Mesmo jogador e tempo, tipo diferente.
+
+    `estrito` e `mills` casam por tipo: o par nem existe, FN + FP.
+    `vidal_codina` CASA o par (ignora o tipo) e a confusao aparece na celula
+    (anotado, detectado) -- mas o par NAO conta como acerto na metrica, porque
+    o numerador e `tp_diag`, a diagonal. Esta e a correcao da revisao da Fatia 2:
+    com `tp` como numerador, um detector que erra todos os tipos reportaria
+    F1 = 1,00.
+    """
     gab = _gabarito([(1000, "throw_in", "g1_home_7")])
     det = _deteccoes([(1000, "corner_kick", "g1_home_7")])
     res, conf = evaluate.avaliar(gab, det, cfg)
     for criterio in ("estrito", "mills"):
         anotado = _celula(res, criterio, "throw_in")
         detectado = _celula(res, criterio, "corner_kick")
-        assert (anotado["tp"], anotado["fn"]) == (0, 1), criterio
-        assert (detectado["tp_det"], detectado["fp"]) == (0, 1), criterio
+        assert (anotado["tp"], anotado["tp_diag"], anotado["fn"]) == (0, 0, 1), criterio
+        assert (detectado["tp_det"], detectado["tp_diag"], detectado["fp"]) == (0, 0, 1), criterio
 
     anotado = _celula(res, "vidal_codina", "throw_in")
     detectado = _celula(res, "vidal_codina", "corner_kick")
-    assert (anotado["tp"], anotado["fn"]) == (1, 0)  # acerto pelo criterio
-    assert anotado["revocacao"] == 1.0
-    assert np.isnan(anotado["precisao"])  # nenhuma deteccao de throw_in
-    assert (detectado["tp_det"], detectado["fp"]) == (1, 0)
+    assert anotado["tp"] == 1  # o par existe: casou
+    assert anotado["tp_diag"] == 0  # mas nao esta na diagonal
+    assert (anotado["fn"], anotado["revocacao"]) == (1, 0.0)
+    # precisao de throw_in e indefinida (0 deteccoes do tipo), logo F1 tambem:
+    # `NaN` com denominador zero, nunca 0,0.
+    assert np.isnan(anotado["precisao"]) and np.isnan(anotado["f1"])
+    assert (detectado["tp_det"], detectado["tp_diag"], detectado["fp"]) == (1, 0, 1)
+    # O NUMERADOR de `precisao` e `tp_diag`, nao `tp_det` (revisao, item 2):
+    assert detectado["precisao"] == 0.0
+    # e a revocacao de corner_kick e indefinida (0 anotados do tipo)
+    assert np.isnan(detectado["revocacao"]) and np.isnan(detectado["f1"])
     cel = conf[(conf["criterio"] == "vidal_codina") & (conf["ancora"] == "frame")]
     cel = cel[cel["game"] == 1]
     assert cel.set_index(["type_gabarito", "type_detectado"])["n"].to_dict() == {
         ("throw_in", "corner_kick"): 1
     }
+
+
+def test_todos_os_tipos_trocados_da_f1_zero(cfg):
+    """TESTE OBRIGATORIO da revisao da Fatia 2, item 1.
+
+    10 escanteios e 10 laterais anotados, detectados com os tipos TROCADOS, no
+    mesmo instante e com o mesmo jogador. Um detector que erra 100 % dos tipos
+    tem de dar F1 = 0,0 nas duas classes, nos TRES criterios. Com `tp` como
+    numerador (o furo que a revisao achou) isto dava precisao 1,0 e revocacao
+    1,0 no `vidal_codina`.
+    """
+    anotados, detectados = [], []
+    for i in range(10):
+        anotados.append((1000 + 300 * i, "corner_kick", "g1_home_7"))
+        detectados.append((1000 + 300 * i, "throw_in", "g1_home_7"))
+        anotados.append((1150 + 300 * i, "throw_in", "g1_home_9"))
+        detectados.append((1150 + 300 * i, "corner_kick", "g1_home_9"))
+    res, conf = evaluate.avaliar(_gabarito(anotados), _deteccoes(detectados), cfg)
+    for criterio in CRITERIOS:
+        for tipo in ("corner_kick", "throw_in"):
+            linha = _celula(res, criterio, tipo)
+            assert (linha["n_gabarito"], linha["n_detectado"]) == (10, 10), (criterio, tipo)
+            assert linha["tp_diag"] == 0, (criterio, tipo)
+            assert (linha["fp"], linha["fn"]) == (10, 10), (criterio, tipo)
+            assert linha["precisao"] == 0.0 and linha["revocacao"] == 0.0, (criterio, tipo)
+            assert linha["f1"] == 0.0, (criterio, tipo)
+    # no vidal_codina os 20 pares existem e a confusao fica visivel na matriz
+    cel = conf[
+        (conf["criterio"] == "vidal_codina") & (conf["ancora"] == "frame") & (conf["game"] == 1)
+    ]
+    assert cel.set_index(["type_gabarito", "type_detectado"])["n"].to_dict() == {
+        ("corner_kick", "throw_in"): 10,
+        ("throw_in", "corner_kick"): 10,
+    }
+    assert int(_celula(res, "vidal_codina", "corner_kick")["tp"]) == 10  # casou, sem acertar
+    # ITEM 1 DA RE-REVISAO: `micro()` e quem vai produzir o agregado do
+    # relatorio da Fatia 8. Com `tp` no lugar de `tp_diag` ela devolveria
+    # F1 = 1,0 aqui -- o mesmo furo, um nivel acima.
+    for criterio in CRITERIOS:
+        agregado = evaluate.micro(
+            res[
+                (res["criterio"] == criterio)
+                & (res["ancora"] == "frame")
+                & (res["game"] == 0)
+                & res["type"].isin(["corner_kick", "throw_in"])
+            ]
+        )
+        assert agregado["tp_diag"] == 0, criterio
+        assert agregado["n_gabarito"] == 20 and agregado["n_detectado"] == 20, criterio
+        assert agregado["precisao"] == 0.0 and agregado["revocacao"] == 0.0, criterio
+        assert agregado["f1"] == 0.0, criterio
+    # nos criterios que casam por tipo nenhum par existe: 20 FN e 20 FP soltos
+    cel = conf[(conf["criterio"] == "estrito") & (conf["ancora"] == "frame")]
+    assert set(cel["type_gabarito"]) | set(cel["type_detectado"]) == {
+        "corner_kick",
+        "throw_in",
+        evaluate.NONE,
+    }
+    assert int(cel[cel["type_detectado"] == evaluate.NONE]["n"].sum()) == 20
+    assert int(cel[cel["type_gabarito"] == evaluate.NONE]["n"].sum()) == 20
 
 
 def test_tipo_errado_entre_grupos_nunca_casa(cfg):
@@ -255,6 +330,37 @@ def test_nenhum_par_proibido_sobrevive(cfg):
     assert list(zip(i_gab.tolist(), i_det.tolist())) == [(0, 0)]
 
 
+def _bloco(tempos, grupo="jogo_corrido"):
+    """DataFrame minimo para `casar`: so as 5 colunas que ela le."""
+    return pd.DataFrame(
+        {
+            "game": 1,
+            "grupo": grupo,
+            "type": "pass",
+            "player_id": "g1_home_1",
+            "t": tempos,
+        }
+    )
+
+
+def test_M_dimensionado_para_o_otimo_lexicografico(cfg):
+    """Revisao da Fatia 2, item 3: `M` tem de ser maior que a SOMA de todos os
+    |dt| permitidos, nao so maior que a janela.
+
+    Contraexemplo do revisor, janela de 1,0 s:
+        gab t = [0,6; 0,0]   det t = [0,0; -0,6]
+        |dt| = [[0,6  1,2],
+                [0,0  0,6]]
+    O casamento de cardinalidade MAXIMA (2 pares) custa 1,2, mais que o de
+    cardinalidade 1 (0,0). Com `M = janela + eps` o solver prefere 1 par, e a
+    maximizacao da cardinalidade -- o primeiro objetivo lexicografico -- cai.
+    """
+    i_gab, i_det = evaluate.casar(_bloco([0.6, 0.0]), _bloco([0.0, -0.6]), 1.0, True, True)
+    assert len(i_gab) == 2, "o primeiro objetivo e MAXIMIZAR o numero de pares"
+    assert sorted(zip(i_gab.tolist(), i_det.tolist())) == [(0, 0), (1, 1)]
+    assert abs(0.6 - 0.0) + abs(0.0 - (-0.6)) == pytest.approx(1.2)  # pior soma, melhor n
+
+
 def test_pares_devolvidos_respeitam_as_restricoes(gab, cfg):
     """Nenhum par casado viola janela, tipo, jogador ou jogo, em nenhum criterio."""
     det = evaluate.deteccoes_do_gabarito(gab, "frame", cfg)
@@ -309,31 +415,59 @@ def test_duplicadas_dao_precisao_meio_e_revocacao_um(gab, cfg):
 
 def test_no_dead_ball_before_continua_no_denominador(gab, cfg):
     """Os 13 eventos com a marca ficam no denominador (decisoes.md, armadilha da
-    Fatia 1). Filtra-los subiria o F1 de bola parada -- o teste mede quanto."""
+    Fatia 1). Filtra-los subiria o F1 de bola parada -- com os numeros exatos
+    das DUAS agregacoes, porque "agregado" sem qualificar e ambiguo (revisao da
+    Fatia 2, item 6). `penalty` fica FORA de todo agregado (n = 1)."""
     marcados = gab[gab["no_dead_ball_before"]]
     assert len(marcados) == 13
+    assert marcados["type"].value_counts().to_dict() == {
+        "goal_kick": 9,
+        "free_kick": 3,
+        "kickoff": 1,
+    }
 
     det = evaluate.deteccoes_do_gabarito(gab[~gab["no_dead_ball_before"]], "frame", cfg)
     completo, _ = evaluate.avaliar(gab, det, cfg)
     filtrado, _ = evaluate.avaliar(gab[~gab["no_dead_ball_before"]], det, cfg)
 
-    bola_parada = cfg["avaliacao"]["grupos"]["bola_parada"]
-    sel = (
-        lambda res: res[
+    agregaveis = [t for t in cfg["avaliacao"]["grupos"]["bola_parada"] if t != "penalty"]
+
+    def bola_parada(res):
+        return res[
             (res["criterio"] == "estrito")
             & (res["ancora"] == "frame")
             & (res["game"] == 0)
-            & res["type"].isin(bola_parada)
+            & res["type"].isin(agregaveis)
         ]
-    )
-    com = sel(completo)
-    sem = sel(filtrado)
+
+    com = bola_parada(completo)
+    sem = bola_parada(filtrado)
     assert int(com["n_gabarito"].sum()) - int(sem["n_gabarito"].sum()) == 13
     assert int(com["fn"].sum()) == 13 and int(sem["fn"].sum()) == 0
-    f1_com = float(np.nansum(com["f1"] * com["n_gabarito"]) / com["n_gabarito"].sum())
-    f1_sem = float(np.nansum(sem["f1"] * sem["n_gabarito"]) / sem["n_gabarito"].sum())
-    assert f1_sem == 1.0 and f1_com < 1.0
-    assert f1_sem - f1_com > 0.01  # ~4 % no plano; o valor exato vai ao relatorio
+
+    # (a) MICRO: 0,977470 -> 1,0, diferenca de 2,2530 pontos
+    micro_com = evaluate.micro(com)
+    micro_sem = evaluate.micro(sem)
+    assert micro_com["n_gabarito"] == 295 and micro_com["tp_diag"] == 282
+    assert micro_com["f1"] == pytest.approx(0.977470, abs=1e-6)
+    assert micro_sem["f1"] == 1.0
+    assert 100 * (micro_sem["f1"] - micro_com["f1"]) == pytest.approx(2.2530, abs=1e-3)
+
+    # a outra leitura de "agregado" da OUTRO numero: 2,3709 pontos
+    ponderada = 100 * (
+        evaluate.media_ponderada_f1(sem) - evaluate.media_ponderada_f1(com)
+    )
+    assert ponderada == pytest.approx(2.3709, abs=1e-3)
+    assert abs(ponderada - 2.2530) > 0.1  # as duas agregacoes NAO sao a mesma
+
+    # (b) a classe mais afetada: tiro de meta, +18,367 pontos de revocacao
+    gk_com = _celula(completo, "estrito", "goal_kick")
+    gk_sem = _celula(filtrado, "estrito", "goal_kick")
+    assert (int(gk_com["n_gabarito"]), int(gk_com["tp_diag"])) == (49, 40)
+    assert (int(gk_sem["n_gabarito"]), int(gk_sem["tp_diag"])) == (40, 40)
+    assert gk_com["revocacao"] == pytest.approx(0.816327, abs=1e-6)
+    assert gk_sem["revocacao"] == 1.0
+    assert 100 * (gk_sem["revocacao"] - gk_com["revocacao"]) == pytest.approx(18.367, abs=1e-3)
 
 
 def test_empate_de_quadro_59923(eventos, cfg):
@@ -513,3 +647,58 @@ def test_grupos_do_config_sao_usados(cfg):
     cfg_alt = dict(cfg, avaliacao=dict(cfg["avaliacao"], grupos=grupos))
     with pytest.raises(ValueError, match="fora de config"):
         evaluate.avaliar(gab, det, cfg_alt)
+
+
+def test_penalty_e_classe_propria_e_nunca_agregada(gab, cfg):
+    """Revisao da Fatia 2, item 7: `penalty` saiu de `fora_do_escopo` e entrou
+    no grupo de bola parada, com n = 1 (jogo 2). Contagem absoluta sim,
+    agregado nunca."""
+    assert "penalty" in cfg["avaliacao"]["grupos"]["bola_parada"]
+    det = evaluate.deteccoes_do_gabarito(gab, "frame", cfg)
+    res, conf = evaluate.avaliar(gab, det, cfg)
+    linha = {
+        int(g): int(_celula(res, "estrito", "penalty", game=g)["n_gabarito"])
+        for g in (1, 2, 3)
+    }
+    assert linha == {1: 0, 2: 1, 3: 0}
+    assert int(_celula(res, "estrito", "penalty")["n_gabarito"]) == 1
+    assert int(_celula(res, "estrito", "penalty", game=2)["tp_diag"]) == 1
+    assert (
+        conf[(conf["type_gabarito"] == "penalty") & (conf["grupo"] != "bola_parada")].empty
+    )
+    # ITEM 4 DA RE-REVISAO: a metade "nunca agregada" do nome deste teste.
+    # A proibicao e guarda de codigo, nao docstring.
+    bola_parada = res[
+        (res["criterio"] == "estrito") & (res["ancora"] == "frame") & (res["game"] == 0)
+        & res["type"].isin(cfg["avaliacao"]["grupos"]["bola_parada"])
+    ]
+    assert "penalty" in set(bola_parada["type"])
+    for funcao in (evaluate.micro, evaluate.media_ponderada_f1):
+        with pytest.raises(ValueError, match="nunca entra em agregado"):
+            funcao(bola_parada)
+    # e sem o penalti as duas agregam normalmente
+    sem_penalty = bola_parada[bola_parada["type"] != "penalty"]
+    assert evaluate.micro(sem_penalty)["f1"] == 1.0
+    assert evaluate.media_ponderada_f1(sem_penalty) == 1.0
+
+
+def test_f1_e_a_media_harmonica_de_precisao_e_revocacao(gab, cfg):
+    """ITEM 2 DA RE-REVISAO: `f1` tem de sair de `precisao` e `revocacao`, nao
+    de outra contagem. Invariante sobre o DADO REAL dos 3 jogos, com deteccoes
+    perturbadas de proposito para que haja linha com P != R e com tipo trocado
+    (senao a media harmonica seria trivialmente igual aos dois)."""
+    det = evaluate.deteccoes_do_gabarito(gab, "frame", cfg)
+    det = det.assign(t=det["t"] + 0.5, frame=det["frame"] + 13)
+    posicao = np.arange(len(det))
+    det.loc[(det["type"] == "throw_in") & (posicao % 3 == 0), "type"] = "corner_kick"
+    det = det[posicao % 7 != 0].astype(evaluate.DETECTIONS)
+    res, _ = evaluate.avaliar(gab, det, cfg)
+
+    vale = (res["n_gabarito"] > 0) & (res["n_detectado"] > 0)
+    assert int(vale.sum()) > 50
+    p = res.loc[vale, "precisao"].to_numpy()
+    r = res.loc[vale, "revocacao"].to_numpy()
+    esperado = np.where(p + r == 0, 0.0, 2 * p * r / np.where(p + r == 0, 1.0, p + r))
+    np.testing.assert_allclose(res.loc[vale, "f1"].to_numpy(), esperado, rtol=0, atol=1e-12)
+    # o teste nao e vacuo: ha linha com precisao != revocacao
+    assert (p != r).any()

@@ -318,7 +318,10 @@ def construir_gabarito(
     ball_live = frames.sort_values("frame")["ball_live"].to_numpy()
     annotated = df["annotated_frame"].to_numpy()
 
-    # Ancorado: todo SET PIECE (inclui PENALTY, fora do escopo) e todo goal_kick.
+    # Ancorado: todo SET PIECE (inclui PENALTY, que desde a revisao da Fatia 2
+    # e classe propria do grupo de bola parada) e todo goal_kick. A decisao e
+    # por `metrica_type`, nao pelo rotulo, e por isso o rotulo novo nao mudou
+    # comportamento nenhum aqui.
     fps = cfg["tracking"]["fps"]
     guarda_quadros = round(cfg["gabarito"]["guarda_ancora_s"] * fps)
     alvo = (df["metrica_type"].to_numpy() == "SET PIECE") | (df["type"].to_numpy() == "goal_kick")

@@ -63,39 +63,38 @@ Tabelas produzidas: `frames`, `tracking`, `periods`, `events`, para os 3 jogos.
 Uma mudança declarada em regra congelada saiu daqui: a **guarda de 10 s** na
 ancoragem (G3). Ver `docs/decisoes.md`.
 
-## Fatia 2 — entregue, em correção (2026-10-30)
+## Fatia 2 — ACEITA (2026-10-30)
 
-Plano em `docs/fatias/02-plano.md`, aprovado no G2. Implementada, revisada
-(ACEITAR COM RESSALVA, com teste de mutação de 27 pontos, 24 mortos). **220 testes
-passam.** Em segunda rodada de correção: 10 itens, sendo o principal um **furo do
-meu plano** — o F1 do critério `vidal_codina` não era o do artigo e esconderia um
-detector que erra todos os tipos.
+Plano em `docs/fatias/02-plano.md`, aprovado no G2. Implementada, revisada em
+**duas rodadas completas mais uma re-revisão focada**, com teste de mutação em
+cada uma. **227 testes passam.**
 
-Entregue: `src/evaluate.py` (casador ótimo, métricas, matriz de confusão por
-grupo), `src/tau.py`, 4 arquivos de teste, `--tau` no CLI. `scipy` acrescentado.
+Entregue: `src/evaluate.py` (casador um-para-um ótimo via `scipy`, métricas,
+matriz de confusão por grupo), `src/tau.py`, 4 arquivos de teste, `--tau` no CLI.
 
-**O gatilho de G3 da defasagem disparou (45,36 % contra 5 %), e eu concluí que o
+Três correções de fundo saíram daqui, e **duas eram erros meus de plano**:
+
+1. O critério do Vidal-Codina **não casa por tipo** — a comparação de tipo é a
+   matriz de confusão (supl. S2, p. 3).
+2. `precisao`/`revocacao`/`f1` saem da **diagonal** da matriz (`tp_diag`). Com o
+   numerador anterior, um detector que erra todos os tipos reportaria F1 = 1,00.
+3. `penalty` virou classe própria do gabarito, senão a detecção da Fatia 4 seria
+   falso positivo sem par possível.
+
+**O gatilho de G3 da defasagem disparou (45,36 % contra 5 %) e eu concluí que o
 meu próprio teste era inválido.** Decisão: adiada para a Fatia 3, com a regra de
 escolha da janela **escrita antes de medir**. O ±1 s está rotulado **provisório**.
 
-> O código da Fatia 2 entrou no commit `7e3686f`, que está rotulado `docs:` por
-> descuido meu (`git add -A` com o código pendente).
+> O código da Fatia 2 entrou nos commits `7e3686f` e `99af5ca`, rotulados
+> `docs:` por descuido meu (`git add -A` com subagente em voo, duas vezes).
+> Regra nova: commit por caminho explícito.
 
 ## Próximo passo
 
-**Fatia 2 — fechar as 10 correções**, re-revisar só os pontos tocados, aceitar e
-commitar. Depois, **Fatia 3 — posse**, que carrega a decisão da janela do D8. Escrever `docs/fatias/02-plano.md` e levar ao G2. Escopo
-em `docs/03-plano.md`, Fatia 2. Três coisas que a Fatia 2 **tem** de fazer e que
-só existem por causa da Fatia 1:
-
-1. Medir a defasagem `τ` da anotação nos 3 jogos, com **gatilho de G3** se mais de
-   5 % dos passes tiverem `|τ| > 1 s` (pode derrubar a janela do D8).
-2. Teste fixando que os **13** eventos com `no_dead_ball_before = True`
-   permanecem no denominador. Filtrá-los sobe o F1 em até 4 %.
-3. Tolerar dois eventos no mesmo quadro (jogo 1, quadro 59923).
-
-E a sensibilidade da âncora: reportar bola parada em `frame` **e** em
-`annotated_frame`.
+**Fatia 3 — posse.** Escrever `docs/fatias/03-plano.md` e levar ao G2. É a fatia
+que implementa o Passo 1 da especificação (PZ/DZ, control frames,
+Savitzky-Golay, perda e ganho de posse) e que **carrega a decisão da janela do
+D8**, com a regra já pré-registrada em `docs/03-plano.md`.
 
 ## Portões
 

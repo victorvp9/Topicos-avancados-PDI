@@ -13,7 +13,14 @@ dependencies = [
     # scipy so por `optimize.linear_sum_assignment`: o casamento evento x
     # deteccao e atribuicao otima, nao gulosa (docs/fatias/02-plano.md §3).
     # Ja esta na pilha aprovada do CLAUDE.md. decisoes.md, G2 da Fatia 2.
-    "scipy>=1.17.1",
+    # O piso NAO vem da API, que existe desde o scipy 0.17: vem do ABI do
+    # numpy 2.x que o `pandas>=3.0` implica. 1.13.1 e o mais antigo VERIFICADO
+    # POR EXECUCAO SOB PYTHON 3.12 (54 testes do casador verdes com scipy
+    # 1.13.1 + pandas 3.1.0 + numpy 2.2.6, em ambiente efemero
+    # `uv run --isolated --no-project`). No Python 3.13 nao ha roda para o
+    # 1.13.1 e o `uv` tentaria compilar: quem for para o 3.13 precisa subir o
+    # piso. Versoes abaixo de 1.13.1 nao foram testadas.
+    "scipy>=1.13.1",
 ]
 
 [dependency-groups]

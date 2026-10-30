@@ -52,16 +52,30 @@ DETECTIONS = {
 
 # Saida do casador (plano §5). `game = 0` e a linha agregada (soma, nao media).
 #
-# `tp` e `tp_det` sao a MESMA coisa em `estrito` e `mills`, que casam por tipo.
-# Em `vidal_codina` um par casado pode ter tipos diferentes, e dai as duas
-# contagens divergem: `tp` conta os pares pelo tipo do GABARITO (quantos eventos
-# anotados daquele tipo foram corretamente detectados pelo criterio) e `tp_det`
-# conta os mesmos pares pelo tipo da DETECCAO (quantas deteccoes daquele tipo
-# acertaram algum evento anotado). Logo `revocacao = tp / n_gabarito` e
-# `precisao = tp_det / n_detectado`, e as identidades `tp + fn = n_gabarito` e
-# `tp_det + fp = n_detectado` valem sempre. A coluna `tp_det` e um acrescimo ao
-# esquema do plano §5, que nao previa a assimetria; sem ela `precisao` nao seria
-# reproduzivel a partir das colunas inteiras.
+# TRES contagens de acerto, porque sob casamento sem tipo elas divergem:
+#
+#   `tp_diag`  pares casados em que `tipo_gabarito == tipo_detectado`. E A
+#              DIAGONAL DA MATRIZ DE CONFUSAO, e e o UNICO numerador de
+#              `precisao`, `revocacao` e `f1`, nos TRES criterios.
+#   `tp`       pares casados contados pelo tipo do GABARITO, ignorando o tipo
+#              detectado. Diagnostico: "quantos eventos deste tipo o criterio
+#              casou com alguma deteccao".
+#   `tp_det`   os mesmos pares contados pelo tipo da DETECCAO. Diagnostico.
+#
+# Em `estrito` e `mills`, que casam por tipo, `tp_diag == tp == tp_det` por
+# construcao. Em `vidal_codina` nao: um escanteio anotado casado com um tiro
+# livre detectado entra em `tp` e em `tp_det`, mas NAO em `tp_diag` -- conta
+# contra a revocacao do escanteio e contra a precisao do tiro livre.
+#
+# Isto e o que o artigo faz: P e R saem da diagonal da matriz (§3.1, p. 9, Fig.
+# 7a), e no mesmo paragrafo os 254 chutes rotulados como passe contam CONTRA a
+# revocacao de chute (78 de precisao vs 53 de revocacao). Usar `tp` como
+# numerador daria F1 = 1,00 para um detector que erra TODOS os tipos, isto e
+# esconderia exatamente o modo de erro que este projeto existe para medir
+# (escanteio virando tiro livre, §2.4.1, p. 8). Corrigido na revisao da Fatia 2;
+# o esquema do plano §5 nao previa a assimetria.
+#
+# Identidades, sempre: `tp_diag + fn = n_gabarito` e `tp_diag + fp = n_detectado`.
 RESULTADO = {
     "criterio": "str",
     "ancora": "str",
@@ -69,6 +83,7 @@ RESULTADO = {
     "type": "str",
     "n_gabarito": "int64",
     "n_detectado": "int64",
+    "tp_diag": "int64",
     "tp": "int64",
     "tp_det": "int64",
     "fp": "int64",
@@ -175,6 +190,64 @@ def _f1(precisao: float, revocacao: float) -> float:
     return 2.0 * precisao * revocacao / (precisao + revocacao)
 
 
+def _recusar_penalty(resultado: pd.DataFrame, funcao: str) -> None:
+    """`penalty` tem n = 1 nos tres jogos: num agregado ele nao sustenta F1.
+
+    A proibicao e guarda de codigo, nao comentario: um relatorio que juntasse
+    todos os tipos de `bola_parada` incluiria o penalti em silencio.
+    """
+    if (resultado["type"] == "penalty").any():
+        raise ValueError(
+            "{}: `penalty` tem n = 1 nos tres jogos e nunca entra em agregado; "
+            "reporte a contagem absoluta dele e filtre-o antes de agregar".format(funcao)
+        )
+
+
+def micro(resultado: pd.DataFrame) -> dict:
+    """Agregacao MICRO de um conjunto de linhas de `resultado`: soma `tp_diag`,
+    `n_gabarito` e `n_detectado` e so DEPOIS calcula P/R/F1.
+
+    Entrada: um subconjunto de linhas de `resultado` (um criterio, uma ancora,
+    um `game`, os tipos que se quer juntar). Saida: dict com as somas e P/R/F1.
+
+    **Nao e** `media_ponderada_f1`, e as duas dao numero diferente: nos 13
+    eventos `no_dead_ball_before`, filtra-los move o F1 de bola parada em
+    +2,2530 pontos no micro e +2,3709 na media ponderada. "Agregado" sem
+    qualificar e ambiguo e ja produziu um erro de escrita no projeto; chamar
+    pelo nome e a correcao (revisao da Fatia 2).
+
+    **Nunca inclua `penalty`** (n = 1 nos tres jogos) num agregado: a guarda
+    abaixo estoura, em vez de deixar a proibicao so no docstring.
+    """
+    _recusar_penalty(resultado, "micro")
+    n_gabarito = int(resultado["n_gabarito"].sum())
+    n_detectado = int(resultado["n_detectado"].sum())
+    tp_diag = int(resultado["tp_diag"].sum())
+    precisao = _razao(tp_diag, n_detectado)
+    revocacao = _razao(tp_diag, n_gabarito)
+    return {
+        "n_gabarito": n_gabarito,
+        "n_detectado": n_detectado,
+        "tp_diag": tp_diag,
+        "precisao": precisao,
+        "revocacao": revocacao,
+        "f1": _f1(precisao, revocacao),
+    }
+
+
+def media_ponderada_f1(resultado: pd.DataFrame) -> float:
+    """Media dos F1 por tipo, ponderada por `n_gabarito`, ignorando os `NaN`.
+
+    A outra leitura de "agregado"; ver `micro`, que e a que os documentos do
+    projeto usam. `penalty` tambem e recusado aqui.
+    """
+    _recusar_penalty(resultado, "media_ponderada_f1")
+    peso = resultado["n_gabarito"].to_numpy()
+    if peso.sum() == 0:
+        return np.nan
+    return float(np.nansum(resultado["f1"].to_numpy() * peso) / peso.sum())
+
+
 def avaliar(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict):
     """Casa, conta e devolve `(resultado, confusao)` nos esquemas deste modulo.
 
@@ -194,7 +267,9 @@ def avaliar(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict):
 
     Toda linha de `resultado` existe para todo tipo dos grupos, mesmo com
     contagem zero -- inclusive `free_kick?`, que o gabarito nunca produz e que
-    **nunca e somado em `free_kick`** (S2, p. 3, e Fig. S1, p. 2).
+    **nunca e somado em `free_kick`** (S2, p. 3, e Fig. S1, p. 2), e `penalty`,
+    que tem n = 1 nos tres jogos e por isso e reportado como contagem absoluta e
+    **nunca entra num agregado** (ver `micro`).
     """
     fps = cfg["tracking"]["fps"]
     grupo_de = grupo_por_tipo(cfg)
@@ -282,12 +357,18 @@ def avaliar(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict):
             n_gab = gab.value_counts(["game", "type"])
             tp_gab = casados.value_counts(["game", "type_gabarito"])
             tp_det = casados.value_counts(["game", "type_detectado"])
+            tp_diag = casados[
+                casados["type_gabarito"] == casados["type_detectado"]
+            ].value_counts(["game", "type_gabarito"])
             for _, tipo in tipos:
-                total = {"n_gabarito": 0, "n_detectado": 0, "tp": 0, "tp_det": 0}
+                total = dict.fromkeys(
+                    ("n_gabarito", "n_detectado", "tp_diag", "tp", "tp_det"), 0
+                )
                 for game in jogos:
                     conta = {
                         "n_gabarito": int(n_gab.get((game, tipo), 0)),
                         "n_detectado": int(n_det.get((game, tipo), 0)),
+                        "tp_diag": int(tp_diag.get((game, tipo), 0)),
                         "tp": int(tp_gab.get((game, tipo), 0)),
                         "tp_det": int(tp_det.get((game, tipo), 0)),
                     }
@@ -305,15 +386,16 @@ def avaliar(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict):
                 "type": tipo,
                 "n_gabarito": conta["n_gabarito"],
                 "n_detectado": conta["n_detectado"],
+                "tp_diag": conta["tp_diag"],
                 "tp": conta["tp"],
                 "tp_det": conta["tp_det"],
-                "fp": conta["n_detectado"] - conta["tp_det"],
-                "fn": conta["n_gabarito"] - conta["tp"],
-                "precisao": _razao(conta["tp_det"], conta["n_detectado"]),
-                "revocacao": _razao(conta["tp"], conta["n_gabarito"]),
+                "fp": conta["n_detectado"] - conta["tp_diag"],
+                "fn": conta["n_gabarito"] - conta["tp_diag"],
+                "precisao": _razao(conta["tp_diag"], conta["n_detectado"]),
+                "revocacao": _razao(conta["tp_diag"], conta["n_gabarito"]),
                 "f1": _f1(
-                    _razao(conta["tp_det"], conta["n_detectado"]),
-                    _razao(conta["tp"], conta["n_gabarito"]),
+                    _razao(conta["tp_diag"], conta["n_detectado"]),
+                    _razao(conta["tp_diag"], conta["n_gabarito"]),
                 ),
             }
             for criterio, ancora, game, tipo, conta in linhas

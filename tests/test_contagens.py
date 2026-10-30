@@ -82,7 +82,8 @@ def test_bola_parada_por_tipo(eventos, game):
 
 @pytest.mark.parametrize("game", [1, 2, 3])
 def test_set_piece_fecha_com_a_soma_dos_subtipos(eventos, game):
-    """77 / 80 / 90: os 4 subtipos no escopo mais PENALTY (fora do escopo)."""
+    """77 / 80 / 90: os 4 subtipos mais PENALTY, que desde a revisao da Fatia 2
+    e classe propria do grupo de bola parada (supl. S2, p. 3)."""
     _, gab = eventos(game)
     no_escopo = sum(
         v for k, v in BOLA_PARADA[game].items() if k != "goal_kick"
@@ -92,7 +93,10 @@ def test_set_piece_fecha_com_a_soma_dos_subtipos(eventos, game):
         (gab["metrica_type"] == "SET PIECE") & (gab["metrica_subtype"].str.contains("PENALTY"))
     ]
     assert len(penaltis) == PENALTY[game]
-    assert (penaltis["type"] == "fora_do_escopo").all()
+    # `penalty` virou classe propria do grupo de bola parada na revisao da
+    # Fatia 2 (supl. S2, p. 3): antes caia em `fora_do_escopo` e saia de todo
+    # denominador, o que daria falso positivo sem par possivel na Fatia 4.
+    assert (penaltis["type"] == "penalty").all()
 
 
 @pytest.mark.parametrize("game", [1, 2, 3])
@@ -142,6 +146,7 @@ def test_fora_do_escopo_nao_perde_nada(eventos, game):
         "throw_in",
         "free_kick",
         "goal_kick",
+        "penalty",   # revisao da Fatia 2: classe propria, n = 1 (jogo 2)
     }
 
 

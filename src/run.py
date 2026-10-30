@@ -103,7 +103,7 @@ def medir_tau(cfg: dict, mapeamento: dict, jogos, gravar_em=None) -> pd.DataFram
         cruas.append(tau_mod.medir(game, linhas_pass, frames, tracking, cfg))
 
     tabela = pd.concat(tabelas, ignore_index=True)
-    resumo = tau_mod.resumir(tabela).set_index("game")
+    resumo = tau_mod.resumir(tabela, cfg).set_index("game")
     colunas = [int(g) for g in jogos] + [0]
     rotulos = ["jogo {}".format(g) for g in jogos] + ["TOTAL"]
 
@@ -122,42 +122,46 @@ def medir_tau(cfg: dict, mapeamento: dict, jogos, gravar_em=None) -> pd.DataFram
     linha("com medida", "n_medidos", "{:12.0f}")
     linha("media de tau (s)", "media_tau_s", "{:12.3f}")
     linha("mediana de tau (s)", "mediana_tau_s", "{:12.3f}")
-    for faixa in tau_mod.FAIXAS_TAU_S:
+    for faixa in cfg["tau"]["faixas_tau_s"]:
         linha(
             "|tau| > {:g} s".format(faixa),
             "frac_tau_gt_{:g}s".format(faixa),
             "{:11.2%} ",
         )
-    for faixa in tau_mod.FAIXAS_D_M:
+    for faixa in cfg["tau"]["faixas_d_m"]:
         linha(
             "d_min < {:g} m".format(faixa),
             "frac_d_min_lt_{:g}m".format(faixa),
             "{:11.2%} ",
         )
-    linha("d no quadro anotado < 0,5 m", "frac_d_anotado_lt_0.5m", "{:11.2%} ")
+    sanidade = cfg["tau"]["faixa_sanidade_d_m"]
+    linha(
+        "d no quadro anotado < {:g} m".format(sanidade),
+        "frac_d_anotado_lt_{:g}m".format(sanidade),
+        "{:11.2%} ",
+    )
     linha("mediana de d no quadro anotado (m)", "mediana_d_anotado_m", "{:12.4f}")
 
     print("")
     print("  Reproducao de docs/inspecao-metrica.md 6.4 (distancia no quadro anotado),")
     print("  nas DUAS populacoes, que nao sao a mesma:")
-    for game, bruta in zip(jogos, cruas):
-        d = bruta["d_no_quadro_anotado_m"].to_numpy()
+    def populacao(game, rotulo, d):
+        faixas = "".join(
+            "< {:g} m {:6.2%}  ".format(f, (d < f).mean())
+            for f in cfg["tau"]["faixas_d_m"][:2]
+        )
         print(
-            "    jogo {} linhas cruas PASS   n = {:4d}  < 0,5 m {:6.2%}  < 1 m {:6.2%}  "
-            "mediana {:.4f} m".format(
-                game, d.size, (d < 0.5).mean(), (d < 1.0).mean(), float(np.nanmedian(d))
+            "    jogo {} {:<20s} n = {:4d}  {}mediana {:.4f} m".format(
+                game, rotulo, d.size, faixas, float(np.nanmedian(d))
             )
         )
-        bloco = tabela[tabela["game"] == game]["d_no_quadro_anotado_m"].to_numpy()
-        print(
-            "    jogo {} passes do gabarito  n = {:4d}  < 0,5 m {:6.2%}  < 1 m {:6.2%}  "
-            "mediana {:.4f} m".format(
-                game,
-                bloco.size,
-                (bloco < 0.5).mean(),
-                (bloco < 1.0).mean(),
-                float(np.nanmedian(bloco)),
-            )
+
+    for game, bruta in zip(jogos, cruas):
+        populacao(game, "linhas cruas PASS", bruta["d_no_quadro_anotado_m"].to_numpy())
+        populacao(
+            game,
+            "passes do gabarito",
+            tabela[tabela["game"] == game]["d_no_quadro_anotado_m"].to_numpy(),
         )
 
     g3 = tau_mod.gatilho_g3(tabela, cfg)

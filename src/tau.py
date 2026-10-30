@@ -33,11 +33,6 @@ TAU = {
     "d_no_quadro_anotado_m": "float64",
 }
 
-# Faixas de |tau| reportadas, em s: as mesmas do suplementar S3, p. 5.
-FAIXAS_TAU_S = (1.0, 3.0, 5.0, 7.5)
-# Faixas de distancia reportadas, em m: as mesmas do suplementar S3, pp. 5-6,
-# e da reproducao de docs/inspecao-metrica.md §6.4.
-FAIXAS_D_M = (0.5, 1.0, 1.5)
 
 
 def _grade_de_posicoes(frames: pd.DataFrame, tracking: pd.DataFrame):
@@ -126,15 +121,19 @@ def medir(game: int, eventos: pd.DataFrame, frames: pd.DataFrame,
     return saida
 
 
-def resumir(tabela: pd.DataFrame) -> pd.DataFrame:
+def resumir(tabela: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     """Resumo por jogo mais a linha agregada `game = 0` (plano §6 e §9.5).
 
     Entrada: concatenacao das tabelas `TAU` dos jogos.
     Saida: uma linha por jogo (mais `game = 0`), com `n` (todos os passes),
     `n_medidos`, media e mediana de `tau_s` sobre os medidos, as fracoes de
-    `|tau|` acima de cada faixa de `FAIXAS_TAU_S`, as fracoes de `d_min_m`
-    abaixo de cada faixa de `FAIXAS_D_M`, e a reproducao de
-    docs/inspecao-metrica.md §6.4 (`d` no QUADRO ANOTADO).
+    `|tau|` acima de cada faixa de `cfg['tau']['faixas_tau_s']`, as fracoes de
+    `d_min_m` abaixo de cada faixa de `cfg['tau']['faixas_d_m']`, e a reproducao
+    de docs/inspecao-metrica.md §6.4 (`d` no QUADRO ANOTADO, na faixa
+    `cfg['tau']['faixa_sanidade_d_m']`).
+
+    O nome de cada coluna de fracao sai do valor da faixa, logo mexer na faixa
+    no `config.yaml` muda a coluna -- a constante nao pode ser ignorada.
 
     **Toda fracao tem por denominador `n`, nao `n_medidos`**: o "sem medida"
     sai do numerador, nunca do denominador (plano §6.1).
@@ -153,12 +152,13 @@ def resumir(tabela: pd.DataFrame) -> pd.DataFrame:
             "media_tau_s": float(np.nanmean(tau)) if medido.any() else np.nan,
             "mediana_tau_s": float(np.nanmedian(tau)) if medido.any() else np.nan,
         }
-        for faixa in FAIXAS_TAU_S:
+        for faixa in cfg["tau"]["faixas_tau_s"]:
             linha["frac_tau_gt_{:g}s".format(faixa)] = float((np.abs(tau) > faixa).sum()) / n
-        for faixa in FAIXAS_D_M:
+        for faixa in cfg["tau"]["faixas_d_m"]:
             linha["frac_d_min_lt_{:g}m".format(faixa)] = float((d_min < faixa).sum()) / n
         # Sanidade (plano §6.2): a mesma rotina no quadro anotado reproduz §6.4.
-        linha["frac_d_anotado_lt_0.5m"] = float((d_anot < 0.5).sum()) / n
+        sanidade = cfg["tau"]["faixa_sanidade_d_m"]
+        linha["frac_d_anotado_lt_{:g}m".format(sanidade)] = float((d_anot < sanidade).sum()) / n
         linha["mediana_d_anotado_m"] = (
             float(np.nanmedian(d_anot)) if (~np.isnan(d_anot)).any() else np.nan
         )
@@ -173,6 +173,11 @@ def gatilho_g3(tabela: pd.DataFrame, cfg: dict) -> dict:
     Saida: dict com `fracao` (|tau| > `limiar_g3_tau_s` sobre TODOS os passes),
     `limiar`, `disparou` (fracao > `limiar_g3_fracao`) e `ambiguo` (dentro de
     `faixa_ambigua`, caso em que se leva ao G3 de todo modo).
+
+    A `faixa_ambigua` e FECHADA nas duas pontas: com [0,03, 0,08], uma fracao de
+    exatamente 3,0 % ou 8,0 % e ambigua. Declarado aqui porque o plano §6.1 diz
+    so "entre 3 % e 8 %", e a escolha conservadora -- a que leva mais casos ao
+    G3 em vez de passar raspando -- e incluir as pontas.
 
     Se `disparou`, a janela de +-1 s do critario principal (D8) esta contradita e
     o projeto PARA antes de qualquer detector. A decisao e do Victor, nao do

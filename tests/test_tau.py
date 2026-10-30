@@ -8,7 +8,6 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src import gabarito as gabarito_mod
 from src import tau
 
 JOGOS = (1, 2, 3)
@@ -151,7 +150,7 @@ def test_sem_medida_fica_na_tabela(cfg):
     assert np.isnan(saida["tau_s"].iloc[1])
     assert np.isnan(saida["d_min_m"].iloc[1])
     assert np.isnan(saida["frame_d"].iloc[1])
-    resumo = tau.resumir(saida)
+    resumo = tau.resumir(saida, cfg)
     assert int(resumo["n"].iloc[0]) == 2 and int(resumo["n_medidos"].iloc[0]) == 1
     # denominador = n, nao n_medidos: 1 de 2 passes tem |tau| > 1 s
     assert resumo["frac_tau_gt_1s"].iloc[0] == 0.5
@@ -267,12 +266,12 @@ def test_sanidade_reproduz_a_inspecao_6_4(eventos, jogo, cfg):
         assert round(np.nanpercentile(d, 99), 2) == p99, game
 
 
-def test_sanidade_na_populacao_do_gabarito(medido):
+def test_sanidade_na_populacao_do_gabarito(medido, cfg):
     """A mesma grandeza na populacao do GABARITO (722 / 889 / 1039 passes) da
     numero diferente, porque e outra populacao: a fusao do `SET PIECE` e o
     `PASS/GOAL KICK` tiram 77 e 75 linhas `PASS`. Travado como regressao para
     que ninguem confunda as duas contagens."""
-    resumo = tau.resumir(medido).set_index("game")
+    resumo = tau.resumir(medido, cfg).set_index("game")
     assert resumo.loc[1, "frac_d_anotado_lt_0.5m"] == pytest.approx(696 / 722)
     assert resumo.loc[2, "frac_d_anotado_lt_0.5m"] == pytest.approx(864 / 889)
     assert resumo.loc[3, "frac_d_anotado_lt_0.5m"] == pytest.approx(931 / 1039)
@@ -287,14 +286,14 @@ def test_o_gatilho_de_g3_disparou_no_dado_real(medido, cfg):
     assert g3["n"] == 2650
     assert g3["fracao"] == pytest.approx(FRAC_TAU_GT_1S[0], abs=1e-9)
     assert g3["fracao"] > 0.05 and g3["disparou"] is True
-    resumo = tau.resumir(medido).set_index("game")
+    resumo = tau.resumir(medido, cfg).set_index("game")
     for game, fracao in FRAC_TAU_GT_1S.items():
         assert resumo.loc[game, "frac_tau_gt_1s"] == pytest.approx(fracao, abs=1e-9), game
 
 
-def test_distribuicao_de_tau_no_dado_real(medido):
+def test_distribuicao_de_tau_no_dado_real(medido, cfg):
     """Media, mediana e as faixas de |tau| e de `d_min` (plano §6)."""
-    resumo = tau.resumir(medido).set_index("game")
+    resumo = tau.resumir(medido, cfg).set_index("game")
     assert resumo.loc[0, "media_tau_s"] == pytest.approx(0.698943, abs=1e-6)
     assert resumo.loc[0, "mediana_tau_s"] == pytest.approx(0.12, abs=1e-9)
     assert resumo.loc[0, "frac_tau_gt_3s"] == pytest.approx(586 / 2650, abs=1e-9)
@@ -321,12 +320,6 @@ def test_o_gabarito_nao_foi_tocado(eventos, medido):
         assert bloco["player_id"].tolist() == passes["player_id"].tolist()
 
 
-def test_modulo_do_gabarito_nao_foi_alterado():
-    """A Fatia 2 nao mexe no gabarito da Fatia 1 (guarda de regressao barata)."""
-    assert gabarito_mod.FORA_DO_ESCOPO == "fora_do_escopo"
-    assert hasattr(gabarito_mod, "ancorar") and hasattr(gabarito_mod, "construir_gabarito")
-
-
 # --- saida da CLI (plano §9.5) ------------------------------------------------
 
 
@@ -341,8 +334,8 @@ def test_cli_tau_imprime_o_gatilho_e_grava_o_csv(capsys, cfg, mapeamento, tmp_pa
     assert "limiar escrito antes de medir: 5.00%" in saida
     assert "D8) esta CONTRADITA" in saida
     # as duas populacoes da reproducao da 6.4, lado a lado
-    assert "linhas cruas PASS   n =  799  < 0,5 m 96.75%" in saida
-    assert "passes do gabarito  n =  722  < 0,5 m 96.40%" in saida
+    assert "linhas cruas PASS" in saida and "n =  799  < 0.5 m 96.75%" in saida
+    assert "passes do gabarito" in saida and "n =  722  < 0.5 m 96.40%" in saida
     assert len(pd.read_csv(destino)) == len(tabela) == 722
 
 
@@ -351,3 +344,68 @@ def test_cli_exige_um_subcomando():
 
     with pytest.raises(SystemExit):
         main([])
+
+
+def test_faixa_ambigua_e_fechada_nas_duas_pontas(cfg):
+    """Revisao da Fatia 2, item 4: a semantica das pontas, declarada e fixada.
+
+    `faixa_ambigua = [0,03; 0,08]` e FECHADA: exatamente 3,0 % e exatamente
+    8,0 % SAO ambiguos. E a escolha conservadora -- leva ao G3 em vez de passar
+    raspando. Logo abaixo e logo acima, nao.
+    """
+    baixo, alto = cfg["tau"]["faixa_ambigua"]
+    assert (baixo, alto) == (0.03, 0.08)
+    casos = {
+        0.029: False,   # 2,9 %: abaixo da faixa
+        0.030: True,    # ponta inferior: AMBIGUO
+        0.050: True,
+        0.080: True,    # ponta superior: AMBIGUO
+        0.081: False,   # 8,1 %: acima da faixa
+    }
+    for fracao, esperado in casos.items():
+        n = 1000
+        acima = round(fracao * n)
+        tabela = pd.DataFrame({"tau_s": [2.0] * acima + [0.1] * (n - acima)})
+        g3 = tau.gatilho_g3(tabela, cfg)
+        assert g3["fracao"] == pytest.approx(fracao)
+        assert g3["ambiguo"] is esperado, fracao
+
+
+def test_faixas_do_config_dao_nome_as_colunas(cfg, medido):
+    """Revisao da Fatia 2, item 5: as faixas sairam do `src/` e foram para o
+    `config.yaml`. O nome de cada coluna vem do valor da faixa, logo mexer no
+    config muda a saida e a constante nao pode ser ignorada."""
+    assert cfg["tau"]["faixas_tau_s"] == [1.0, 3.0, 5.0, 7.5]
+    assert cfg["tau"]["faixas_d_m"] == [0.5, 1.0, 1.5]
+    assert cfg["tau"]["faixa_sanidade_d_m"] == 0.5
+    colunas = set(tau.resumir(medido, cfg).columns)
+    assert {"frac_tau_gt_1s", "frac_tau_gt_3s", "frac_tau_gt_5s", "frac_tau_gt_7.5s"} <= colunas
+    assert {"frac_d_min_lt_0.5m", "frac_d_min_lt_1m", "frac_d_min_lt_1.5m"} <= colunas
+    assert "frac_d_anotado_lt_0.5m" in colunas
+
+    cfg_alt = dict(
+        cfg,
+        tau=dict(cfg["tau"], faixas_tau_s=[2.0], faixas_d_m=[0.25], faixa_sanidade_d_m=0.25),
+    )
+    outras = set(tau.resumir(medido, cfg_alt).columns)
+    assert "frac_tau_gt_2s" in outras and "frac_tau_gt_1s" not in outras
+    assert "frac_d_min_lt_0.25m" in outras and "frac_d_min_lt_0.5m" not in outras
+    assert "frac_d_anotado_lt_0.25m" in outras
+
+
+def test_faixa_de_sanidade_muda_o_VALOR_nao_so_o_nome_da_coluna(medido, cfg):
+    """ITEM 3 DA RE-REVISAO: o teste anterior conferia quais colunas existem, o
+    que um literal `0.5` na comparacao nao quebraria. Aqui a comparacao e de
+    VALOR entre duas faixas, sobre os 2650 passes reais."""
+    base = tau.resumir(medido, cfg).set_index("game")
+    menor = tau.resumir(
+        medido, dict(cfg, tau=dict(cfg["tau"], faixa_sanidade_d_m=0.25, faixas_d_m=[0.25, 0.5]))
+    ).set_index("game")
+    assert base.loc[0, "frac_d_anotado_lt_0.5m"] == pytest.approx(0.94, abs=1e-9)
+    frac_025 = menor.loc[0, "frac_d_anotado_lt_0.25m"]
+    assert frac_025 < base.loc[0, "frac_d_anotado_lt_0.5m"]
+    assert 0.5 < frac_025 < 0.94  # faixa menor, fracao estritamente menor
+    # idem para as faixas de d_min: 0,25 m e subconjunto de 0,5 m
+    assert menor.loc[0, "frac_d_min_lt_0.25m"] < menor.loc[0, "frac_d_min_lt_0.5m"]
+    # e para |tau|: 3 s e subconjunto de 1 s
+    assert base.loc[0, "frac_tau_gt_3s"] < base.loc[0, "frac_tau_gt_1s"]
