@@ -52,11 +52,20 @@ avaliacao:
   # Uma matriz de confusao POR GRUPO, nao uma matriz unica, e `free_kick?` como
   # categoria propria: suplementar S2, p. 3, e Fig. S1, p. 2.
   grupos:
-    bola_parada: [kickoff, corner_kick, throw_in, goal_kick, free_kick, "free_kick?"]
+    # `penalty` e classe propria: o S2, p. 3, inclui penalty kick no grupo de
+    # bola parada, e a hierarquia do docs/01 mantem o penalti, logo o detector
+    # da Fatia 4 vai emitir penalti. n = 1 (jogo 2): reportar a contagem
+    # absoluta e NUNCA agregar -- n=1 nao sustenta F1. Revisao da Fatia 2.
+    bola_parada: [kickoff, corner_kick, throw_in, goal_kick, free_kick, "free_kick?", penalty]
     jogo_corrido: [pass]
 
 tau:
   janela_s: 10.0                 # mesma do suplementar S3, p. 5, para comparar
   limiar_g3_tau_s: 1.0           # a janela do criterio principal
   limiar_g3_fracao: 0.05         # criterio escrito antes de medir. decisoes.md
-  faixa_ambigua: [0.03, 0.08]    # dentro disto, levar ao G3 de todo modo
+  faixa_ambigua: [0.03, 0.08]    # dentro disto, levar ao G3 de todo modo;
+                                 # FECHADA nas duas pontas (3,0 % e 8,0 % sao
+                                 # ambiguos): levar ao G3 e a escolha conservadora
+  faixas_tau_s: [1.0, 3.0, 5.0, 7.5]   # as faixas de |tau| do supl. S3, p. 5
+  faixas_d_m: [0.5, 1.0, 1.5]          # as faixas de distancia do supl. S3, pp. 5-6
+  faixa_sanidade_d_m: 0.5              # a faixa da inspecao-metrica.md §6.4

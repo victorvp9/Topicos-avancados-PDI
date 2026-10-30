@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-10-29
+Atualizado: 2026-10-30
 
 ## Onde estamos
 
@@ -63,9 +63,28 @@ Tabelas produzidas: `frames`, `tracking`, `periods`, `events`, para os 3 jogos.
 Uma mudança declarada em regra congelada saiu daqui: a **guarda de 10 s** na
 ancoragem (G3). Ver `docs/decisoes.md`.
 
+## Fatia 2 — entregue, em correção (2026-10-30)
+
+Plano em `docs/fatias/02-plano.md`, aprovado no G2. Implementada, revisada
+(ACEITAR COM RESSALVA, com teste de mutação de 27 pontos, 24 mortos). **220 testes
+passam.** Em segunda rodada de correção: 10 itens, sendo o principal um **furo do
+meu plano** — o F1 do critério `vidal_codina` não era o do artigo e esconderia um
+detector que erra todos os tipos.
+
+Entregue: `src/evaluate.py` (casador ótimo, métricas, matriz de confusão por
+grupo), `src/tau.py`, 4 arquivos de teste, `--tau` no CLI. `scipy` acrescentado.
+
+**O gatilho de G3 da defasagem disparou (45,36 % contra 5 %), e eu concluí que o
+meu próprio teste era inválido.** Decisão: adiada para a Fatia 3, com a regra de
+escolha da janela **escrita antes de medir**. O ±1 s está rotulado **provisório**.
+
+> O código da Fatia 2 entrou no commit `7e3686f`, que está rotulado `docs:` por
+> descuido meu (`git add -A` com o código pendente).
+
 ## Próximo passo
 
-**Fatia 2 — avaliação.** Escrever `docs/fatias/02-plano.md` e levar ao G2. Escopo
+**Fatia 2 — fechar as 10 correções**, re-revisar só os pontos tocados, aceitar e
+commitar. Depois, **Fatia 3 — posse**, que carrega a decisão da janela do D8. Escrever `docs/fatias/02-plano.md` e levar ao G2. Escopo
 em `docs/03-plano.md`, Fatia 2. Três coisas que a Fatia 2 **tem** de fazer e que
 só existem por causa da Fatia 1:
 

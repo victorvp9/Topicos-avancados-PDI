@@ -16,7 +16,9 @@ set_piece:
   CORNER KICK: corner_kick
   THROW IN: throw_in
   FREE KICK: free_kick
-  PENALTY: fora_do_escopo     # fora do escopo, mas continua ancorado (plano §6.2)
+  PENALTY: penalty            # classe propria do grupo de bola parada
+                              # (supl. S2, p. 3); n = 1, no jogo 2. Sempre
+                              # ancorado (plano §6.2). Revisao da Fatia 2.
 
 # Plano §5 regra 3 (D10 / V16): tiro de meta nao e SET PIECE.
 goal_kick:

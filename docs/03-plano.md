@@ -120,10 +120,29 @@ Implementa o Passo 1 da especificação. `ball_live` já veio da Fatia 1.
   Medir para os passes dos 3 jogos, reportar média, mediana e as frações acima de
   1 s, 3 s, 5 s e 7,5 s.
 
-  **Mesmo critério, escrito antes: se mais de 5 % dos passes tiverem desvio
-  > 1 s, PARAR e levar ao Victor (G3).** Faixa ambígua de 3 % a 8 %: levar de todo
-  modo. Até esta medição, **a janela de ±1 s do critério principal é PROVISÓRIA** e
-  tem de ser rotulada assim em qualquer número reportado antes da Fatia 3.
+  **REGRA DE DECISAO DA JANELA, ESCRITA ANTES DE MEDIR (2026-10-30).** Isto fecha
+  o viés que o revisor da Fatia 2 apontou: rearmar o gatilho sem fixar a regra
+  faria a escolha do valor ser feita **olhando o resultado**, que é exatamente o
+  que eu recusei ao descartar "alargar para 3 s" agora.
+
+  1. Medir `|τ_posse|` para todos os passes dos **3 jogos juntos** (agrupado; o
+     por jogo entra no relatório para transparência, não na decisão).
+  2. A janela passa a ser o **menor valor da escada {1,0; 1,5; 2,0; 3,0} s** tal
+     que **no máximo 5 %** dos passes tenham `|τ_posse|` maior que a janela.
+  3. Se 1,0 s já satisfaz, **o D8 está confirmado** e nada muda.
+  4. Se nem 3,0 s satisfaz, **PARAR e levar ao Victor (G3)**: aí o problema é o
+     critério de casamento, não a largura da janela, e alargar mais seria só
+     esconder.
+  5. **Nenhum valor fora da escada pode ser escolhido.** Sem interpolação, sem
+     "p95 arredondado", sem valor intermediário.
+  6. O teto da escada é 3,0 s porque é o valor publicado do Mills (§2.2, p. 4);
+     acima disso o nosso critério principal deixaria de ser mais estrito que a
+     literatura e de se distinguir do secundário.
+  7. Se a janela mudar, **todo número já reportado com ±1 s é recalculado**, não
+     rerrotulado.
+
+  Até esta medição, **a janela de ±1 s do critério principal é PROVISORIA** e tem
+  de ser rotulada assim em qualquer número reportado antes da Fatia 3.
 - **Saída:** série temporal de posse, visualizável.
 
 ### Fatia 4 — Bolas paradas (ordem 4)

@@ -191,10 +191,40 @@ revisão independente; serão recalculados após a guarda de 10 s.
 | linhas de `tracking`: 3190138 / 3105436 / 3162742 | [nosso] `src.run --inspect` |
 | eventos no gabarito: 1668 / 1855 / 3530 (linhas cruas 1745 / 1935 / 3620) | [nosso] `src.run --inspect` |
 
+
+## Dados — medidos na Fatia 2 (2026-10-30)
+
+Produzidos por `src/tau.py` e `src/evaluate.py`, e **todos reproduzidos
+independentemente pelo revisor** com script próprio.
+
+| número | onde |
+|---|---|
+| passes medidos: 722 / 889 / 1039 = **2650** | [nosso] `src.run --tau` |
+| `|τ| > 1 s` = **45,36 %** (1202/2650); por jogo 46,95 / 46,57 / 43,21 % | [nosso] `--tau`, confirmado pelo revisor (45,3585 %) |
+| média de `τ` = **+0,699 s**; mediana **+0,120 s** | [nosso] confirmado (+0,698943) |
+| `|τ| > 3 s` 22,11 % · `> 5 s` **13,02 %** · `> 7,5 s` 6,26 % | [nosso] confirmado |
+| `d_min < 0,5 m` 97,92 % · `< 1 m` 98,49 % · `< 1,5 m` 98,68 % | [nosso] `--tau` |
+| **gatilho de G3 disparou**: 45,36 % contra limiar de 5 % | [nosso] decisão em `docs/decisoes.md` |
+| sanidade §6.4, linhas cruas `PASS`: j1 n=799 **96,75 %** med 0,0840 m; j2 n=964 **97,41 %** med 0,0884 m | [nosso] confirmado (96,7459 / 97,4066) |
+| passes do **gabarito**: j1 96,40 % · j2 97,19 % · j3 89,61 % | [nosso] confirmado |
+| **jogo 3, linhas cruas `PASS`: n=1121, `d < 0,5 m` em 90,01 %, mediana 0,0648 m** — anotação mais frouxa, não estava na inspeção | [nosso] confirmado pelo revisor (90,0089 %) |
+| filtrar os 13 `no_dead_ball_before`: **+2,2530 pontos no F1 micro** de bola parada (0,977470 → 1,0) e **+2,371 em média ponderada** | [nosso] confirmado; as duas agregações nomeadas |
+| filtrar os 13: **revocação de `goal_kick` 0,816327 → 1,0 = +18,367 pontos** | [nosso] confirmado |
+| os 13 são 9 `goal_kick` + 3 `free_kick` + 1 `kickoff` | [nosso] confirmado |
+| sensibilidade da âncora: única célula diferente é `goal_kick` no estrito, **49 contra 48** | [nosso] confirmado; só 4 eventos têm `anchor_shift` ≠ 0, só 1 passa de 1 s |
+| casamento ótimo: 0 divergências contra força bruta em 300 casos aleatórios | [nosso] medido pelo revisor |
+| decomposição de `τ` (jogos 1+2, linhas cruas `PASS`): dos ~43 % com `|τ| > 1 s`, a maior parte persiste **dentro** de um único episódio de contato | [dado] orquestrador 30,26/12,31 pp (n=1738); revisor 26,32/16,00 pp (n=1763), operacionalizações diferentes, **mesma conclusão** |
+| quadro anotado fora de qualquer contato `d < 0,5 m`: 2,93 % (orquestrador) / 0,85 % (revisor) | [dado] operacionalizações diferentes |
+
+**Números que NÃO devem ser reportados como resultado:** as frações de `|τ|` são
+válidas como réplica do S3 (mesmo estimador), mas **não** como porteiro da janela
+de ±1 s — a grandeza é inválida para isso neste dataset. Ver `docs/decisoes.md`.
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |
 |---|---|---|
-| distribuição de `τ = t_anotado − t_D` (defasagem da anotação), passes dos 3 jogos | Fatia 2 | **G3 se > 5 % dos passes tiverem \|τ\| > 1 s** — derruba a janela do D8 |
+| ~~distribuição de `τ` pelo argmin de distância~~ | ~~Fatia 2~~ | **FEITO: disparou com 45,36 %, mas a grandeza é inválida; decisão adiada** |
+| `\|τ_posse\|` = \|quadro anotado − quadro de perda de posse\| | **Fatia 3** | **G3 pela escada {1,0; 1,5; 2,0; 3,0} s, regra escrita antes** |
 | curva F1(`eps_c`) no jogo 3 | Fatia 8 | sem gatilho, mas **baixa confiança obrigatória**: n = 8 escanteios, 3 cobradores |
 | tempo de parede de uma execução real | antes da Fatia 8 | **G4 se o orçamento passar de 2 h de CPU** |
