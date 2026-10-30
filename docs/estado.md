@@ -65,8 +65,9 @@ constantes em `docs/01-definicoes.md`.
 
 ## Dívidas registradas
 
-- Não conferi se o `events-definitions.pdf` de `refs/` e o de
-  `data/metrica-sample-data/documentation/` são o mesmo arquivo.
+- ~~Conferir se o `events-definitions.pdf` de `refs/` e o de
+  `data/metrica-sample-data/documentation/` são o mesmo arquivo.~~ **Fechada:**
+  são, sha256 `5afb1ee34931447223ef8b9dc6a30b827fd0ba57ac9b6e2d7125ee87b083a866`.
 - Não medi a defasagem `τ` da anotação. É entregável da Fatia 2 e pode derrubar a
   janela de ±1 s do D8 (G3).
 - Não medi distância jogador-bola nem gatilhos no jogo 3 — de propósito, para ele

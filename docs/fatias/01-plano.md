@@ -179,8 +179,16 @@ Regras, nesta ordem:
 4. **`pass` principal**: `Type == PASS` e `GOAL KICK` ∉ subtipos. Inclui
    `CROSS` (fundido, V9/D10).
 5. `pass_secundario`: coluna booleana adicional, `True` para
-   `PASS ∪ BALL LOST ∪ BALL OUT` sem `SHOT` e sem `THEFT` e sem `GOAL KICK`
-   (D10, critério secundário). **Não** cria linhas novas.
+   `PASS ∪ BALL LOST ∪ BALL OUT` **sem `THEFT`** (D10, critério secundário).
+   **Não** cria linhas novas. Contada nas **linhas cruas**, antes da fusão.
+
+   > **Corrigido em 2026-10-29.** Esta regra dizia "sem `SHOT` e sem `THEFT` e sem
+   > `GOAL KICK`", em contradição com o próprio §8.4 deste plano, com a tabela do
+   > `docs/02-dados.md` e com o D10 congelado. Conferido: `1107 − 21 = 1086` e
+   > `1246 − 38 = 1208`, que é o critério de aceite; excluir `GOAL KICK` daria
+   > 1064 / 1192, que não bate com nada. `SHOT` é um `Type` próprio, logo nunca
+   > está dentro da união — a exclusão é inócua em qualquer leitura. **Vale o
+   > D10: só `THEFT`.** Erro meu, apontado pelo codificador.
 6. Resto → `fora_do_escopo`.
 
 O YAML lista os subtipos **literais** esperados. **Subtipo não listado é erro
@@ -214,10 +222,29 @@ Para todo evento de bola parada (`kickoff`, `corner_kick`, `throw_in`,
 i  = annotated_frame
 j  = maior índice <= i com ball_live[j] == False      # último quadro morto
 frame = j + 1                                          # primeiro quadro em jogo
+
+# GUARDA (G3 de 2026-10-29): a âncora não pode mover o evento mais de 10 s
+if (i - frame) > GUARDA_ANCORA_QUADROS:                # 250 quadros = 10 s
+    frame = i
+    no_dead_ball_before = True
 ```
 
 Se não existir tal `j` (nenhum quadro morto em ou antes de `i`): `frame = i`,
 `no_dead_ball_before = True`.
+
+**A guarda de 10 s foi acrescentada no G3 de 2026-10-29**, depois de medir que a
+regra sem ela mal-ancora 12 de 296 bolas paradas, concentradas em tiro de meta
+(**9 de 49 = 18,4 %**) e tiro livre (3 de 92), com saltos de até 4242 quadros
+(169,7 s), e produz **duas colisões** (dois eventos ancorando no mesmo quadro,
+inclusive um tiro de meta caindo sobre o quadro de um pontapé inicial). Origem dos
+10 s: é a janela do critério oficial de benchmarking do Vidal-Codina (suplementar
+S2, p. 3) — se a âncora move o evento mais que o critério mais frouxo que
+reportamos, não é o mesmo evento. Vai para `config.yaml` como
+`gabarito.guarda_ancora_s: 10.0`. Ver `docs/decisoes.md`.
+
+Efeito: esses 12 eventos ficam no quadro anotado com `no_dead_ball_before = True`
+e passam a ser **perda de revocação declarada**. Isso **piora** os números, não os
+melhora — é o sinal de que a mudança não é perseguição de resultado.
 
 Justificativa e caso concreto em `docs/inspecao-metrica.md` §6.3: em
 `BALL LOST`/`GOAL KICK-INTERCEPTION` o `Start Frame` é o ponto da interceptação, e
@@ -381,9 +408,20 @@ tipo interno e por `Type` cru. **O que ele imprime tem de bater com
    aparecer entre um `SET PIECE` e a execução, a fusão falha. Coberto pelo
    `raise`.
 3. **Geometria da pequena área não conferida** (§7). Não afeta esta fatia.
-4. **`attack_dir` pelo x médio do goleiro** pressupõe identificar o goleiro.
-   Nos jogos 1 e 2 é a primeira coluna de cada arquivo (`Player11`, `Player25`).
-   No jogo 3 **não conferi** qual canal é o goleiro. Alternativa robusta e sem
-   essa dependência: usar o x médio de **todos** os jogadores do time, cujo sinal
-   é o mesmo. O codificador deve usar a média do time inteiro e **testar que as
-   duas formas concordam** nos jogos 1 e 2.
+4. ~~**`attack_dir` pelo x médio do goleiro** pressupõe identificar o goleiro, e
+   no jogo 3 eu não conferi qual canal é o goleiro. Usar a média do time
+   inteiro.~~
+
+   **Resolvido em 2026-10-29: usar o x médio do GOLEIRO.** Conferi o XML do jogo
+   3 e o goleiro **é** identificável: cada `<Player>` traz
+   `<ProviderParameter><Name>position_type</Name><Value>Goalkeeper</Value>`
+   (2 ocorrências, uma por time). Nos jogos 1 e 2 é a primeira coluna de cada
+   arquivo (`Player11`, `Player25`, ambos com 0,0000 % de NaN — nenhum goleiro foi
+   substituído). O motivo de eu ter pedido a média do time desapareceu.
+
+   Por que o goleiro é melhor: a margem da média do time chega a ser de **2,24 m**
+   (jogo 3, P2, home) contra ~40 m do goleiro. Um time que pressionasse alto um
+   tempo inteiro poderia inverter o sinal. Manter a média do time como
+   **checagem cruzada** no teste, exigindo que as duas formas concordem nas 12
+   combinações de (jogo, período, time). O campo `gk_mean_x` passa a guardar de
+   fato o x médio do goleiro, e o nome deixa de ser enganoso.

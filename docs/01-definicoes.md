@@ -350,7 +350,27 @@ pontapés iniciais e 109 laterais nos três jogos somados**
 **Evento não detectado é perda de revocação, nunca exclusão.** Vale inclusive
 para o pontapé inicial do quadro 1 do jogo 1, que é estruturalmente indetectável
 porque não há intervalo de bola morta antes dele (`docs/inspecao-metrica.md`
-§6.2). **NaN nunca conta como acerto nem é descartado.**
+§6.2), e para os 12 eventos que a guarda de 10 s deixa sem ancorar.
+**NaN nunca conta como acerto nem é descartado.**
+
+> ### Risco declarado: a ancoragem trivializa o tempo nas bolas paradas
+>
+> O detector dispara bola parada na transição morto → vivo (§2.4.1, p. 7). Como
+> o gabarito de bola parada é ancorado no primeiro quadro em jogo, o **instante**
+> do gabarito vem de `ball_live` — o mesmo sinal que o detector usa. Logo, para
+> bola parada, a dimensão temporal do casamento fica largamente trivializada e o
+> critério de acerto testa sobretudo **tipo + jogador**.
+>
+> É defensável: corrige um artefato documentado da anotação (o `Start Frame` de
+> `BALL LOST`/`GOAL KICK` é o instante da **perda**, não o do chute — no quadro
+> 77582 a bola já viajou ~47 m) e `ball_live` já é oráculo declarado (D1b). Mas
+> não fica implícito.
+>
+> **Mitigação obrigatória:** reportar P/R/F1 de bola parada nas **duas** âncoras,
+> em `frame` e em `annotated_frame`, como análise de sensibilidade. A Fatia 1 já
+> guarda as duas colunas, então não custa código. Espera-se diferença pequena: os
+> tetos de gatilho são **idênticos** nas duas âncoras (tiro de meta 33/38 e 34/38
+> com `eps_g` = 0 e 0,5; lateral 27 e 28; escanteio 6 e 4).
 
 ---
 

@@ -461,13 +461,43 @@ jogos 1 e 2, antes de qualquer degradação, antes de posse e hierarquia):
 
 ### 6.3 Dois problemas de gabarito encontrados
 
-1. **`BALL LOST`/`GOAL KICK-INTERCEPTION`**: o `Start Frame` dessas linhas é o
-   ponto da **interceptação**, não o do chute. No jogo 1, quadro 125622, o
-   executor anotado está a 23,17 m da própria linha de fundo. Medindo no
-   **primeiro quadro em jogo** depois da bola morta, o quadro 77582 passa de
-   49,55 m para 4,52 m — dentro da pequena área. Logo o gabarito de tiro de meta
+1. **`GOAL KICK` em `BALL LOST`**: o `Start Frame` dessas linhas é o instante em
+   que a **bola foi perdida**, não o do chute.
+
+   > **Corrigido em 2026-10-29.** A versão anterior desta alínea dizia que "o
+   > quadro 77582 passa de 49,55 m para 4,52 m". **Era comparação de grandezas
+   > diferentes**: 49,55 m é a distância da **bola** à linha de fundo, e 4,52 m é
+   > a do **executor**. O erro foi apontado pelo codificador e confirmado por
+   > medição própria. A conclusão (ancorar no primeiro quadro em jogo) continua
+   > válida; o exemplo estava mal construído.
+
+   Medição correta do jogo 1, quadro 77582 (`BALL LOST`/`GOAL KICK`, Away,
+   `From = Player25`, o goleiro; P2; ataca para +x; linha de fundo própria em
+   −52,5 m):
+
+   | grandeza | quadro anotado (77582) | 1º quadro vivo (77510) |
+   |---|---|---|
+   | bola, x | −2,945 m | — |
+   | bola, distância à linha de fundo própria | **49,55 m** | — |
+   | executor, x | −47,052 m | −47,978 m |
+   | executor, distância à linha de fundo própria | 5,45 m | **4,52 m** |
+
+   Leitura: o chute é no quadro 77510, com o goleiro a 4,52 m da própria linha de
+   fundo, dentro da pequena área. 72 quadros (2,88 s) depois, no quadro anotado, a
+   bola já viajou ~47 m e está na linha do meio — cerca de 16 m/s, plausível para
+   um tiro de meta longo. **O `Start Frame` marca a perda da bola, não o chute**, e
+   é por isso que a ancoragem no primeiro quadro em jogo é necessária.
+
+2. **O caso 125622 não é o que eu disse.** Também jogo 1, `BALL LOST`/`GOAL KICK`:
+   no quadro anotado o executor está a **11,29 m** da própria linha de fundo
+   (fora da pequena área) e a bola já está a x = +15,65 m, na metade adversária.
+   Os "23,17 m" que esta inspeção reportava antes vinham de medir o executor no
+   quadro **124787**, que é 835 quadros (33,4 s) antes — isto é, eram um artefato
+   da própria regra de ancoragem, não evidência independente. Sob a guarda de 10 s
+   decidida no G3 este evento **não é ancorado**: fica no quadro anotado com
+   `no_dead_ball_before = True`, e é perda de revocação declarada. Logo o gabarito de tiro de meta
    tem de ser ancorado no **primeiro quadro em jogo**, não no `Start Frame`.
-2. **Lateral do jogo 2, quadro 107548**: o executor anotado está a |y| = 26,67 m,
+3. **Lateral do jogo 2, quadro 107548**: o executor anotado está a |y| = 26,67 m,
    7,3 m da lateral, e nenhum jogador do time passa de 30,82 m. Candidato a erro
    de anotação (jogador errado). Não corrigir o gabarito — contar como perda.
 

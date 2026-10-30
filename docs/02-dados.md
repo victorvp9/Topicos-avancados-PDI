@@ -261,8 +261,9 @@ explícito, não espalhado em `if`s. Conferido contra os CSVs reais:
 
 ## Armadilhas registradas
 
-- **Coordenadas saem de [0,1]** e os jogadores estão recortados em ±0,05. Não
-  fazer clamp.
+- **Coordenadas saem de [0,1].** Nos jogos 1 e 2 os jogadores estão recortados em
+  ±0,05 (`max|y|` = 37,4000 m); **o jogo 3 não tem esse recorte** (`max|y|` =
+  39,2952 m). Não fazer clamp em nenhum dos casos.
 - Unidades: normalizado (Metrica) vs. metros (SkillCorner).
 - Frequência: Metrica a 25 fps exatos (`Time = Frame/25` bit a bit), SkillCorner
   a 10 fps. Reamostrar, não assumir.

@@ -8,8 +8,9 @@ Rótulo: **[lit]** da literatura; **[dado]** medido nos dados reais; **[prev]**
 previsão derivada, ainda não medida por execução do nosso código; **[nosso]**
 produzido pelo nosso código.
 
-Nada aqui foi produzido pelo nosso código ainda: o repositório não tem código.
-Aberto em 2026-10-29 (G1).
+Aberto em 2026-10-29 (G1). Os primeiros números **[nosso]** entraram na Fatia 1 e
+estão marcados como tal; tudo que vier do nosso código só é promovido depois de
+revisão independente.
 
 ---
 
@@ -156,6 +157,39 @@ Todos medidos em 2026-10-29 sobre o commit
 | teto de revocação de passe ~97 % com `R_pz` = 0,50 m e ~98 % com 1,00 m | [prev] distribuição de `docs/inspecao-metrica.md` §6.4; **não** vem de rodar o detector |
 | teto de revocação de bola parada: lateral 92 %, pontapé inicial 92 %, tiro de meta 89 %, escanteio 56 % | [prev] geometria dos gatilhos, §6.2; não inclui posse, hierarquia nem hierarquia de reserva |
 | ~96 h de CPU para a grade de exemplo (1920 execuções × 3 min) | [prev] 3 min/partida do artigo (§3, p. 9) extrapolado; **medir uma execução real antes do G4** |
+
+## Dados — medidos na Fatia 1 (2026-10-29)
+
+Medidos por script efêmero independente do código do projeto, sobre o dado cru.
+
+| número | onde |
+|---|---|
+| ancoragem: **12 de 296** bolas paradas saltam > 10 s para trás | [dado] G3, `docs/decisoes.md` |
+| por tipo: tiro de meta **9 de 49 (18,4 %)**, tiro livre 3 de 92, escanteio/lateral/pontapé inicial **0** | [dado] G3 |
+| maior salto: 4242 quadros = 169,7 s (tiro livre, jogo 1, 42476 → 38234) | [dado] G3 |
+| colisões de âncora: j1 125558 e 125622 → 124787; j2 56958 → 54472 (quadro de um pontapé inicial) | [dado] G3 |
+| 3 s e 10 s de guarda dão o **mesmo** conjunto de 12 eventos; 1 s cortaria o caso bom 77582 | [dado] G3 |
+| j1 quadro 77582: bola a **49,55 m** da linha de fundo própria; executor a **5,45 m** no quadro anotado e **4,52 m** no 1º quadro vivo (77510, shift −72) | [dado] `docs/inspecao-metrica.md` §6.3, **corrigido** |
+| j1 quadro 125622: executor a **11,29 m** da linha de fundo própria no quadro anotado; bola em x = +15,65 m | [dado] §6.3 |
+| jogo 3 tem `position_type = Goalkeeper` no XML (2 ocorrências) | [dado] `Sample_Game_3_metadata.xml` |
+| margem mínima do `attack_dir` pela média do time: **2,24 m** (j3, P2, home) contra ~40 m pelo goleiro | [dado] relatório da Fatia 1 |
+| jogo 3 **não** tem recorte em ±0,05: `max\|y\|` = **39,2952 m** (vs 37,4000 nos jogos 1 e 2) | [dado] relatório da Fatia 1 |
+| `pass_secundario` **cru** (descritivo): 1086 / 1208 / 1447 (= 1107 − 21 e 1246 − 38); com `GOAL KICK` excluído daria 1064 / 1192 | [dado] §3.5 + Fatia 1 |
+| `pass_secundario` na tabela `events` (**denominador normativo de avaliação**): 1009 / 1131 / 1358 | [dado] revisão da Fatia 1 |
+| tetos de gatilho são **idênticos** nas duas âncoras: tiro de meta 33/38 (`eps_g`=0) e 34/38 (0,5); lateral 27 e 28; escanteio 6 e 4 | [dado] revisão da Fatia 1 |
+| `refs/events-definitions.pdf` == `data/.../documentation/`: sha256 `5afb1ee3…` | [dado] revisão da Fatia 1 |
+| margem do `attack_dir`: goleiro 39,1 a 42,6 m; média do time 2,24 a 11,11 m | [dado] revisão da Fatia 1 |
+| fusão `SET PIECE` + execução: **247 de 247** nos 3 jogos | [dado] Fatia 1 |
+| ancorar pelo quadro do rótulo daria `anchor_shift` positivo em 12 de 77 e 9 de 80 | [dado] Fatia 1 |
+
+**[nosso]** — primeiros números produzidos pelo código do projeto. Pendentes de
+revisão independente; serão recalculados após a guarda de 10 s.
+
+| número | onde |
+|---|---|
+| sha256 de `ball_live`: j1 `437927c2…`, j2 `98263d3f…`, j3 `2b43ba7f…` | [nosso] `docs/decisoes.md` |
+| linhas de `tracking`: 3190138 / 3105436 / 3162742 | [nosso] `src.run --inspect` |
+| eventos no gabarito: 1668 / 1855 / 3530 (linhas cruas 1745 / 1935 / 3620) | [nosso] `src.run --inspect` |
 
 ## Números pendentes de medição, com gatilho de portão
 

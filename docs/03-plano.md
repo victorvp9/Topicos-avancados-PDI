@@ -70,6 +70,15 @@ Casador de eventos e métricas, **antes de detectar qualquer coisa**.
   executar qualquer detector.** A evidência que hoje sustenta o D8 é indireta
   (distância no instante anotado, `docs/inspecao-metrica.md` §6.4); esta é a
   direta.
+- **Sensibilidade obrigatória da âncora.** Reportar P/R/F1 de bola parada nas
+  duas âncoras: em `frame` (primeiro quadro em jogo) e em `annotated_frame`. A
+  ancoragem faz o instante do gabarito vir de `ball_live`, o mesmo sinal que o
+  detector usa para disparar bola parada, logo trivializa a dimensão temporal do
+  casamento — ver o risco declarado em `docs/01-definicoes.md`, Avaliação. As duas
+  colunas já existem desde a Fatia 1; não custa código.
+- **Denominador do critério secundário de passe:** usar a contagem da tabela
+  `events` (1009 / 1131 / 1358), **não** a crua (1086 / 1208 / 1447). Ver
+  `docs/decisoes.md`.
 - **Testes:** (a) gabarito contra si mesmo → F1 = 1,0 em tudo, nos três
   critérios; (b) gabarito deslocado 30 s → F1 = 0 nos três; (c) deslocado 2 s →
   F1 = 0 no estrito e 1,0 no de ±10 s (prova que os critérios são distintos);
