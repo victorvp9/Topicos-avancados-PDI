@@ -344,6 +344,13 @@ janela de ±10 s casaria o evento errado.
   casamento um-para-um. **Este critério é NOSSO**, não de nenhum artigo: é a
   conjunção das duas restrições com a janela que o D8 justifica. Rotular como tal
   em todo lugar onde for reportado.
+
+  > **A janela de ±1 s é PROVISÓRIA até a Fatia 3.** A medição direta da Fatia 2
+  > disparou o gatilho (45,36 % dos passes com `|τ| > 1 s`), mas a grandeza
+  > medida — argmin de distância em ±10 s — é inválida neste dataset, e nenhum
+  > estimador baseado em distância serve. A grandeza comparável é
+  > `quadro anotado − quadro de perda de posse`, que só existe na Fatia 3, onde o
+  > gatilho está rearmado. Ver `docs/decisoes.md`.
 - **Secundários, sempre reportados:** Vidal-Codina (jogador + ±10 s, tipo na
   matriz) e Mills (tipo + 3 s, sem jogador).
 

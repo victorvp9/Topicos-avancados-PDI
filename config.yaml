@@ -29,3 +29,34 @@ gabarito:
   fundir_set_piece_com_execucao: true                 # decisoes.md, G1
   guarda_ancora_s: 10.0   # janela do critério oficial de benchmarking,
                           # Vidal-Codina supl. S2, p. 3; decisoes.md, G3
+
+# Avaliacao (Fatia 2). Plano docs/fatias/02-plano.md §8.
+avaliacao:
+  criterio_principal: estrito        # D8, decisoes.md
+  janela_inclusiva: true             # casa se |dt| <= janela
+  criterios:
+    estrito:                         # NOSSO, nao de artigo. D8.
+      janela_s: 1.0
+      casa_tipo: true
+      casa_jogador: true
+    vidal_codina:                    # suplementar S2, p. 3
+      janela_s: 10.0
+      casa_tipo: false               # o tipo vai para a matriz de confusao
+      casa_jogador: true
+    mills:                           # Mills, secao 2.2, p. 4
+      janela_s: 3.0
+      casa_tipo: true
+      casa_jogador: false
+  denominador_passe_secundario: events   # 1009/1131/1358. decisoes.md
+  ancoras: [frame, annotated_frame]      # sensibilidade, 01-definicoes.md
+  # Uma matriz de confusao POR GRUPO, nao uma matriz unica, e `free_kick?` como
+  # categoria propria: suplementar S2, p. 3, e Fig. S1, p. 2.
+  grupos:
+    bola_parada: [kickoff, corner_kick, throw_in, goal_kick, free_kick, "free_kick?"]
+    jogo_corrido: [pass]
+
+tau:
+  janela_s: 10.0                 # mesma do suplementar S3, p. 5, para comparar
+  limiar_g3_tau_s: 1.0           # a janela do criterio principal
+  limiar_g3_fracao: 0.05         # criterio escrito antes de medir. decisoes.md
+  faixa_ambigua: [0.03, 0.08]    # dentro disto, levar ao G3 de todo modo

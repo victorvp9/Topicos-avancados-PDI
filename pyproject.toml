@@ -10,6 +10,10 @@ dependencies = [
     # reprovaria as 4 tabelas.
     "pandas>=3.0",
     "pyyaml>=6.0",
+    # scipy so por `optimize.linear_sum_assignment`: o casamento evento x
+    # deteccao e atribuicao otima, nao gulosa (docs/fatias/02-plano.md §3).
+    # Ja esta na pilha aprovada do CLAUDE.md. decisoes.md, G2 da Fatia 2.
+    "scipy>=1.17.1",
 ]
 
 [dependency-groups]

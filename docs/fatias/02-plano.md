@@ -263,13 +263,13 @@ tau:
 | deslocado 2 s | **F1 = 0 no estrito e 1,0 no Vidal-Codina** — prova que os critérios são distintos de verdade, não três nomes para a mesma coisa |
 | deslocado 2 s, Mills (3 s) | F1 = 1,0 |
 | metade removida | revocação = 0,5, precisão = 1,0 |
-| metade duplicada | precisão = 0,5, revocação = 1,0 |
+| **todas** duplicadas | precisão = 0,5, revocação = 1,0. (Corrigido em 2026-10-30: o rótulo dizia "metade duplicada", que daria 0,667. Vale o número.) |
 | borda da janela | `Δt` exatamente 1,000 s casa no estrito; 1,001 s não casa |
 | jogador errado | mesmo tipo e tempo, jogador diferente → **FN + FP** no estrito e no Vidal-Codina; **acerto** no Mills |
 | tipo errado | mesmo jogador e tempo, tipo diferente → **FN + FP** no estrito; **acerto** no Vidal-Codina, caindo na célula (anotado, detectado) da matriz |
 | **ótimo vs guloso** | caso construído em que o guloso casa 1 e o ótimo casa 2; o casador tem de casar 2 |
 | um-para-um | duas detecções válidas para um anotado → 1 TP e 1 FP; dois anotados para uma detecção → 1 TP e 1 FN |
-| **`no_dead_ball_before` não filtra** | os **13** eventos com a marca continuam no denominador; filtrá-los subiria o F1 de bola parada em até 4 % |
+| **`no_dead_ball_before` não filtra** | os **13** eventos com a marca continuam no denominador. Impacto medido de filtrá-los: **+2,25 pontos** no F1 agrupado de bola parada e **+18,4 pontos na revocação de tiro de meta** (9 dos 13 são `goal_kick`). A estimativa anterior de "até 4 %" estava errada nos dois sentidos. |
 | **empate de quadro** | o jogo 1 tem duas linhas `pass` no quadro **59923** com jogadores diferentes; o casador não quebra e as duas são avaliadas |
 | NaN no tempo | um evento com `t = NaN` **não** casa e **não** sai do denominador |
 | determinismo | permutar a ordem das linhas de entrada não muda nenhum número |

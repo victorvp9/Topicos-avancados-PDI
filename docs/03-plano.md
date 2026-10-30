@@ -86,8 +86,8 @@ Casador de eventos e métricas, **antes de detectar qualquer coisa**.
   tempo **não** casa e **não** desaparece do denominador; (f) casamento é
   um-para-um: dois detectados perto de um anotado dão 1 acerto e 1 falso
   positivo; (g) **os 13 eventos com `no_dead_ball_before = True` permanecem no
-  denominador** — se forem filtrados, o F1 de bola parada sobe artificialmente em
-  até 4 %, e a coluna é informativa, nunca filtro; (h) **dois eventos no mesmo
+  denominador** — se forem filtrados, o F1 agrupado de bola parada sobe 2,25 pontos e a
+  revocação de tiro de meta sobe 18,4 pontos, e a coluna é informativa, nunca filtro; (h) **dois eventos no mesmo
   quadro não quebram o casador** — jogo 1, quadro 59923, tem duas linhas `PASS`
   com jogadores diferentes no mesmo `Start Frame`.
 
@@ -106,6 +106,24 @@ Implementa o Passo 1 da especificação. `ball_live` já veio da Fatia 1.
   nem velocidade → **sem** ganho (Fig. 3c2).
 - **Medir e reportar:** a distribuição real de `eps_s`, `eps_v` e `eps_theta` na
   Metrica, para confirmar ou não a escolha dos valores do provedor A (D9c).
+- **GATILHO DE G3 REARMADO: a janela do D8 se decide aqui.** A Fatia 2 mediu a
+  defasagem `τ` pelo argmin de distância em ±10 s e o gatilho disparou (45,36 %
+  dos passes acima de 1 s), mas eu concluí que **a grandeza é inválida** neste
+  dataset: com um passe a cada ~6 s, o argmin frequentemente aponta para outro
+  toque do mesmo jogador, e a defasagem persiste mesmo dentro do episódio de
+  contato, porque conduzir a bola mantém `d < 0,5 m` por segundos. Ver
+  `docs/decisoes.md`, bloco "Fatia 2 — G3 da defasagem".
+
+  **A grandeza certa só existe aqui:** `quadro anotado − quadro de PERDA DE
+  POSSE`, isto é o quadro em que a bola sai da PZ do jogador anotado **e**
+  `Δs > eps_s` (§2.3.2, p. 5). É o instante que o detector de passe vai emitir.
+  Medir para os passes dos 3 jogos, reportar média, mediana e as frações acima de
+  1 s, 3 s, 5 s e 7,5 s.
+
+  **Mesmo critério, escrito antes: se mais de 5 % dos passes tiverem desvio
+  > 1 s, PARAR e levar ao Victor (G3).** Faixa ambígua de 3 % a 8 %: levar de todo
+  modo. Até esta medição, **a janela de ±1 s do critério principal é PROVISÓRIA** e
+  tem de ser rotulada assim em qualquer número reportado antes da Fatia 3.
 - **Saída:** série temporal de posse, visualizável.
 
 ### Fatia 4 — Bolas paradas (ordem 4)

@@ -3,3 +3,4 @@ refs/
 __pycache__/
 .pytest_cache/
 .venv/
+outputs/*.csv
