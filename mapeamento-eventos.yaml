@@ -1,0 +1,90 @@
+# Mapeamento das classes da Metrica para o vocabulario interno.
+# Fonte das regras: docs/fatias/01-plano.md §5. Contagens: docs/inspecao-metrica.md §3.
+# Explicito aqui, nunca espalhado em `if`s (docs/02-dados.md).
+
+# Jogos 1 e 2 juntam varios subtipos numa so string separada por '-'
+# (ex. "GOAL KICK-INTERCEPTION"); o jogo 3 traz lista. Nenhum subtipo atomico
+# contem '-' (conferido nos 3 jogos). Plano §5 regra 1.
+separador_subtipo_csv: "-"
+
+# Plano §5 regra 1: nao fazem parte do subtipo principal.
+modificadores: [RETAKEN, INDIRECT, DIRECT]
+
+# Plano §5 regra 2: SET PIECE + subtipo principal -> vocabulario interno.
+set_piece:
+  KICK OFF: kickoff
+  CORNER KICK: corner_kick
+  THROW IN: throw_in
+  FREE KICK: free_kick
+  PENALTY: fora_do_escopo     # fora do escopo, mas continua ancorado (plano §6.2)
+
+# Plano §5 regra 3 (D10 / V16): tiro de meta nao e SET PIECE.
+goal_kick:
+  subtipo: GOAL KICK
+  tipos: [PASS, BALL LOST, BALL OUT]
+
+# Plano §5 regra 4: passe principal. CROSS fica fundido (V9/D10).
+passe:
+  tipo: PASS
+
+# Criterio secundario de passe (D10). Exclui SOMENTE THEFT: e o que o D10 diz e
+# o que reproduz 1086/1208/1447 cruas (1107-21, 1246-38, inspecao-metrica.md
+# §3.5). SHOT nao e nem Type nem subtipo desta uniao, logo seria no-op.
+# O denominador de avaliacao e o da tabela `events` (1009/1131/1358), menor
+# porque a execucao de bola parada e fundida. Decisao do G3 de 2026-10-29.
+passe_secundario:
+  tipos: [PASS, BALL LOST, BALL OUT]
+  excluir_subtipos: [THEFT]
+
+# Plano §5: lista literal do que a Metrica pode trazer. Qualquer Type ou
+# subtipo atomico fora destas listas e erro duro (raise), nunca fora_do_escopo.
+tipos_conhecidos:
+  - BALL LOST
+  - BALL OUT
+  - CARD
+  - CARRY
+  - CHALLENGE
+  - FAULT RECEIVED
+  - PASS
+  - RECOVERY
+  - SET PIECE
+  - SHOT
+
+subtipos_conhecidos:
+  - ADVANTAGE
+  - AERIAL
+  - BLOCKED
+  - CLEARANCE
+  - CORNER KICK
+  - CROSS
+  - DEEP BALL
+  - DIRECT
+  - DRIBBLE
+  - END HALF
+  - FAULT
+  - FORCED
+  - FREE KICK
+  - GOAL
+  - GOAL KICK
+  - GROUND
+  - HAND BALL
+  - HEAD
+  - INDIRECT
+  - INTERCEPTION
+  - KICK OFF
+  - LOST
+  - OFF TARGET
+  - OFFSIDE
+  - ON TARGET
+  - OUT
+  - PENALTY
+  - REFEREE HIT
+  - RETAKEN
+  - SAVED
+  - TACKLE
+  - THEFT
+  - THROUGH BALL
+  - THROW IN
+  - WON
+  - WOODWORK
+  - YELLOW

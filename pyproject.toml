@@ -1,0 +1,24 @@
+[project]
+name = "topicos-avancados-pdi"
+version = "0.1.0"
+description = "Deteccao deterministica de eventos de futebol sob degradacao de visibilidade (Vidal-Codina et al., 2022)"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    # pandas 3.0 e piso real, nao conveniencia: src/io/schema.py exige dtype
+    # "str"; em pandas 2.x `astype("str")` devolve `object` e `validar()`
+    # reprovaria as 4 tabelas.
+    "pandas>=3.0",
+    "pyyaml>=6.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+# Projeto nao e pacote instalavel: `python -m src.run` roda da raiz do repo.
+[tool.uv]
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]   # projeto nao instalado: `src` vem da raiz do repo

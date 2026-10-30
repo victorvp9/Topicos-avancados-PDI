@@ -85,7 +85,11 @@ Casador de eventos e métricas, **antes de detectar qualquer coisa**.
   (d) metade dos eventos removidos → revocação = 0,5; (e) um evento com NaN no
   tempo **não** casa e **não** desaparece do denominador; (f) casamento é
   um-para-um: dois detectados perto de um anotado dão 1 acerto e 1 falso
-  positivo.
+  positivo; (g) **os 13 eventos com `no_dead_ball_before = True` permanecem no
+  denominador** — se forem filtrados, o F1 de bola parada sobe artificialmente em
+  até 4 %, e a coluna é informativa, nunca filtro; (h) **dois eventos no mesmo
+  quadro não quebram o casador** — jogo 1, quadro 59923, tem duas linhas `PASS`
+  com jogadores diferentes no mesmo `Start Frame`.
 
 ### Fatia 3 — Posse (ordem 3)
 Implementa o Passo 1 da especificação. `ball_live` já veio da Fatia 1.

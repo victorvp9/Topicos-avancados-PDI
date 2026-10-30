@@ -47,11 +47,36 @@ Atualizado: 2026-10-29
    6 de um só time → **ajuste de `eps_c` declarado de baixa confiança**, e o
    rótulo acompanha o número onde ele aparecer.
 
+## Fatia 1 — ACEITA (2026-10-29)
+
+Plano em `docs/fatias/01-plano.md`, aprovado no G2. Implementada, revisada em duas
+rodadas, aceita. **144 testes passam.** Os 12 testes novos da segunda rodada
+passaram por teste de mutação do revisor.
+
+Entregue: `pyproject.toml`, `config.yaml`, `mapeamento-eventos.yaml`, `src/` (9
+arquivos, ~1120 linhas), `tests/` (6 arquivos, ~1320 linhas). Dependências:
+`pandas>=3.0`, `numpy`, `pyyaml`, `pytest`. Sem `kloppy`, sem `floodlight`.
+
+Tabelas produzidas: `frames`, `tracking`, `periods`, `events`, para os 3 jogos.
+`python -m src.run --inspect` confere contra `docs/inspecao-metrica.md`.
+
+Uma mudança declarada em regra congelada saiu daqui: a **guarda de 10 s** na
+ancoragem (G3). Ver `docs/decisoes.md`.
+
 ## Próximo passo
 
-**Fatia 1 — loaders e gabarito.** Escrever `docs/fatias/01-plano.md` e levar ao
-G2. Escopo em `docs/03-plano.md`, Fatia 1; esquemas em `docs/02-dados.md`;
-constantes em `docs/01-definicoes.md`.
+**Fatia 2 — avaliação.** Escrever `docs/fatias/02-plano.md` e levar ao G2. Escopo
+em `docs/03-plano.md`, Fatia 2. Três coisas que a Fatia 2 **tem** de fazer e que
+só existem por causa da Fatia 1:
+
+1. Medir a defasagem `τ` da anotação nos 3 jogos, com **gatilho de G3** se mais de
+   5 % dos passes tiverem `|τ| > 1 s` (pode derrubar a janela do D8).
+2. Teste fixando que os **13** eventos com `no_dead_ball_before = True`
+   permanecem no denominador. Filtrá-los sobe o F1 em até 4 %.
+3. Tolerar dois eventos no mesmo quadro (jogo 1, quadro 59923).
+
+E a sensibilidade da âncora: reportar bola parada em `frame` **e** em
+`annotated_frame`.
 
 ## Portões
 

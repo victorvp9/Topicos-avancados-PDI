@@ -1,0 +1,31 @@
+# Constantes do projeto. Cada uma com a origem.
+# Nunca hardcode constante em src/ (CLAUDE.md).
+
+dados:
+  raiz: data/metrica-sample-data/data
+  commit: e706dd506b360d69d9d123d5b8026e7294b13996   # inspecao-metrica.md §1
+  jogos: [1, 2, 3]
+
+tracking:
+  fps: 25            # medido: todos os dt = 0,04 s; max|Time - Frame/25| = 0
+                     # inspecao-metrica.md §2; jogo 3: FrameRate=25 no XML
+
+campo:
+  # conferido: README do dataset e XML do jogo 3 (Width=105, Height=68)
+  comprimento_m: 105.0
+  largura_m: 68.0
+  # IFAB Lei 1, valores padrao. NAO CONFERIDO em fonte primaria:
+  # nenhum PDF das Regras do Jogo esta em refs/. Marcado para conferencia.
+  pequena_area_profundidade_m: 5.5     # [IFAB Lei 1, nao conferido]
+  pequena_area_meia_largura_m: 9.16    # = (7.32 + 2*5.5)/2 [IFAB Lei 1, nao conferido]
+  grande_area_profundidade_m: 16.5     # [IFAB Lei 1, nao conferido]
+  grande_area_meia_largura_m: 20.16    # [IFAB Lei 1, nao conferido]
+  marca_penal_m: 11.0                  # [IFAB Lei 1, nao conferido]
+  raio_impedido_penalti_m: 9.15        # CONFERIDO: Vidal-Codina 2.3.4, p. 6
+
+gabarito:
+  mapeamento: mapeamento-eventos.yaml
+  ancorar_bola_parada_no_primeiro_quadro_vivo: true   # decisoes.md, G1
+  fundir_set_piece_com_execucao: true                 # decisoes.md, G1
+  guarda_ancora_s: 10.0   # janela do critério oficial de benchmarking,
+                          # Vidal-Codina supl. S2, p. 3; decisoes.md, G3
