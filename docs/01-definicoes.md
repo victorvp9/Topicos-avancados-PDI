@@ -345,12 +345,21 @@ janela de ±10 s casaria o evento errado.
   conjunção das duas restrições com a janela que o D8 justifica. Rotular como tal
   em todo lugar onde for reportado.
 
-  > **A janela de ±1 s é PROVISÓRIA até a Fatia 3.** A medição direta da Fatia 2
-  > disparou o gatilho (45,36 % dos passes com `|τ| > 1 s`), mas a grandeza
-  > medida — argmin de distância em ±10 s — é inválida neste dataset, e nenhum
-  > estimador baseado em distância serve. A grandeza comparável é
-  > `quadro anotado − quadro de perda de posse`, que só existe na Fatia 3, onde o
-  > gatilho está rearmado. Ver `docs/decisoes.md`.
+  > **A janela de ±1 s está CONFIRMADA (2026-10-30), e o rótulo "provisória" caiu.**
+  > A medição certa — `quadro anotado − quadro de perda de posse`, §2.3.2, p. 5 —
+  > foi feita na Fatia 3 sobre os 2650 passes dos 3 jogos: **mediana de `τ_posse`
+  > = −0,040 s, exatamente um quadro**, p95 de `|τ_posse|` = 0,16 s, e apenas
+  > **3,27 %** acima de 1,0 s, contra o limiar de 5 % pré-registrado. A regra da
+  > escada selecionou o **primeiro degrau**, logo nada mudou e nada foi
+  > recalculado. A mesma conclusão em `R_pz` = 1,00 m.
+  >
+  > Alargar não ajudaria: a distribuição é bimodal e ir de 1,0 para 3,0 s
+  > recuperaria 0,9 ponto percentual — o resíduo é casamento com o toque errado,
+  > não defasagem de anotação.
+  >
+  > Para contraste, o estimador **inválido** da Fatia 2 (argmin de distância em
+  > ±10 s) dava média +0,699 s e 45,36 % acima de 1 s. A diferença entre as duas
+  > medidas não é de grau: é de grandeza medida. Ver `docs/decisoes.md`.
 - **Secundários, sempre reportados:** Vidal-Codina (jogador + ±10 s, tipo na
   matriz) e Mills (tipo + 3 s, sem jogador).
 
