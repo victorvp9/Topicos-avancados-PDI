@@ -169,17 +169,49 @@ nesse caso a dependência precisa de justificativa em `docs/decisoes.md`
 
 Todo loader converte para estes dois DataFrames.
 
-### `tracking`
+> **Esquema revisado e aprovado no G2 da Fatia 1 (2026-10-29).** A versão anterior
+> tinha uma tabela só, com a bola como linha `player_id = "ball"` e `team =
+> "ball"`, mais rotação global do sentido de ataque. Trocado por três tabelas e
+> **nenhuma rotação**. Justificativa em `docs/fatias/01-plano.md` §2.
+
+### `frames` — um registro por quadro e jogo
 | coluna | tipo | unidade |
 |---|---|---|
-| `frame` | int | — |
-| `t` | float | s desde o início do período |
+| `game` | int | 1, 2, 3 |
 | `period` | int | 1 ou 2 |
-| `player_id` | str | `ball` para a bola |
-| `team` | str | `home` / `away` / `ball` / `referee` |
+| `frame` | int | numeração original da Metrica, 1-based |
+| `t` | float | s desde o início do **jogo** (= `frame`/25) |
+| `ball_x`, `ball_y` | float | m, origem no centro; **NaN preservado** |
+| `ball_live` | bool | `not isna(ball_x)` (D1). **Idêntico em todos os níveis de degradação.** |
+
+### `tracking` — um registro por quadro, jogo e jogador **presente**
+| coluna | tipo | unidade |
+|---|---|---|
+| `game` | int | 1, 2, 3 |
+| `period` | int | 1 ou 2 |
+| `frame` | int | — |
+| `player_id` | str | ex. `g1_home_11` |
+| `team` | str | `home` / `away` |
+| `is_gk` | bool | — |
 | `x`, `y` | float | m, origem no centro |
 | `visible` | bool | False quando imputado |
-| `ball_live` | bool | estado da bola, D1. **Idêntico em todos os níveis de degradação.** |
+
+### `periods` — sentido de ataque, em vez de rotacionar
+| coluna | tipo | domínio |
+|---|---|---|
+| `game`, `period` | int | — |
+| `team` | str | `home` / `away` |
+| `attack_dir` | int | `+1` ataca para `+x`; `−1` para `−x` |
+| `gk_mean_x` | float | m; o valor que gerou a decisão, para auditoria |
+
+**Não há rotação do tracking.** Os gatilhos do algoritmo são **por time** e já
+dependem do sentido ("marca de canto **ativa**", "**própria** pequena área"), logo
+`attack_dir` é necessário de qualquer forma e a rotação seria um transform
+destrutivo a mais. E há a armadilha: inverter **só** `x` espelha o campo e troca
+as pontas; uma rotação correta mexe em `x` **e** `y`.
+
+**Sinal de `y`: cresce para cima.** `y_m = −(y_norm − 0.5) × 68`, porque a Metrica
+tem `(0,0)` no canto **superior** esquerdo. Fixado no G2 da Fatia 1.
 
 `visible` tem um só significado: **False = a posição foi imputada**. Nunca
 sobrescrever, nunca reaproveitar para "jogador ausente por substituição" — para
