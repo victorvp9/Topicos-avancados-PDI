@@ -298,11 +298,27 @@ Dependem de sequência com desfecho e, na prática, da coordenada z. Fora.
 Três critérios existem na literatura e **não são o mesmo critério**, apesar de o
 Mills dizer que segue o Vidal-Codina:
 
-| critério | regra | origem |
-|---|---|---|
-| **Vidal-Codina** | executado **pelo jogador anotado** E dentro de **±10 s** do instante anotado | suplementar S2, p. 3 |
-| **Mills** | **mesmo tipo** dentro de **3 s**, casamento um-para-um | Mills §2.2, p. 4 |
-| **FOOTPASS** | mesmo jogador e mesma classe dentro de **±12 quadros (0,48 s)** | FOOTPASS §4.1, p. 6 |
+Cada um é uma escolha diferente em três eixos. **Esta tabela foi corrigida em
+2026-10-29**: a versão anterior sugeria que todos casam por tipo, e **o do
+Vidal-Codina não casa**.
+
+| critério | casa por tipo? | casa por jogador? | janela | origem |
+|---|---|---|---|---|
+| **Vidal-Codina** | **não** | sim | ±10 s | suplementar S2, p. 3 |
+| **Mills** | sim | **não** | 3 s | Mills §2.2, p. 4 |
+| **FOOTPASS** | sim | sim | ±12 quadros (0,48 s) | FOOTPASS §4.1, p. 6 |
+
+> **No critério do Vidal-Codina a comparação de tipo É a matriz de confusão.** O
+> S2, p. 3, diz literalmente *"A discrete event is correctly detected if it is
+> executed by the annotated player and is within a ±10 s window of the annotated
+> time"* — sem mencionar tipo — e em seguida *"present the detection results using
+> confusion matrices"*. É isso que permite ver escanteio virando tiro livre, que é
+> o erro (1) da lista do §2.4.1, p. 8, e o que a nossa inspeção prevê em 44 % dos
+> escanteios.
+>
+> O S2 agrupa os eventos e usa **uma matriz por grupo** (passes de jogo corrido;
+> bolas paradas; gols; defesas), não uma matriz única. E inclui **`free kick?`**
+> como categoria própria.
 
 A janela de ±10 s existe porque a anotação manual da STS vem em média **1,5 s
 atrasada**, e 16 % dos passes têm |τ| > 5 s e 8 % > 7,5 s (suplementar S3, p. 5).
@@ -324,10 +340,17 @@ janela de ±10 s casaria o evento errado.
 
 **Congelado no G1 (D8):**
 
-- **Principal:** mesmo tipo + mesmo jogador + janela de **±1 s**, casamento
-  um-para-um, o mais próximo no tempo.
-- **Secundários, sempre reportados:** Vidal-Codina (jogador + ±10 s) e Mills
-  (tipo + 3 s).
+- **Principal:** mesmo tipo + mesmo jogador + janela de **±1 s** (inclusiva),
+  casamento um-para-um. **Este critério é NOSSO**, não de nenhum artigo: é a
+  conjunção das duas restrições com a janela que o D8 justifica. Rotular como tal
+  em todo lugar onde for reportado.
+- **Secundários, sempre reportados:** Vidal-Codina (jogador + ±10 s, tipo na
+  matriz) e Mills (tipo + 3 s, sem jogador).
+
+**O casamento é um-para-um e ótimo**, não guloso: maximiza o número de pares e,
+entre os casamentos máximos, minimiza `Σ|Δt|`. Guloso por "mais próximo no tempo"
+pode consumir a única detecção compatível com outro evento anotado e perder um
+casamento que existia. Ver `docs/fatias/02-plano.md` §3.
 
 > **A janela de ±1 s é verificada na Fatia 2, antes de rodar qualquer detector.**
 > A evidência acima é indireta: mede distância, não defasagem. A medida direta é a
