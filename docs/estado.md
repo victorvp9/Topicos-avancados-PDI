@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-10-30
+Atualizado: 2026-10-30 (portoes delegados ao orquestrador)
 
 ## Onde estamos
 
@@ -98,13 +98,25 @@ D8**, com a regra já pré-registrada em `docs/03-plano.md`.
 
 ## Portões
 
+**2026-10-30: o Victor delegou todos os portões ao orquestrador até o fim do
+projeto.** Eles viram auto-portões **com registro escrito** — a disciplina não
+muda: regra antes de medir, decisão registrada com a alternativa descartada,
+mudança declarada como mudança, rótulos limpo/exploratório honestos.
+
+**Controle compensatório:** como eu passo a ser proponente e aprovador, e como
+**três decisões minhas de plano já estavam erradas** e foram pegas por outros (o
+`docs/01-definicoes.md` trocava gatilho por padrão; o teste de `τ` da Fatia 2 era
+inválido por desenho; o F1 do `vidal_codina` esconderia um detector que erra todos
+os tipos), o mandato do revisor passa a incluir **criticar o plano**, não só o
+código.
+
 | portão | situação |
 |---|---|
-| G1 correção consolidada e plano congelado | **fechado** 2026-10-29 |
-| G2 plano de cada fatia | aberto, começa na Fatia 1 |
-| G3 decisão só do Victor / mudança em regra congelada | — |
-| G4 orçamento antes de execução > 2 h de CPU | antes da Fatia 8 |
-| G5 rodada final limpa | antes da Fatia 8 |
+| G1 correção consolidada e plano congelado | fechado 2026-10-29 |
+| G2 plano de fatia | Fatias 1 e 2 fechadas; Fatia 3 decidida por mim |
+| G3 mudança em regra congelada | 2 usados: guarda de 10 s; janela do D8 (adiada) |
+| G4 aviso de execução longa | **continua indo ao Victor**: a máquina é dele e ele precisa pausar Windows Update e suspensão |
+| G5 rodada final limpa | **continua indo ao Victor**, mesmo motivo |
 
 ## Dívidas registradas
 
