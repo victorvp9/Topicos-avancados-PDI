@@ -117,24 +117,45 @@ Duas variantes do simulador, e as duas têm origem:
    Lateral é também o evento com pior cobertura de caixa do jogador ativo:
    **43,8%, contra 81,5% na média** (§3.2, p. 6).
 
-> ### Como a resposta tem de ser lida (achado da Fatia 3, 2026-10-31)
+> ### Como a resposta tem de ser lida — EM RECÁLCULO (2026-10-31)
 >
-> Medimos que **o colapso dos eventos acima de `R_pz` = 1 m vem majoritariamente
-> da regra de duelo, não da zona de posse.** O artigo exige `R_dz >= R_pz`
-> (§2.3.1, p. 4), e essa exigência não é convenção: ela **garante que bola
-> disputada seja classificada como duelo**. Como o duelo prevalece sobre a posse e
-> não gera ganho nem perda, subir `R_pz` arrasta `R_dz` e converte posse em duelo.
+> **Este bloco afirmava mais do que o dado sustentava, e os números dele estão
+> sendo refeitos. Não cite nada daqui até a revisão fechar.** Registro o estado
+> em vez de apagar, porque o erro é instrutivo.
 >
-> Com `R_dz` parado em 1 m, os ganhos **crescem** monotonicamente com `R_pz`
-> (jogo 1: 1113 → 1199); com `R_dz` acompanhando, **sobem e caem** (1113 → 1138 →
-> 976). Ou seja: aumentar a PZ **captura** mais contato, como os autores dizem — o
-> que destrói o ganho é o duelo.
+> **O que eu afirmei e está FALSO:** que "com `R_dz` parado em 1 m os ganhos
+> crescem monotonicamente com `R_pz`". Vale para os jogos 1 e 2 (1113 → 1199 e
+> 1230 → 1311), **não para o jogo 3**, onde caem e estabilizam: 1582, 1560, 1559,
+> 1553, 1545, 1546, 1547, 1547. Eu generalizei do jogo 1. O
+> `docs/decisoes.md` dizia corretamente "jogo 3 praticamente estável"; este
+> arquivo, que é o de leitura do resultado, generalizou. Achado do revisor.
 >
-> **Portanto o resultado principal usa a configuração fiel ao artigo
-> (`R_dz` = max(1 m; `R_pz`)), e a variante de `R_dz` fixo entra como
-> decomposição de mecanismo, nunca como configuração de detector.** Se a resposta
-> à pergunta do projeto for "não compensa", a razão a escrever é que a regra de
-> duelo converte posse em duelo, e não que a PZ maior falhe em capturar contato.
+> **O que eu afirmei e está SOB SUSPEITA:** que "o que destrói o ganho é o duelo
+> prevalecendo". O mecanismo do duelo existe, mas o revisor mediu que o canal
+> dominante pode ser outro: uma decisão **minha**, não declarada, de quebrar a
+> sequência de ganho em quadro de duelo. No jogo 1 a `R_pz` = 3 m, a distância
+> entre as duas políticas de `R_dz` é de 223 ganhos e **a quebra de sequência
+> responde por 224 deles**. Ou seja, o que eu promovi a leitura principal do
+> projeto podia estar medindo sobretudo a minha própria escolha.
+>
+> **O que está sendo corrigido:** o §2.3.3, p. 5, define a sequência como
+> *"control frames f0,…,fn where the ball is within the PZ of the same player"* —
+> condição **geométrica**, e quadro de duelo **é** control frame (§2.3.1, p. 4).
+> A leitura literal não quebra a sequência. Estou refazendo a medição com a
+> leitura literal, e o portão da janela de ±1 s está sendo reverificado junto,
+> porque o descarte do §2.3.3 pode mover as perdas.
+>
+> **O que sobrevive, e é o que motivou o bloco:** a exigência `R_dz >= R_pz`
+> (§2.3.1, p. 4) não é convenção — ela **garante que bola disputada seja
+> classificada como duelo**, porque dois adversários com a bola na PZ estão ambos
+> a `<= R_pz` da bola e portanto ambos dentro de `R_dz`. Esse raciocínio foi
+> conferido pelo revisor e se sustenta. E a decisão de desenho continua: o
+> resultado principal usa a configuração fiel ao artigo (`R_dz` = max(1 m;
+> `R_pz`)), e a variante de `R_dz` fixo é **decomposição de mecanismo, nunca
+> configuração de detector** — ela produz acima de 1 m um estado que o artigo
+> proíbe, e é útil exatamente por isso.
+>
+> Ver `docs/decisoes.md`, blocos de 2026-10-31.
 
 > **Ressalva estrutural (V3), e ela vale para todo o projeto.** O nosso desenho
 > remove **só jogadores**. A bola fica perfeita. No Mills, o erro de posição da
