@@ -117,6 +117,25 @@ Duas variantes do simulador, e as duas têm origem:
    Lateral é também o evento com pior cobertura de caixa do jogador ativo:
    **43,8%, contra 81,5% na média** (§3.2, p. 6).
 
+> ### Como a resposta tem de ser lida (achado da Fatia 3, 2026-10-31)
+>
+> Medimos que **o colapso dos eventos acima de `R_pz` = 1 m vem majoritariamente
+> da regra de duelo, não da zona de posse.** O artigo exige `R_dz >= R_pz`
+> (§2.3.1, p. 4), e essa exigência não é convenção: ela **garante que bola
+> disputada seja classificada como duelo**. Como o duelo prevalece sobre a posse e
+> não gera ganho nem perda, subir `R_pz` arrasta `R_dz` e converte posse em duelo.
+>
+> Com `R_dz` parado em 1 m, os ganhos **crescem** monotonicamente com `R_pz`
+> (jogo 1: 1113 → 1199); com `R_dz` acompanhando, **sobem e caem** (1113 → 1138 →
+> 976). Ou seja: aumentar a PZ **captura** mais contato, como os autores dizem — o
+> que destrói o ganho é o duelo.
+>
+> **Portanto o resultado principal usa a configuração fiel ao artigo
+> (`R_dz` = max(1 m; `R_pz`)), e a variante de `R_dz` fixo entra como
+> decomposição de mecanismo, nunca como configuração de detector.** Se a resposta
+> à pergunta do projeto for "não compensa", a razão a escrever é que a regra de
+> duelo converte posse em duelo, e não que a PZ maior falhe em capturar contato.
+
 > **Ressalva estrutural (V3), e ela vale para todo o projeto.** O nosso desenho
 > remove **só jogadores**. A bola fica perfeita. No Mills, o erro de posição da
 > bola vai de **RMSE 3,5 a 16,2 m** (Tabela 1, p. 5), muito acima de qualquer
