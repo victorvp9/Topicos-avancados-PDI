@@ -117,45 +117,41 @@ Duas variantes do simulador, e as duas têm origem:
    Lateral é também o evento com pior cobertura de caixa do jogador ativo:
    **43,8%, contra 81,5% na média** (§3.2, p. 6).
 
-> ### Como a resposta tem de ser lida — EM RECÁLCULO (2026-10-31)
+> ### Como a resposta tem de ser lida (Fatia 3, 2026-10-31)
 >
-> **Este bloco afirmava mais do que o dado sustentava, e os números dele estão
-> sendo refeitos. Não cite nada daqui até a revisão fechar.** Registro o estado
-> em vez de apagar, porque o erro é instrutivo.
+> Números **pendentes de revisão independente**; a leitura qualitativa já está
+> ancorada em texto do artigo. Histórico do erro que me trouxe aqui, em
+> `docs/decisoes.md`.
 >
-> **O que eu afirmei e está FALSO:** que "com `R_dz` parado em 1 m os ganhos
-> crescem monotonicamente com `R_pz`". Vale para os jogos 1 e 2 (1113 → 1199 e
-> 1230 → 1311), **não para o jogo 3**, onde caem e estabilizam: 1582, 1560, 1559,
-> 1553, 1545, 1546, 1547, 1547. Eu generalizei do jogo 1. O
-> `docs/decisoes.md` dizia corretamente "jogo 3 praticamente estável"; este
-> arquivo, que é o de leitura do resultado, generalizou. Achado do revisor.
+> **1. O `R_dz` não confunde os ganhos.** Eu havia afirmado que subir `R_pz`
+> arrasta `R_dz`, o duelo prevalece e os ganhos colapsam. **Errado, e a causa era
+> um bug meu**: eu quebrava a sequência de ganho em quadro de duelo, contra a
+> letra do §2.3.3, p. 5, que define a sequência por condição **geométrica**
+> (*"control frames … where the ball is within the PZ of the same player"*).
+> Corrigido, os ganhos são **estruturalmente independentes** de `R_dz` — ele não
+> aparece em ponto nenhum do passo de ganho.
 >
-> **O que eu afirmei e está SOB SUSPEITA:** que "o que destrói o ganho é o duelo
-> prevalecendo". O mecanismo do duelo existe, mas o revisor mediu que o canal
-> dominante pode ser outro: uma decisão **minha**, não declarada, de quebrar a
-> sequência de ganho em quadro de duelo. No jogo 1 a `R_pz` = 3 m, a distância
-> entre as duas políticas de `R_dz` é de 223 ganhos e **a quebra de sequência
-> responde por 224 deles**. Ou seja, o que eu promovi a leitura principal do
-> projeto podia estar medindo sobretudo a minha própria escolha.
+> **2. O `R_dz` confunde as PERDAS, e só elas.** As perdas caem acima de 1 m nas
+> duas políticas, mas a queda é ~8 pontos percentuais menor com `R_dz` fixo. A
+> variante de `R_dz` fixo continua sendo **decomposição de mecanismo, nunca
+> configuração de detector** — acima de 1 m ela produz um estado que o artigo
+> proíbe (`R_dz < R_pz`), e é útil exatamente por isso.
 >
-> **O que está sendo corrigido:** o §2.3.3, p. 5, define a sequência como
-> *"control frames f0,…,fn where the ball is within the PZ of the same player"* —
-> condição **geométrica**, e quadro de duelo **é** control frame (§2.3.1, p. 4).
-> A leitura literal não quebra a sequência. Estou refazendo a medição com a
-> leitura literal, e o portão da janela de ±1 s está sendo reverificado junto,
-> porque o descarte do §2.3.3 pode mover as perdas.
+> **3. Subir `R_pz` captura mais contato, mas não nos três jogos.** Os ganhos
+> crescem nos jogos 1 e 2 (1127 → 1200 e 1278 → 1354 ao longo dos 8 raios) e
+> **caem ~3 % no jogo 3** (1635 → 1583), por fusão de sequências. **Nenhuma
+> afirmação de monotonicidade sobre esta grade pode ser escrita sem conferir os
+> três jogos** — eu já errei isso uma vez aqui.
 >
-> **O que sobrevive, e é o que motivou o bloco:** a exigência `R_dz >= R_pz`
-> (§2.3.1, p. 4) não é convenção — ela **garante que bola disputada seja
-> classificada como duelo**, porque dois adversários com a bola na PZ estão ambos
-> a `<= R_pz` da bola e portanto ambos dentro de `R_dz`. Esse raciocínio foi
-> conferido pelo revisor e se sustenta. E a decisão de desenho continua: o
-> resultado principal usa a configuração fiel ao artigo (`R_dz` = max(1 m;
-> `R_pz`)), e a variante de `R_dz` fixo é **decomposição de mecanismo, nunca
-> configuração de detector** — ela produz acima de 1 m um estado que o artigo
-> proíbe, e é útil exatamente por isso.
->
-> Ver `docs/decisoes.md`, blocos de 2026-10-31.
+> **4. AMEAÇA À VALIDADE, e o controle dela.** A janela de ±1 s do critério
+> principal fica **enviesada contra `R_pz` grande**: com PZ de 3 m o jogador
+> "possui" a bola muito antes e depois do toque, o quadro da perda deriva, e a
+> detecção correta é contada como erro. Medido: a escada **esgota** em `R_pz` ≥
+> 2,5 m. **A janela não se reajusta por condição** — isso tornaria o F1
+> incomparável ao longo da varredura. O controle é reportar os **três critérios**:
+> a distância entre a curva de ±1 s e a de ±10 s **isola a deriva de rótulo de
+> tempo da falha real de detecção**. Sem esse par de curvas, a resposta à pergunta
+> do projeto fica enviesada para "não compensa".
 
 > **Ressalva estrutural (V3), e ela vale para todo o projeto.** O nosso desenho
 > remove **só jogadores**. A bola fica perfeita. No Mills, o erro de posição da
