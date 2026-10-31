@@ -59,6 +59,57 @@ avaliacao:
     bola_parada: [kickoff, corner_kick, throw_in, goal_kick, free_kick, "free_kick?", penalty]
     jogo_corrido: [pass]
 
+# Passo 1 da especificacao (Fatia 3). Plano docs/fatias/03-plano.md §8.
+posse:
+  r_pz_m: 0.50                 # valor de partida, D9c; grade em D3
+  r_dz_m: 1.00                 # R_dz BASE: 1,00 m para todos os provedores,
+                               # supl. S4.1, p. 6. A politica abaixo decide como
+                               # ele se combina com r_pz.
+  # `acompanha_r_pz` = max(1,0; r_pz), que e o D3, e o PADRAO: respeita
+  # R_dz >= R_pz (sec. 2.3.1, p. 4). `fixo_1m` = sempre o valor base, e a
+  # "checagem de sensibilidade com R_dz fixo em 1,0 m" que o D3 preve como
+  # secundaria; acima de 1 m ela viola R_dz >= R_pz de proposito, e existe para
+  # desconfundir "R_pz grande demais" de "duelo arrastado comeu a posse".
+  # Nao esta no plano 03 §8: pedido do orquestrador em 2026-10-30.
+  r_dz_politica: acompanha_r_pz
+  eps_s_m: 0.05                # supl. S4.2, p. 8 (provedor A). D9c
+  eps_v_ms: 1.0                # supl. S4.2, p. 8 (provedor A). D9c
+  eps_theta: 0.984807753012208 # cos 10 graus. supl. S4.2, p. 8. D9c
+  suavizar: false              # DESLIGADA no teto; ver plano 03 §3.6
+  savgol_ordem: 2              # sec. 2.3.1, p. 5
+  savgol_janela_quadros: 7     # sec. 2.3.1, p. 5
+  # 1,0e-9 com o ponto: `1e-9` o YAML 1.1 le como STRING, nao como float.
+  empate_distancia_m: 1.0e-9   # tolerancia de empate no dono mais proximo
+  # Valores dos provedores B e C (supl. S4.2, p. 8), SO para o diagnostico do
+  # plano 03 §7. O detector nunca os usa; estao aqui para nao ficarem hardcoded
+  # no relatorio. Mexer em eps_s_m/eps_v_ms seria mudanca declarada (D9c).
+  diagnostico_eps_s_alt_m: 0.10
+  diagnostico_eps_v_alt_ms: 5.0
+  # Grade varrida de R_pz, com R_dz = max(1,0; R_pz). D3, decisoes.md.
+  # Nao esta no plano 03 §8: acrescentada porque o teste do §9.1 exige "os 8
+  # valores da grade de D3" e o CLAUDE.md proibe hardcode.
+  grade_r_pz_m: [0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50, 3.00]
+
+tau_posse:
+  janela_busca_s: 10.0         # mesma da Fatia 2, para comparabilidade
+  escada_janela_s: [1.0, 1.5, 2.0, 3.0]   # pre-registrada, 03-plano Fatia 3
+  limiar_fracao: 0.05                     # pre-registrado
+  limiar_sem_perda_g3: 0.20               # acima disto, G3 de todo modo
+  r_pz_da_decisao_m: 0.50                 # a decisao nao depende da varredura
+  # Sensibilidade exigida pelo plano 03 §6.2; NAO decide a janela. 1,00 m e o
+  # valor dos provedores B e C (supl. S4.1, p. 6); 2,50 e 3,00 m sao o topo da
+  # grade de D3, pedidos na revisao de 2026-10-31 para ver se a cauda de
+  # |tau_posse| se alarga onde as perdas caem.
+  r_pz_sensibilidade_m: [1.00, 2.50, 3.00]
+
+# Apresentacao dos comandos de relatorio. Nenhuma regra de deteccao depende
+# destes valores, mas o CLAUDE.md nao abre excecao para apresentacao.
+relatorio:
+  # Acima disto, (jogo, R_pz) entra na lista de celulas lentas. Plano 03 §9.6.
+  limiar_celula_lenta_s: 30.0
+  # Percentis das tabelas de distribuicao do diagnostico (plano 03 §7).
+  percentis: [5, 25, 50, 75, 95]
+
 tau:
   janela_s: 10.0                 # mesma do suplementar S3, p. 5, para comparar
   limiar_g3_tau_s: 1.0           # a janela do criterio principal

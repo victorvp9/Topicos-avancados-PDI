@@ -35,7 +35,7 @@ TAU = {
 
 
 
-def _grade_de_posicoes(frames: pd.DataFrame, tracking: pd.DataFrame):
+def grade_de_posicoes(frames: pd.DataFrame, tracking: pd.DataFrame):
     """Densifica o tracking em matrizes indexadas por (jogador, quadro - 1).
 
     Entrada: `frames` e `tracking` de `src.io.carregar_jogo`.
@@ -80,7 +80,7 @@ def medir(game: int, eventos: pd.DataFrame, frames: pd.DataFrame,
     """
     fps = cfg["tracking"]["fps"]
     meia_janela = round(cfg["tau"]["janela_s"] * fps)
-    jogadores, px, py, ball_x, ball_y = _grade_de_posicoes(frames, tracking)
+    jogadores, px, py, ball_x, ball_y = grade_de_posicoes(frames, tracking)
     n_quadros = ball_x.size
 
     passes = eventos[eventos["type"] == "pass"]

@@ -117,41 +117,49 @@ Duas variantes do simulador, e as duas têm origem:
    Lateral é também o evento com pior cobertura de caixa do jogador ativo:
    **43,8%, contra 81,5% na média** (§3.2, p. 6).
 
-> ### Como a resposta tem de ser lida (Fatia 3, 2026-10-31)
->
-> Números **pendentes de revisão independente**; a leitura qualitativa já está
-> ancorada em texto do artigo. Histórico do erro que me trouxe aqui, em
-> `docs/decisoes.md`.
+> ### Como a resposta tem de ser lida (Fatia 3, revisada em 2026-10-31)
 >
 > **1. O `R_dz` não confunde os ganhos.** Eu havia afirmado que subir `R_pz`
 > arrasta `R_dz`, o duelo prevalece e os ganhos colapsam. **Errado, e a causa era
 > um bug meu**: eu quebrava a sequência de ganho em quadro de duelo, contra a
-> letra do §2.3.3, p. 5, que define a sequência por condição **geométrica**
-> (*"control frames … where the ball is within the PZ of the same player"*).
-> Corrigido, os ganhos são **estruturalmente independentes** de `R_dz` — ele não
-> aparece em ponto nenhum do passo de ganho.
+> letra do §2.3.3, p. 5, que a define por condição **geométrica**. A narrativa da
+> Fig. S5, p. 9, decide a questão em texto: *"the blue player **maintains
+> possession until** a red player comes nearby and **a duel starts**"* — a
+> sequência atravessa o duelo. Corrigido, os ganhos são **estruturalmente
+> independentes** de `R_dz` (igualdade de tabela nos 24 pares de raio × jogo).
+> Parcela do efeito que **não** era confundimento, e que existe: +1, +43 e +36
+> ganhos (0,1 %, 3,3 %, 2,3 %) nos três jogos.
 >
-> **2. O `R_dz` confunde as PERDAS, e só elas.** As perdas caem acima de 1 m nas
-> duas políticas, mas a queda é ~8 pontos percentuais menor com `R_dz` fixo. A
-> variante de `R_dz` fixo continua sendo **decomposição de mecanismo, nunca
-> configuração de detector** — acima de 1 m ela produz um estado que o artigo
-> proíbe (`R_dz < R_pz`), e é útil exatamente por isso.
+> **2. O `R_dz` confunde as PERDAS, e só elas** (~8 pontos percentuais). A
+> variante de `R_dz` fixo é **decomposição de mecanismo, nunca configuração de
+> detector**: acima de 1 m ela produz um estado que o artigo proíbe.
 >
-> **3. Subir `R_pz` captura mais contato, mas não nos três jogos.** Os ganhos
-> crescem nos jogos 1 e 2 (1127 → 1200 e 1278 → 1354 ao longo dos 8 raios) e
-> **caem ~3 % no jogo 3** (1635 → 1583), por fusão de sequências. **Nenhuma
-> afirmação de monotonicidade sobre esta grade pode ser escrita sem conferir os
-> três jogos** — eu já errei isso uma vez aqui.
+> **3. Subir `R_pz` captura mais contato, mas não nos três jogos.** Ganhos crescem
+> nos jogos 1 e 2 (1127 → 1200, 1278 → 1354) e **caem 3 % no jogo 3**
+> (1635 → 1583).
 >
-> **4. AMEAÇA À VALIDADE, e o controle dela.** A janela de ±1 s do critério
-> principal fica **enviesada contra `R_pz` grande**: com PZ de 3 m o jogador
-> "possui" a bola muito antes e depois do toque, o quadro da perda deriva, e a
-> detecção correta é contada como erro. Medido: a escada **esgota** em `R_pz` ≥
-> 2,5 m. **A janela não se reajusta por condição** — isso tornaria o F1
-> incomparável ao longo da varredura. O controle é reportar os **três critérios**:
-> a distância entre a curva de ±1 s e a de ±10 s **isola a deriva de rótulo de
-> tempo da falha real de detecção**. Sem esse par de curvas, a resposta à pergunta
-> do projeto fica enviesada para "não compensa".
+> **4. O TETO É DO FRAMEWORK, e o mecanismo está medido.** Subir `R_pz` quebra a
+> **condição 1** da perda (§2.3.2, p. 5), que exige a bola **fora** da PZ em
+> `f+1`: com PZ de 3 m, ou a bola demora a sair — e a perda sai depois do toque —
+> ou **nunca sai** antes de outro jogador ficar mais perto, e aí não há perda
+> alguma. Medido: os bloqueios pela condição 2 somem (224 → 25) e os quadros em
+> que a condição 1 vale caem 39 %. **Passe curto com PZ grande não gera perda.**
+> A fração de passes sem perda vai de 8,3 % a 32,9 %. Isso é um achado sobre a
+> sugestão dos autores, não um artefato nosso.
+>
+> **5. COMO CONTROLAR O VIÉS, e o que NÃO funciona.** O critério de ±1 s é
+> enviesado contra `R_pz` grande. **A janela não se reajusta por condição** —
+> tornaria o F1 incomparável ao longo da varredura. Mas a minha primeira
+> resolução (usar a distância entre as curvas de ±1 s e ±10 s) **foi derrubada por
+> medição**: a deriva é 3,5× menor que a janela (mediana de τ: −0,04 s → −0,28 s)
+> e a cauda acima de 1 s **não tem direção** (53 % → 48 % de um sinal), logo ela é
+> **casamento com o toque errado**, não deriva. Alargar a janela converte "sem
+> casamento" em "casamento errado" e **sobe** o F1 sem nada ter sido detectado.
+> **O controle correto é um par de medidas diretas, por `R_pz`:** a fração de
+> passes **sem perda nenhuma** (teto de revocação, sem janela) e a **mediana de
+> τ** entre os casados (a deriva, medida). As três curvas de critério continuam
+> sendo reportadas para comparar com a literatura, mas **não carregam o argumento
+> causal**.
 
 > **Ressalva estrutural (V3), e ela vale para todo o projeto.** O nosso desenho
 > remove **só jogadores**. A bola fica perfeita. No Mills, o erro de posição da
