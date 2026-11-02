@@ -89,12 +89,27 @@ escolha da janela **escrita antes de medir**. O ±1 s está rotulado **provisór
 > `docs:` por descuido meu (`git add -A` com subagente em voo, duas vezes).
 > Regra nova: commit por caminho explícito.
 
+## Fatia 3 — ACEITA (2026-10-31)
+
+Passo 1 completo (PZ/DZ, control frames, Savitzky-Golay por corrida, perda e
+ganho), as duas políticas de `R_dz`, e a medição que **confirmou a janela do D8
+em ±1 s** (3,17 % dos 2430 passes com perda acima de 1 s, limiar pré-registrado
+de 5 %, primeiro degrau da escada). **319 testes.** Duas revisões completas mais
+uma re-revisão focada; o revisor reimplementou o Passo 1 do zero **duas vezes**.
+
+Três afirmações minhas foram desmentidas por medição nesta fatia, e a lição virou
+regra: **nenhuma afirmação numérica sobre a grade entra em documento sem a linha
+dos três jogos ao lado** — os três erros tiveram a mesma causa, eu escrever a
+partir do jogo 1.
+
 ## Próximo passo
 
-**Fatia 3 — posse.** Escrever `docs/fatias/03-plano.md` e levar ao G2. É a fatia
-que implementa o Passo 1 da especificação (PZ/DZ, control frames,
-Savitzky-Golay, perda e ganho de posse) e que **carrega a decisão da janela do
-D8**, com a regra já pré-registrada em `docs/03-plano.md`.
+**Fatia 4 — bolas paradas.** Plano em `docs/fatias/04-plano.md`, decidido por mim.
+É a fatia mais algorítmica e a primeira que produz F1 real. Tetos previstos já
+medidos e escritos no plano como contrato de verificação: revocação de gatilho
+92 % (lateral), 92 % (pontapé inicial), 89 % (tiro de meta) e **56 % (escanteio)**
+nos jogos 1 e 2; e **teto de precisão de 61,5 %**, com 185 falsos positivos
+estruturais que vêm de buracos de `NaN` de um quadro.
 
 ## Portões
 
