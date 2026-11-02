@@ -442,12 +442,41 @@ perda obrigatória de revocação, nunca excluído do denominador.
 | | jogo 1 (n=22) | jogo 2 (n=16) | somados |
 |---|---|---|---|
 | `ε_g` = 0 | 20 (91 %) | 13 (81 %) | 33/38 = 87 % |
-| `ε_g` = 0,5 m (publicado) | 20 (91 %) | 14 (88 %) | **34/38 = 89 %** |
+| `ε_g` = 0,5 m (publicado) | ~~20 (91 %)~~ | ~~14 (88 %)~~ | ~~34/38 = 89 %~~ **ERRADO, ver nota** |
 | `ε_g` = 2 m | 20 (91 %) | 16 (100 %) | 36/38 = 95 % |
 
 O suplementar (S4.2, p. 7) diz que `ε_g` existe justamente para acomodar *"a goal
 kick pass from beyond the goal area"*. Os casos do jogo 2 a 6,2–6,4 m da linha de
 fundo são isso.
+
+> ### ERRO MEU, corrigido em 2026-11-01: o teto de tiro de meta é 33/38 = 86,8 %
+>
+> A tabela acima está **errada por dois motivos independentes**, e o número certo
+> é **33/38 = 86,8 %**, medido na Fatia 4 contra o gabarito atual.
+>
+> **1. Bug de geometria.** Eu usei `abs(x − x_linha_de_fundo)`, que **dobra a
+> região atrás da linha de fundo para dentro do campo**: um jogador 0,56 m atrás
+> da própria linha aparecia como 0,56 m "dentro" da pequena área. O certo é
+> profundidade **com sinal**, caixa de `−ε_g` a `5,5 + ε_g`. Só isso já tira um
+> evento de cada jogo.
+>
+> **2. Número obsoleto, e é o mais instrutivo.** Esta seção foi medida em
+> 2026-10-29, **antes de a guarda de 10 s existir** (G3 do mesmo dia), e eu nunca
+> a remedi. Dos 12 eventos que a guarda deixa **sem ancorar**, **9 são tiros de
+> meta** — e para esses o gabarito usa o `annotated_frame`, não o primeiro quadro
+> em jogo. Exemplo: o evento 125622 do jogo 1 dá **11,29 m** no quadro do gabarito
+> e **23,17 m** no quadro que o meu script escolhia.
+>
+> **Regra que sai disto:** quando uma regra congelada muda, **todo teto medido
+> antes dela fica obsoleto e tem de ser remedido**. Eu propaguei este número para
+> o plano da Fatia 4 como "contrato de verificação", que é onde um número obsoleto
+> faz mais dano.
+>
+> **Os outros três tetos são imunes** e continuam valendo: os 12 eventos não
+> ancorados são 9 tiros de meta e 3 tiros livres, logo escanteio (10/18), lateral
+> (55/60) e pontapé inicial não são afetados. O denominador do pontapé inicial,
+> porém, é **14** e não 13 — ver §3.2, que conta 8 no jogo 2 (incluindo
+> `KICK OFF-RETAKEN`), enquanto esta seção filtrava o subtipo exato.
 
 **Teto de revocação por geometria, com as tolerâncias publicadas** (soma dos
 jogos 1 e 2, antes de qualquer degradação, antes de posse e hierarquia):

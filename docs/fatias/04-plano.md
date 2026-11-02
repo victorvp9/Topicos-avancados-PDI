@@ -39,10 +39,17 @@ tracking perfeito, avaliando o executor anotado no **primeiro quadro em jogo**:
 
 | evento | teto | n | tolerância |
 |---|---|---|---|
-| lateral | **92 %** | 60 | `eps_t` = 0,5 m |
-| pontapé inicial | **92 %** | 13 | `eps_k1` = 3 m, `eps_k2` = 2 m |
-| tiro de meta | **89 %** | 38 | `eps_g` = 0,5 m |
-| **escanteio** | **56 %** | 18 | `eps_c` = 3 m |
+| lateral | **92 %** (55/60) | 60 | `eps_t` = 0,5 m |
+| pontapé inicial | **93 %** (13/14) | **14** | `eps_k1` = 3 m, `eps_k2` = 2 m |
+| tiro de meta | **86,8 %** (33/38) | 38 | `eps_g` = 0,5 m |
+| **escanteio** | **56 %** (10/18) | 18 | `eps_c` = 3 m |
+
+> **Corrigido em 2026-11-01.** A primeira versão deste plano dizia 89 % para tiro
+> de meta e n = 13 para pontapé inicial. **Os dois estavam errados** — o tiro de
+> meta por bug de geometria (`abs()` em vez de profundidade com sinal) **e** por
+> número obsoleto (medido antes da guarda de 10 s, que deixa 9 tiros de meta sem
+> ancorar), e o pontapé inicial por eu ter conflacionado duas populações. Ver a
+> nota em `docs/inspecao-metrica.md` §6.2.
 
 > **O jogo 3 NÃO está nestes números, de propósito.** Ele é o único conjunto não
 > visto para ajustar `eps_c` (D9b), e eu não medi a geometria dele. **Não me peça
