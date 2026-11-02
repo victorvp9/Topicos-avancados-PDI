@@ -210,6 +210,13 @@ O coração da contribuição. **Duas variantes**, as duas com origem publicada
   frames sem jogador, moda ~7 por time, 10,9 cortes/min, visibilidade por
   posição GK 14 % / DEF 40 % / MID 52 % / OFF 46 %. Verificação contra a
   SkillCorner é secundária.
+- **A visibilidade POR POSIÇÃO é requisito, não calibração opcional.** Descoberto
+  na Fatia 4: o gatilho de tiro de meta exige um jogador na própria pequena área,
+  e na prática esse jogador é o **goleiro** — que é o menos visível em TV (14 %
+  contra 40–52 % dos jogadores de linha). Um simulador que remova jogadores
+  **uniformemente** não reproduziria o colapso do tiro de meta, e a Fatia 8
+  mediria a degradação errada. Ver a previsão pré-registrada em
+  `docs/decisoes.md`, 2026-11-01.
 
 ### Fatia 7 — Reconstrução (ordem 7)
 Preenche os buracos, como fazem os sistemas reais.
