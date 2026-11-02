@@ -477,6 +477,26 @@ fundo são isso.
 > (55/60) e pontapé inicial não são afetados. O denominador do pontapé inicial,
 > porém, é **14** e não 13 — ver §3.2, que conta 8 no jogo 2 (incluindo
 > `KICK OFF-RETAKEN`), enquanto esta seção filtrava o subtipo exato.
+>
+> **Split autoritativo, medido na Fatia 4 contra o gabarito atual, com a caixa de
+> profundidade orientada em `[−ε_g; 5,5 + ε_g]` e `|y| ≤ 9,16 + ε_g`:**
+>
+> | `ε_g` | jogo 1 | jogo 2 | jogo 3 | **jogos 1+2** |
+> |---|---|---|---|---|
+> | 0 m | 21/22 | 11/16 | 10/11 | **32/38 = 84,2 %** |
+> | **0,5 m (publicado)** | **21/22** | **12/16** | 10/11 | **33/38 = 86,8 %** |
+> | 2 m | 21/22 | 16/16 | 11/11 | **37/38 = 97,4 %** |
+>
+> As cinco falhas em `ε_g` = 0,5 m: jogo 1, quadro **125622** (11,29 m, é um dos
+> `no_dead_ball_before`); jogo 2, **27994** (**−0,56 m**, isto é 0,56 m *atrás* da
+> própria linha de fundo — era exatamente o caso que o `abs()` dobrava para
+> dentro), **56958** (6,24 m), **133363** (6,24 m) e **136961** (6,35 m). Em
+> `ε_g` = 2 m sobra só o 125622.
+>
+> `ε_g` = 2 m levaria o tiro de meta a 97,4 %, e o suplementar (S4.2, p. 7) diz
+> que `ε_g` existe justamente para acomodar *"a goal kick pass from beyond the
+> goal area"* — mas **`ε_g` está congelado em 0,5 m (D9a)**, e mexer nele depois
+> de ver isto seria ajuste por resultado.
 
 **Teto de revocação por geometria, com as tolerâncias publicadas** (soma dos
 jogos 1 e 2, antes de qualquer degradação, antes de posse e hierarquia):
