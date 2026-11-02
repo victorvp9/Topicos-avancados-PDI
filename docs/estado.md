@@ -102,14 +102,35 @@ regra: **nenhuma afirmação numérica sobre a grade entra em documento sem a li
 dos três jogos ao lado** — os três erros tiveram a mesma causa, eu escrever a
 partir do jogo 1.
 
+## Fatia 4 — implementada, em revisão (2026-11-02)
+
+Plano em `docs/fatias/04-plano.md`. **375 testes passam.** Cinco rodadas com o
+codificador; é a fatia com mais lacunas de especificação preenchidas do projeto
+(oito dele, três minhas), e por isso a revisão independente é a mais importante
+até agora.
+
+**A primeira tabela de F1 real do projeto** (critério estrito, âncora `frame`,
+3 jogos, micro sem pênalti): **P 0,482 / R 0,786 / F1 0,598**. Por tipo: pontapé
+inicial 0,971, lateral 0,912, escanteio 0,762, tiro de meta 0,649, tiro livre
+0,500. A precisão baixa é o teto de 61,5 % previsto; a revocação alta mostra que
+o algoritmo **acha** os reinícios e erra o **tipo**.
+
+**Três achados de fundo:**
+
+1. **As tolerâncias publicadas não transferem para a Metrica**, com três
+   instâncias medidas: `ε_c` = 3 m pega 10 de 18 escanteios, `ε_f` = 1 m roteia
+   31–36 % das transições para o problema 3 do S1, e `ε_p2` = 2 m perde o único
+   pênalti por 48 cm. É o que explica o teto abaixo dos ~90 % do artigo **sem que
+   o algoritmo esteja errado**.
+2. **A matriz do critério Vidal-Codina mostrou o erro previsto desde o G1**: dos
+   10 escanteios perdidos, 7 viram tiro livre e 3 viram lateral.
+3. **O goleiro mora na pequena área**, logo o gatilho de tiro de meta fica quase
+   sempre completo — e daí saiu a previsão pré-registrada para a Fatia 6.
+
 ## Próximo passo
 
-**Fatia 4 — bolas paradas.** Plano em `docs/fatias/04-plano.md`, decidido por mim.
-É a fatia mais algorítmica e a primeira que produz F1 real. Tetos previstos já
-medidos e escritos no plano como contrato de verificação: revocação de gatilho
-92 % (lateral), 92 % (pontapé inicial), 89 % (tiro de meta) e **56 % (escanteio)**
-nos jogos 1 e 2; e **teto de precisão de 61,5 %**, com 185 falsos positivos
-estruturais que vêm de buracos de `NaN` de um quadro.
+**Revisar a Fatia 4**, com o mandato de criticar as onze lacunas e as minhas
+decisões antes do código. Depois, **Fatia 5 — passes**, que fecha o marco `teto`.
 
 ## Portões
 
