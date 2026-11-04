@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-10-30 (portoes delegados ao orquestrador)
+Atualizado: 2026-11-04 (Fatia 4 aceita)
 
 ## Onde estamos
 
@@ -102,16 +102,16 @@ regra: **nenhuma afirmação numérica sobre a grade entra em documento sem a li
 dos três jogos ao lado** — os três erros tiveram a mesma causa, eu escrever a
 partir do jogo 1.
 
-## Fatia 4 — implementada, em revisão (2026-11-02)
+## Fatia 4 — ACEITA (2026-11-04)
 
-Plano em `docs/fatias/04-plano.md`. **375 testes passam.** Cinco rodadas com o
+Plano em `docs/fatias/04-plano.md`. **378 testes passam** (após a re-revisão). Cinco rodadas com o
 codificador; é a fatia com mais lacunas de especificação preenchidas do projeto
 (oito dele, três minhas), e por isso a revisão independente é a mais importante
 até agora.
 
 **A primeira tabela de F1 real do projeto** (critério estrito, âncora `frame`,
 3 jogos, micro sem pênalti): **P 0,482 / R 0,786 / F1 0,598**. Por tipo: pontapé
-inicial 0,971, lateral 0,912, escanteio 0,762, tiro de meta 0,649, tiro livre
+inicial 0,971, lateral 0,912, escanteio 0,762, tiro de meta **0,396** (era 0,649 antes de a Fig. S1 ser lida; ver `decisoes.md`), tiro livre
 0,500. A precisão baixa é o teto de 61,5 % previsto; a revocação alta mostra que
 o algoritmo **acha** os reinícios e erra o **tipo**.
 
@@ -129,8 +129,8 @@ o algoritmo **acha** os reinícios e erra o **tipo**.
 
 ## Próximo passo
 
-**Revisar a Fatia 4**, com o mandato de criticar as onze lacunas e as minhas
-decisões antes do código. Depois, **Fatia 5 — passes**, que fecha o marco `teto`.
+**Fatia 5 — passes**, que fecha o marco `teto`. Primeiro o plano em
+`docs/fatias/05-plano.md` (critério D10 congelado no G1).
 
 ## Portões
 

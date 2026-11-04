@@ -249,7 +249,11 @@ Aplica-se **só quando nenhum gatilho completo foi detectado**.
 3. **Problema 3 — bola ausente no quadro de reposição**, ou bola fora da PZ do
    repositor. Aí **não se pode checar padrão algum** e só restam gatilhos, nesta
    ordem: pontapé inicial → pênalti → escanteio completo → lateral completo →
-   escanteio incompleto → lateral incompleto. Os autores registram que
+   escanteio incompleto → lateral incompleto → **tiro de meta**. **Corrigido em
+   2026-11-04:** a prosa do S1, p. 2, omite o tiro de meta, mas remete a *"the
+   dead ball hierarchy shown in issue 3 of Fig. S1"*, e a figura, lida no
+   stream da página, diz `K P C T Ci Ti G F?`. A figura é a norma (leitura
+   `depois_de_cto`; `docs/decisoes.md`, revisão da Fatia 4). Os autores registram que
    *"we have observed higher detection rate when favoring complete throw-in over
    incomplete corner"* (S1, p. 2). Se nenhum gatilho ativa, o rótulo é
    **`free kick?`**, que sinaliza confusão do algoritmo e entra no relatório como

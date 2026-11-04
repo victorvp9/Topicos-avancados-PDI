@@ -18,6 +18,15 @@ dos tres depois de ver a distribuicao seria mudanca declarada (D9c).
 `python -m src.run --tau-posse` mede `tau_posse` e aplica a escada
 pre-registrada que decide a janela do criterio principal (plano 03 §6). Grava
 `outputs/tau_posse.csv`.
+
+`python -m src.run --bola-parada` roda o Passo 2 nos tres jogos e imprime, nesta
+ordem: a TABELA CONTRA OS TETOS PREVISTOS do plano 04 §2 (numero de deteccoes,
+teto de precisao, revocacao de gatilho dos jogos 1+2 e a sensibilidade de 1 s),
+a primeira tabela de F1 real do projeto nos tres criterios e nas duas ancoras,
+a matriz de confusao de bola parada, a distribuicao da coluna `via`, a curva
+F1(`eps_c`) da grade de D9b -- **sem escolher um otimo** -- e os dois requisitos
+que vem da revisao da Fatia 3 (com e sem as perdas `so_por_lacuna_5`, e o
+contador de trocas de dono por duelo). Grava `outputs/deteccoes.csv`.
 """
 
 import argparse
@@ -27,8 +36,9 @@ import time
 import numpy as np
 import pandas as pd
 
-from src import gabarito, possession, tau as tau_mod, tau_posse as tau_posse_mod
+from src import evaluate, gabarito, possession, tau as tau_mod, tau_posse as tau_posse_mod
 from src.config import RAIZ_REPO, carregar_config, carregar_mapeamento
+from src.events import bola_parada, gatilhos, hierarquia
 from src.io import carregar_jogo
 
 
@@ -508,6 +518,387 @@ def medir_tau_posse(cfg: dict, mapeamento: dict, jogos, gravar_em=None) -> pd.Da
     return tabela
 
 
+def trocas_de_dono_por_duelo(control: pd.DataFrame, sequencias: pd.DataFrame) -> dict:
+    """Donos distintos e trocas de dono DENTRO de cada duelo, num jogo.
+
+    Entrada: `control` e `sequencias` de `src.possession.calcular`.
+    Saida: dict com `duelos`, `duelos_2_mais_donos`, `frac_2_mais`, `trocas` e
+    `trocas_por_duelo`.
+
+    Em quadro de duelo o `control` nao traz dono (em duelo nao existe dono, por
+    construcao do Passo 1), mas o `sequencias` traz: o jogador "em controle" --
+    o mais proximo com a bola na propria PZ -- e unico por quadro, inclusive em
+    duelo (revisao de 2026-10-31). Os intervalos `[frame_f0, frame_fn]` nao se
+    sobrepoem exatamente por isso, e e o que permite a busca binaria abaixo.
+
+    Requisito da revisao da Fatia 3, registrado em `decisoes.md`: a 3,00 m, 62 a
+    65 % dos duelos tem 2+ donos e um deles tem 9, o que e a origem provavel de
+    recepcao espuria -- de uma recepcao que a Fatia 5 vai medir. **Diagnostico**:
+    nada aqui entra no detector de bola parada.
+
+    Uma troca = par de quadros CONSECUTIVOS do mesmo duelo com donos diferentes
+    e nenhum deles vazio. O criterio esta aqui porque o numero depende dele.
+    """
+    frames_duelo = control.loc[
+        control["ball_control"] == possession.DUEL, "frame"
+    ].to_numpy()
+    if frames_duelo.size == 0:
+        return {"duelos": 0, "duelos_2_mais_donos": 0, "frac_2_mais": np.nan,
+                "trocas": 0, "trocas_por_duelo": np.nan}
+    duelo_id = np.cumsum(np.r_[True, np.diff(frames_duelo) > 1])
+    f0 = sequencias["frame_f0"].to_numpy()
+    fn = sequencias["frame_fn"].to_numpy()
+    jogador = sequencias["player_id"].to_numpy()
+    k = np.searchsorted(f0, frames_duelo, side="right") - 1
+    seguro = np.maximum(k, 0)
+    tem = (k >= 0) & (frames_duelo <= fn[seguro])
+    dono = np.where(tem, jogador[seguro], "")
+    mesmo = duelo_id[1:] == duelo_id[:-1]
+    troca = mesmo & (dono[1:] != dono[:-1]) & (dono[1:] != "") & (dono[:-1] != "")
+    tabela = pd.DataFrame({"duelo": duelo_id, "dono": dono})
+    donos = tabela[tabela["dono"] != ""].groupby("duelo")["dono"].nunique()
+    n_duelos = int(duelo_id[-1])
+    return {
+        "duelos": n_duelos,
+        "duelos_2_mais_donos": int((donos >= 2).sum()),
+        "frac_2_mais": float((donos >= 2).sum()) / n_duelos,
+        "trocas": int(troca.sum()),
+        "trocas_por_duelo": float(troca.sum()) / n_duelos,
+    }
+
+
+def revocacao_de_gatilho(base: dict, cfg: dict, jogos) -> pd.DataFrame:
+    """Teto de revocacao POR GATILHO: o executor anotado ativa o gatilho do seu
+    proprio tipo no primeiro quadro em jogo?
+
+    Entrada: `base` de `_carregar_base`. Saida: DataFrame com `game`, `type`,
+    `n`, `ativa` e a fracao.
+
+    E a replica da medicao de `docs/inspecao-metrica.md` §6.2, que o plano 04 §2
+    usa como teto previsto: mede a GEOMETRIA contra o gabarito, sem hierarquia,
+    sem posse e sem padrao. Evento nao detectado e perda de revocacao, nunca
+    exclusao: o denominador e o gabarito inteiro, inclusive os eventos com
+    `no_dead_ball_before` (decisoes.md, G3 da Fatia 1).
+    """
+    linhas = []
+    for game in jogos:
+        dados = base[game]
+        ativo = gatilhos.ativacoes(
+            dados["px"], dados["py"], dados["times"], dados["lado"], cfg
+        )
+        eventos = dados["eventos"]
+        for tipo in gatilhos.TIPOS:
+            sub = eventos[eventos["type"] == tipo]
+            if sub.empty:
+                continue
+            p = dados["jogadores"].get_indexer(sub["player_id"])
+            f = sub["frame"].to_numpy() - 1
+            if (p < 0).any():
+                raise ValueError("gabarito com player_id fora do tracking")
+            linhas.append({"game": game, "type": tipo, "n": len(sub),
+                           "ativa": int(ativo[tipo][p, f].sum())})
+    tabela = pd.DataFrame(linhas)
+    tabela["fracao"] = tabela["ativa"] / tabela["n"]
+    return tabela
+
+
+def _carregar_base(cfg: dict, mapeamento: dict, jogos) -> dict:
+    """Carrega uma vez por jogo tudo o que o Passo 2 consome.
+
+    Saida: `game -> dict` com `frames`, `tracking`, `periods`, `eventos`,
+    `perdas` (Passo 1 no `R_pz` do config), `control`, `sequencias` e as
+    matrizes de posicao, para que a varredura de `eps_c` e as variantes nao
+    repitam carga nem Passo 1.
+    """
+    base = {}
+    for game in jogos:
+        frames, tracking, periods = carregar_jogo(game, cfg)
+        passo1 = possession.calcular(frames, tracking, cfg)
+        crus = gabarito.carregar_eventos_crus(game, cfg, mapeamento)
+        jogadores, px, py, _, _ = tau_mod.grade_de_posicoes(frames, tracking)
+        times = (
+            tracking.drop_duplicates("player_id")
+            .set_index("player_id")["team"]
+            .reindex(jogadores)
+            .to_numpy()
+        )
+        base[game] = {
+            "frames": frames,
+            "tracking": tracking,
+            "periods": periods,
+            "eventos": gabarito.construir_gabarito(game, crus, frames, cfg),
+            "perdas": passo1["perdas"],
+            "control": passo1["control"],
+            "sequencias": passo1["sequencias"],
+            "jogadores": jogadores,
+            "px": px,
+            "py": py,
+            "times": times,
+            "lado": bola_parada.attack_dir_por_jogador(frames, periods, times),
+        }
+    return base
+
+
+def detectar_jogos(base: dict, cfg: dict, jogos, sem_lacuna_5: bool = False):
+    """Roda o detector nos jogos e concatena. `sem_lacuna_5` filtra as perdas
+    que existem apenas pela lacuna 5 da Fatia 3 (plano 04 §3.6.1)."""
+    saida = []
+    for game in jogos:
+        perdas = base[game]["perdas"]
+        if sem_lacuna_5:
+            perdas = perdas[~perdas["so_por_lacuna_5"]]
+        saida.append(
+            bola_parada.detectar(
+                base[game]["frames"],
+                base[game]["tracking"],
+                base[game]["periods"],
+                perdas,
+                cfg,
+            )
+        )
+    return pd.concat(saida, ignore_index=True)
+
+
+def _tabela_f1(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict,
+               criterios=None, ancoras=None):
+    """Imprime P/R/F1 e contagem absoluta por tipo de bola parada, agregado nos
+    tres jogos (`game = 0`), em cada criterio e ancora pedidos.
+
+    `penalty` sai com a contagem absoluta e **nunca** entra no micro: `micro()`
+    levanta `ValueError` se receber (n = 1 nos tres jogos). `free_kick?` e
+    categoria propria e **nunca** e somado em `free_kick`.
+
+    `tp` ("casou") e o numero de eventos daquele tipo que casaram com ALGUMA
+    deteccao, ignorando o tipo detectado; `tp_diag` e a diagonal da matriz e e o
+    unico numerador de P/R/F1 nos tres criterios. Em `estrito` e `mills` os dois
+    sao iguais por construcao; em `vidal_codina`, que nao casa por tipo, a
+    diferenca e exatamente a confusao de tipo.
+    """
+    resultado, confusao = evaluate.avaliar(
+        eventos, bola_parada.para_casador(deteccoes), cfg
+    )
+    tipos = cfg["avaliacao"]["grupos"]["bola_parada"]
+    for criterio in criterios or cfg["avaliacao"]["criterios"]:
+        for ancora in ancoras or cfg["avaliacao"]["ancoras"]:
+            bloco = resultado[
+                (resultado["criterio"] == criterio)
+                & (resultado["ancora"] == ancora)
+                & (resultado["game"] == 0)
+                & (resultado["type"].isin(tipos))
+            ]
+            print("  criterio {:14s} ancora {:16s}".format(criterio, ancora)
+                  + "{:>6s}{:>6s}{:>6s}{:>7s}{:>8s}{:>8s}{:>8s}".format(
+                      "n_gab", "n_det", "tp", "casou", "P", "R", "F1"))
+            indexado = bloco.set_index("type")
+            for tipo in tipos:
+                linha = indexado.loc[tipo]
+                print("    {:28s}".format(tipo)
+                      + "{:6d}{:6d}{:6d}{:7d}".format(
+                          linha["n_gabarito"], linha["n_detectado"], linha["tp_diag"],
+                          linha["tp"])
+                      + "".join("{:8.3f}".format(linha[c])
+                               for c in ("precisao", "revocacao", "f1")))
+            agregado = evaluate.micro(bloco[bloco["type"] != "penalty"])
+            print("    {:28s}".format("MICRO (sem penalty)")
+                  + "{:6d}{:6d}{:6d}{:7s}".format(
+                      agregado["n_gabarito"], agregado["n_detectado"],
+                      agregado["tp_diag"], "")
+                  + "".join("{:8.3f}".format(agregado[c])
+                            for c in ("precisao", "revocacao", "f1")))
+    return resultado, confusao
+
+
+def rodar_bola_parada(cfg: dict, mapeamento: dict, jogos, gravar_em=None):
+    """Roda o Passo 2 nos jogos e imprime o relatorio do plano 04.
+
+    Saida: (deteccoes, resultado, confusao) do caminho principal.
+    """
+    base = _carregar_base(cfg, mapeamento, jogos)
+    eventos = pd.concat([base[g]["eventos"] for g in jogos], ignore_index=True)
+    tipos_bp = cfg["avaliacao"]["grupos"]["bola_parada"]
+    reinicios = eventos[eventos["type"].isin(tipos_bp)]
+    principal = cfg["avaliacao"]["criterio_principal"]
+    p = cfg["bola_parada"]
+
+    print("=" * 78)
+    print("PASSO 2 -- BOLAS PARADAS (R_pz = {:g} m, duracao minima morta = {:g} s)".format(
+        cfg["posse"]["r_pz_m"], p["duracao_minima_morta_s"]))
+    deteccoes = detectar_jogos(base, cfg, jogos)
+
+    print("")
+    print("  (1) CONTRA OS TETOS PREVISTOS (plano 04 sec. 2)")
+    print("  {:>6s}{:>12s}{:>12s}{:>12s}{:>10s}".format(
+        "jogo", "transicoes", "deteccoes", "reinicios", "precisao"))
+    transicoes = {
+        g: bola_parada.corridas_mortas(base[g]["frames"]["ball_live"])[0].size
+        for g in jogos
+    }
+    for game in list(jogos) + [0]:
+        det = deteccoes if game == 0 else deteccoes[deteccoes["game"] == game]
+        gab = reinicios if game == 0 else reinicios[reinicios["game"] == game]
+        n_trans = sum(transicoes.values()) if game == 0 else transicoes[game]
+        print("  {:>6s}{:12d}{:12d}{:12d}{:9.1f}%".format(
+            "TOTAL" if game == 0 else str(game), n_trans, len(det), len(gab),
+            100.0 * len(gab) / len(det)))
+    print("  o teto de precisao e `reinicios / deteccoes`: o detector emite UMA")
+    print("  bola parada por transicao, e a Metrica tem mais transicoes que")
+    print("  reinicios porque a bola fica NaN em buracos curtos de rastreamento")
+    print("  que nao sao paradas de jogo (plano 04 sec. 2.2).")
+
+    print("")
+    print("  REVOCACAO DE GATILHO -- a geometria contra o gabarito, sem hierarquia")
+    rev = revocacao_de_gatilho(base, cfg, jogos)
+    for rotulo, sub in (
+        *(("jogo %d" % g, rev[rev["game"] == g]) for g in jogos),
+        ("JOGOS 1+2 (o teto)", rev[rev["game"].isin([1, 2])]),
+        ("os tres jogos", rev),
+    ):
+        soma = sub.groupby("type")[["n", "ativa"]].sum()
+        print("    {:20s}".format(rotulo)
+              + "  ".join("{} {}/{} = {:4.1f}%".format(
+                  t, int(r["ativa"]), int(r["n"]), 100.0 * r["ativa"] / r["n"])
+                  for t, r in soma.iterrows()))
+
+    print("")
+    print("  (2) F1 REAL, POR TIPO, nos tres criterios e nas duas ancoras")
+    print("  o criterio `estrito` (tipo + jogador + 1 s) e NOSSO, D8, nao de artigo")
+    resultado, confusao = _tabela_f1(eventos, deteccoes, cfg)
+
+    print("")
+    print("  MATRIZ DE CONFUSAO DO GRUPO `bola_parada` (criterio {}, ancora".format(
+        principal))
+    print("  `frame`, tres jogos somados). Linha = gabarito, coluna = detectado.")
+    for criterio in (principal, "vidal_codina"):
+        cel = confusao[
+            (confusao["criterio"] == criterio)
+            & (confusao["ancora"] == "frame")
+            & (confusao["grupo"] == "bola_parada")
+        ]
+        print("  -- criterio {}".format(criterio))
+        print(cel.pivot_table(index="type_gabarito", columns="type_detectado",
+                              values="n", aggfunc="sum", fill_value=0).to_string())
+    print("  `free_kick?` nunca aparece como linha: o gabarito nao o tem, logo")
+    print("  toda deteccao dele e falso positivo -- e e informativo (S2, p. 3).")
+    print("  A confusao de TIPO (escanteio virando tiro livre, §2.4.1, p. 8) so")
+    print("  aparece no criterio `vidal_codina`: `estrito` e `mills` casam por")
+    print("  tipo, logo celula fora da diagonal deles e impossivel por construcao.")
+
+    print("")
+    print("  (3) DISTRIBUICAO DE `via` -- o analogo dos 85 % -> 95 % do S1")
+    print(pd.crosstab(deteccoes["type"], deteccoes["via"], margins=True).to_string())
+    print("  `via` = o ESTAGIO que decidiu (ver src/events/hierarquia.py):")
+    print("  `padrao` = gatilho completo confirmado por padrao, na principal.")
+    # o corte vem de `sensibilidade_duracao_minima_s`, nunca hardcoded
+    corte = p["sensibilidade_duracao_minima_s"][-1]
+    longa = deteccoes["dur_morta_s"] >= corte
+    print("  bola morta >= {:g} s: {}".format(
+        corte, dict(deteccoes.loc[longa, "via"].value_counts())))
+    print("  bola morta <  {:g} s: {}".format(
+        corte, dict(deteccoes.loc[~longa, "via"].value_counts())))
+    print("")
+    print("  DECOMPOSICAO DAS {} DECISOES POR CAUSA (portao do problema 1 do S1).".format(
+        len(deteccoes)))
+    print("  `motivo_reserva1` e o estado do portao, independente de a principal")
+    print("  ter decidido antes. `sem_passe_do_executor` e a LACUNA declarada em")
+    print("  `src/events/bola_parada.py:_primeiro_passe`, que vale 14 acertos e")
+    print("  acopla bola parada a revocacao de perda do Passo 1 (revisao 2026-11-02).")
+    print(pd.crosstab(deteccoes["motivo_reserva1"], deteccoes["via"],
+                      margins=True).to_string())
+    print(pd.crosstab(deteccoes["motivo_reserva1"], deteccoes["type"]).to_string())
+
+    print("")
+    print("  (4) SENSIBILIDADE DA DURACAO MINIMA DE BOLA MORTA (plano 04 sec. 3.1)")
+    print("  o principal NAO aplica minimo; o 1 s e NOSSO, do Bassek, Metodos, p. 4")
+    for minimo in p["sensibilidade_duracao_minima_s"]:
+        cfg_d = copy.deepcopy(cfg)
+        cfg_d["bola_parada"]["duracao_minima_morta_s"] = minimo
+        det_d = detectar_jogos(base, cfg_d, jogos)
+        print("    minimo {:4.1f} s: {:4d} deteccoes | teto de precisao {:5.1f}%".format(
+            minimo, len(det_d), 100.0 * len(reinicios) / len(det_d)))
+        if minimo:
+            _tabela_f1(eventos, det_d, cfg, [principal], ["frame"])
+
+    print("")
+    print("  (5) CURVA F1(eps_c) na grade de D9b -- BAIXA CONFIANCA.")
+    print("  O conjunto nao visto tem 8 escanteios de 3 cobradores (decisoes.md);")
+    print("  1 escanteio move a taxa em 12,5 pontos. NENHUM otimo e escolhido:")
+    print("  o valor publicado, eps_c = 3 m, segue sendo o numero principal.")
+    print("    {:>7s}{:>7s}{:>7s}{:>5s}{:>8s}{:>8s}{:>8s}{:>9s}".format(
+        "eps_c", "n_gab", "n_det", "tp", "P", "R", "F1", "F1_micro"))
+    for eps_c in p["grade_eps_c_m"]:
+        cfg_e = copy.deepcopy(cfg)
+        cfg_e["bola_parada"]["eps_c_m"] = eps_c
+        det_e = detectar_jogos(base, cfg_e, jogos)
+        res_e, _ = evaluate.avaliar(eventos, bola_parada.para_casador(det_e), cfg)
+        bloco = res_e[(res_e["criterio"] == principal) & (res_e["ancora"] == "frame")
+                      & (res_e["game"] == 0) & (res_e["type"].isin(tipos_bp))]
+        linha = bloco[bloco["type"] == "corner_kick"].iloc[0]
+        micro = evaluate.micro(bloco[bloco["type"] != "penalty"])
+        print("    {:7.1f}{:7d}{:7d}{:5d}{:8.3f}{:8.3f}{:8.3f}{:9.3f}".format(
+            eps_c, linha["n_gabarito"], linha["n_detectado"], linha["tp_diag"],
+            linha["precisao"], linha["revocacao"], linha["f1"], micro["f1"]))
+
+    print("")
+    print("  (6) COM E SEM AS PERDAS `so_por_lacuna_5` (revisao da Fatia 3).")
+    print("  So o problema 1 do S1 usa as perdas: elas dizem onde esta o primeiro")
+    print("  passe depois da bola morta. Acima de R_pz = 1 m a variante `sem` nao")
+    print("  e opcional, porque a lacuna 5 chega a 13-14 % de todas as perdas.")
+    det_sem = detectar_jogos(base, cfg, jogos, sem_lacuna_5=True)
+    diferentes = int((deteccoes["type"].to_numpy() != det_sem["type"].to_numpy()).sum())
+    print("    deteccoes com rotulo diferente: {} de {}".format(
+        diferentes, len(deteccoes)))
+    print("    sem lacuna 5, por via: {}".format(dict(det_sem["via"].value_counts())))
+    _tabela_f1(eventos, det_sem, cfg, [principal], ["frame"])
+
+    print("")
+    print("  (7) TROCAS DE DONO POR DUELO (requisito da revisao da Fatia 3).")
+    print("  Diagnostico de RECEPCAO, que e da Fatia 5; aqui so o contador.")
+    for r_pz in (cfg["posse"]["r_pz_m"], cfg["posse"]["grade_r_pz_m"][-1]):
+        for game in jogos:
+            if r_pz == cfg["posse"]["r_pz_m"]:
+                passo1 = base[game]
+            else:
+                passo1 = possession.calcular(
+                    base[game]["frames"], base[game]["tracking"], com_r_pz(cfg, r_pz)
+                )
+            k = trocas_de_dono_por_duelo(passo1["control"], passo1["sequencias"])
+            print("    R_pz {:4.2f} jogo {}: {} duelos | 2+ donos {} ({:.1%}) | "
+                  "trocas {} ({:.2f} por duelo)".format(
+                      r_pz, game, k["duelos"], k["duelos_2_mais_donos"],
+                      k["frac_2_mais"], k["trocas"], k["trocas_por_duelo"]))
+    print("")
+    print("  (8) SENSIBILIDADE: POSICAO DO `goal_kick` NO PROBLEMA 3")
+    print("  Os rotulos decodificados da Fig. S1 dao `K P C T Ci Ti G F?` no")
+    print("  issue 3, logo o padrao e `depois_de_cto` (correcao de leitura de")
+    print("  2026-11-02). As outras duas leituras ficam como sensibilidade; a")
+    print("  prosa do S1, que omite o `G`, e a `nao`.")
+    alternativas = [
+        posicao for posicao in hierarquia.POSICOES_GOAL_KICK_NO_PROBLEMA_3
+        if posicao != p["goal_kick_no_problema_3"]
+    ]
+    for posicao in alternativas:
+        cfg_g = copy.deepcopy(cfg)
+        cfg_g["bola_parada"]["goal_kick_no_problema_3"] = posicao
+        det_g = detectar_jogos(base, cfg_g, jogos)
+        mudou = deteccoes["type"].to_numpy() != det_g["type"].to_numpy()
+        print("  -- {} ({} deteccoes mudam de tipo, de {} | por jogo {})".format(
+            posicao, int(mudou.sum()), len(det_g),
+            dict(deteccoes.loc[mudou, "game"].value_counts().sort_index())))
+        # linha = tipo no padrao, coluna = tipo na alternativa
+        print(pd.crosstab(deteccoes.loc[mudou, "type"].rename("type_padrao"),
+                          det_g.loc[mudou, "type"].rename("type_alternativa")).to_string())
+        print("     via: {} | soma {}".format(
+            dict(det_g["via"].value_counts()), len(det_g)))
+        _tabela_f1(eventos, det_g, cfg, [principal], ["frame"])
+    print("=" * 78)
+
+    destino = RAIZ_REPO / "outputs" / "deteccoes.csv" if gravar_em is None else gravar_em
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    deteccoes.to_csv(destino, index=False)
+    print("gravado: {} ({} linhas)".format(destino, len(deteccoes)))
+    return deteccoes, resultado, confusao
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python -m src.run", description=__doc__)
     parser.add_argument("--inspect", action="store_true", help="imprime o resumo dos jogos")
@@ -515,12 +906,15 @@ def main(argv=None) -> int:
     parser.add_argument("--posse", action="store_true", help="roda o Passo 1 (posse)")
     parser.add_argument("--tau-posse", action="store_true",
                         help="mede tau_posse e aplica a escada pre-registrada")
+    parser.add_argument("--bola-parada", action="store_true",
+                        help="roda o Passo 2 (bolas paradas) e o relatorio do plano 04")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
     args = parser.parse_args(argv)
 
     cfg = carregar_config(args.config)
-    if not (args.inspect or args.tau or args.posse or args.tau_posse):
-        parser.error("escolha --inspect, --tau, --posse ou --tau-posse")
+    if not (args.inspect or args.tau or args.posse or args.tau_posse
+            or args.bola_parada):
+        parser.error("escolha --inspect, --tau, --posse, --tau-posse ou --bola-parada")
     mapeamento = carregar_mapeamento(cfg)
     if args.inspect:
         inspecionar(cfg, mapeamento, cfg["dados"]["jogos"])
@@ -530,6 +924,8 @@ def main(argv=None) -> int:
         rodar_posse(cfg, mapeamento, cfg["dados"]["jogos"])
     if args.tau_posse:
         medir_tau_posse(cfg, mapeamento, cfg["dados"]["jogos"])
+    if args.bola_parada:
+        rodar_bola_parada(cfg, mapeamento, cfg["dados"]["jogos"])
     return 0
 
 

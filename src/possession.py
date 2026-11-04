@@ -369,9 +369,15 @@ def calcular(frames: pd.DataFrame, tracking: pd.DataFrame, cfg: dict) -> dict:
     # dono --, logo o descarte segue sendo 1:1.
     falso = np.zeros(frames.shape[0], dtype=bool)
     if (~ganho).any():
-        quadros, de_quem = _expandir(f0[~ganho], fn[~ganho], jogador_seq[~ganho])
-        do_dono = posse_zona[quadros] & (dono[quadros] == de_quem)
-        falso[quadros[do_dono]] = True
+        # Sem filtro por dono: o quadro da sequencia JA e um quadro em que
+        # `dono` e aquele jogador (e assim que `em_controle` foi construido), e
+        # `falso` so e lido na linha seguinte, contra `posse_zona` -- marcar um
+        # quadro de duelo ali nao muda nada, porque `posse_zona` ja e False
+        # nele. A guarda anterior era codigo morto (limpeza da Fatia 4,
+        # autorizada em decisoes.md de 2026-10-31, com dois mutantes do revisor
+        # passando 319/319).
+        quadros, _ = _expandir(f0[~ganho], fn[~ganho], jogador_seq[~ganho])
+        falso[quadros] = True
     posse = posse_zona & ~falso
     controle = posse | duelo
 
@@ -535,9 +541,14 @@ def calcular(frames: pd.DataFrame, tracking: pd.DataFrame, cfg: dict) -> dict:
         "perdas_termina_corrida": int(termina_corrida.sum()),
         "perdas_so_por_lacuna_5": int(so_por_lacuna_5.sum()),
         "ganhos": int(ganho.sum()),
-        # Consequencia da sequencia que nao quebra em duelo (revisao de
-        # 2026-10-31): dois duelistas com a bola na PZ podem ganhar no MESMO
-        # quadro. Contado para que a Fatia 4 saiba da ambiguidade.
+        # CANARIO, nao medicao (comentario corrigido na Fatia 4): sob a leitura
+        # implementada em `em_controle` -- UM dono por quadro, o mais proximo,
+        # inclusive em duelo -- duas sequencias nao podem comecar no mesmo
+        # quadro, logo este contador e identicamente 0 por construcao. Fica como
+        # guarda: se virar > 0, a unicidade do dono quebrou. A ambiguidade que a
+        # revisao de 2026-10-31 levantou (o controle alternando entre duelistas)
+        # aparece em `ganhos_em_quadro_de_duelo` e no contador de trocas de dono
+        # por duelo de `src.run`, nao aqui.
         "quadros_com_mais_de_um_ganho": int(
             (np.bincount(fg) > 1).sum() if fg.size else 0
         ),

@@ -155,8 +155,9 @@ Pontapé inicial, escanteio, lateral, tiro de meta, tiro livre residual **e
   meta → tiro livre. Ver `docs/01-definicoes.md`, Passo 2 — **o documento foi
   reescrito; a versão antiga trocava gatilho por padrão.**
 - **A hierarquia de reserva do suplementar S1 é obrigatória**, com os três
-  problemas e a ordem "escanteio completo → lateral completo → escanteio
-  incompleto → lateral incompleto". Sem ela o F1 médio de bola parada do artigo
+  problemas e, no problema 3, a ordem "escanteio completo → lateral completo →
+  escanteio incompleto → lateral incompleto → tiro de meta" (Fig. S1; corrigido
+  em 2026-11-04, ver `docs/01-definicoes.md`). Sem ela o F1 médio de bola parada do artigo
   cai de 95 % para 85 % (S1, p. 2), e o nosso simulador cria exatamente esses
   erros.
 - **Testes:** (a) um jogador a 2 m de um vértice ativo, durante a bola morta, com

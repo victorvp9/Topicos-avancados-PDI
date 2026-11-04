@@ -142,7 +142,9 @@ foi confirmado por padrão**:
    **imputa-se o evento a esse jogador ausente**.
 3. **Problema 3 — bola ausente ou fora da PZ do repositor.** Só gatilhos, nesta
    ordem: pontapé inicial → pênalti → **escanteio completo → lateral completo →
-   escanteio incompleto → lateral incompleto**. Os autores registram
+   escanteio incompleto → lateral incompleto → tiro de meta** (corrigido em
+   2026-11-04: a Fig. S1, issue 3, diz `K P C T Ci Ti G F?`; a prosa omite o `G`
+   e remete à figura; ver `docs/decisoes.md`, revisão da Fatia 4). Os autores registram
    explicitamente *"higher detection rate when favoring complete throw-in over
    incomplete corner"* (S1, p. 2). Se nenhum gatilho ativa, o rótulo é
    **`free_kick?`**.

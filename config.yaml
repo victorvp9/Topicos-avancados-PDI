@@ -22,6 +22,11 @@ campo:
   grande_area_meia_largura_m: 20.16    # [IFAB Lei 1, nao conferido]
   marca_penal_m: 11.0                  # [IFAB Lei 1, nao conferido]
   raio_impedido_penalti_m: 9.15        # CONFERIDO: Vidal-Codina 2.3.4, p. 6
+  # NAO esta no plano 04 §6: a condicao 1 do gatilho de penalti ("so 1 jogador
+  # na linha de gol ENTRE AS TRAVES") precisa da meia-largura do gol, e ela nao
+  # existia no config. Nao e valor novo: e o 7,32/2 que o comentario de
+  # pequena_area_meia_largura_m acima ja usa. [IFAB Lei 1, nao conferido]
+  gol_meia_largura_m: 3.66             # = 7.32/2 [IFAB Lei 1, nao conferido]
 
 gabarito:
   mapeamento: mapeamento-eventos.yaml
@@ -89,6 +94,39 @@ posse:
   # Nao esta no plano 03 §8: acrescentada porque o teste do §9.1 exige "os 8
   # valores da grade de D3" e o CLAUDE.md proibe hardcode.
   grade_r_pz_m: [0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 2.50, 3.00]
+
+# Passo 2 da especificacao, bolas paradas (Fatia 4). Plano docs/fatias/04-plano.md §6.
+bola_parada:
+  # tolerancias: supl. S4.2, pp. 7-8. Congeladas no G1 (D9a/D9b).
+  eps_k1_m: 3.0          # faixa 3 a 5 m; F1 cai a 9/82/95% com 0/0,5/1 m
+  eps_k2_m: 2.0          # >= 2 m
+  eps_c_m: 3.0           # escanteio. TAMBEM 2o parametro livre (D9b)
+  eps_t_m: 0.5           # lateral
+  eps_g_m: 0.5           # tiro de meta. ATENCAO: o texto do 2.3.4 p. 6 escreve
+                         # eps_c por erro de digitacao; vale a Fig. 4 p. 6 (V14)
+  eps_f_m: 1.0           # deslocamento do jogador no problema 1 do S1 (V12)
+  eps_p1_m: 2.0          # penalti, fora do escopo de avaliacao agregada
+  eps_p2_m: 2.0
+  eps_p3_m: 4.0
+  # NOSSA, declarada. Ver plano 04 secao 3.1
+  duracao_minima_morta_s: 0.0
+  sensibilidade_duracao_minima_s: [0.0, 1.0]
+  grade_eps_c_m: [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0]   # D9b, baixa confianca
+  # Posicao do tiro de meta na ordem do problema 3 do supl. S1. A FIGURA S1 FOI
+  # LIDA: os rotulos do lado direito, decodificados dos operadores de texto da
+  # pagina 2, dao `K P C T Ci Ti G F?` na checagem do issue 3 -- isto e tiro de
+  # meta DEPOIS de escanteio e lateral e ANTES de `free_kick?`. A prosa do S1
+  # omite o `G`, mas ela remete a figura ("the dead ball hierarchy SHOWN IN
+  # issue 3 of Fig. S1"), logo a figura e o artefato normativo. Padrao corrigido
+  # de `nao` para `depois_de_cto` em 2026-11-02, por correcao de leitura: ela
+  # PIORA o F1 de tiro de meta (0,649 -> 0,396) e nao muda o micro (0,598).
+  # As outras duas seguem implementadas como sensibilidade (bloco 8 de
+  # `--bola-parada`):
+  #   `depois_de_cto`  K P C/T completo C/T incompleto G   <- a figura, PADRAO
+  #   `nao`            K P C/T completo C/T incompleto     <- a prosa
+  #   `antes_de_cto`   K P G C/T completo C/T incompleto
+  # Ver src/events/hierarquia.py:ordem_reserva_3.
+  goal_kick_no_problema_3: depois_de_cto
 
 tau_posse:
   janela_busca_s: 10.0         # mesma da Fatia 2, para comparabilidade
