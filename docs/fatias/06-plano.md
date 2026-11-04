@@ -305,3 +305,56 @@ Não se aplicam aqui, de propósito:
 - Lista de arquivos tocados.
 - Toda lacuna que ele tiver preenchido, cada uma com a alternativa descartada.
 - Tempo de parede do `--simulador`.
+
+## 10. Emenda de 2026-11-04 — MUDANÇA DECLARADA (G3 por mim), antes de qualquer F1 degradado
+
+**O que se viu.** O ajuste da §4.4, passo 1, convergiu, com mínimo único em três
+pontos iniciais, para `b` = 0,3245 e `a_morto` no limite do acoplamento. Os três
+alvos ficaram com resíduo < 1 ponto, mas os episódios `off` duram ~3 quadros:
+**332,5 trocas on↔off por minuto contra ≤ 10,9 do Bassek** (p. 8). É um pisca-pisca
+quadro a quadro, não corte editorial.
+
+**Causa.** O quadro-âncora da lateral é o primeiro quadro vivo. Com uma taxa
+`b` sem memória, o alvo de 0,468 nele contra 0,68 na bola morta só fecha com
+`1 − b ≈ 0,468/0,68`.
+
+**Por que muda.** Pisca-pisca e corte longo atingem o detector de modos opostos:
+- o gatilho "completo" exige o jogador visível até o último quadro morto;
+- o problema 2 do S1 exige o executor sumir em `[di+1, dc]`.
+
+Com o modelo como está, a Fatia 8 mediria um artefato da calibração.
+
+**Mudança.** A taxa de trocas deixa de ser validação e vira **restrição do ajuste**:
+minimizar os mesmos três resíduos, com pesos iguais, sujeito a:
+- trocas on↔off esperadas por minuto em B8 (`c` = 1), nos 3 jogos juntos e em
+  todos os quadros, **≤ 10,9** (Bassek, Discussão, p. 8);
+- o acoplamento `c·a_s ≤ 1 − b`.
+
+É limite superior, porque o Bassek conta também as trocas de ângulo.
+
+**O que não muda:**
+- a forma da cadeia;
+- os alvos;
+- `θ*` pelo mesmo procedimento, recalculado com os novos cortes;
+- os níveis, que são regerados;
+- a regra da §4.5, que segue de pé: resíduo > 5 pontos é limitação registrada, não
+  troca de modelo. O resíduo da lateral deve crescer (a sondagem do codificador
+  com `b` pequeno deu 9 a 23 pontos), e isso vai para o relatório.
+
+**Rótulo.** Nenhum F1 degradado foi visto. O que se viu foi um diagnóstico do próprio
+simulador, previsto como validação. Por isso o que depender deste simulador continua
+**limpo**, com esta emenda citada.
+
+Alternativas descartadas:
+- **Tirar o alvo da lateral:** joga fora o único alvo publicado sobre o mecanismo
+  que mais importa para bola parada.
+- **Trocar para uma cadeia com duração explícita:** constantes novas sem fonte.
+
+**B5 sem GK = 0,545, abaixo do limite inferior de 0,56 do Crang Camera 1.** Fica
+como validação reprovada por 1,5 pontos, só registrada (§4.5). Jogo e estádio são
+outros, e `θ*` vem do Bassek.
+
+**T7.** O meu critério "|Δ| < 0,01 por quadro em média com 1000 amostras" era
+inviável: só o ruído de Monte Carlo dá ≈ 0,013. Fica a leitura do codificador
+(|média Δ| < 0,01; média |Δ|/σ_MC < 1; idem nos quadros de transição). Erro meu de
+plano.
