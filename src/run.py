@@ -1,4 +1,5 @@
-"""Ponto de entrada unico: `--inspect`, `--tau`, `--posse` e `--tau-posse`.
+"""Ponto de entrada unico: `--inspect`, `--tau`, `--posse`, `--tau-posse`,
+`--bola-parada` e `--passes`.
 
 `python -m src.run --inspect` imprime, por jogo: numero de quadros, periodos,
 fracao de bola morta, jogadores por quadro, `attack_dir`, e as contagens de
@@ -27,6 +28,11 @@ a matriz de confusao de bola parada, a distribuicao da coluna `via`, a curva
 F1(`eps_c`) da grade de D9b -- **sem escolher um otimo** -- e os dois requisitos
 que vem da revisao da Fatia 3 (com e sem as perdas `so_por_lacuna_5`, e o
 contador de trocas de dono por duelo). Grava `outputs/deteccoes.csv`.
+
+`python -m src.run --passes` rotula as perdas de posse como passes, avalia nos
+tres criterios contra o gabarito principal (`PASS`) e o secundario, e decompoe
+os falsos negativos do principal por causa (docs/fatias/05-plano.md §6). Grava
+`outputs/passes.csv`.
 """
 
 import argparse
@@ -38,7 +44,7 @@ import pandas as pd
 
 from src import evaluate, gabarito, possession, tau as tau_mod, tau_posse as tau_posse_mod
 from src.config import RAIZ_REPO, carregar_config, carregar_mapeamento
-from src.events import bola_parada, gatilhos, hierarquia
+from src.events import bola_parada, gatilhos, hierarquia, passes as passes_mod
 from src.io import carregar_jogo
 
 
@@ -628,6 +634,7 @@ def _carregar_base(cfg: dict, mapeamento: dict, jogos) -> dict:
             "periods": periods,
             "eventos": gabarito.construir_gabarito(game, crus, frames, cfg),
             "perdas": passo1["perdas"],
+            "ganhos": passo1["ganhos"],
             "control": passo1["control"],
             "sequencias": passo1["sequencias"],
             "jogadores": jogadores,
@@ -657,6 +664,18 @@ def detectar_jogos(base: dict, cfg: dict, jogos, sem_lacuna_5: bool = False):
             )
         )
     return pd.concat(saida, ignore_index=True)
+
+
+def deteccoes_na_ancora(deteccoes: pd.DataFrame, eventos: pd.DataFrame, cfg: dict) -> np.ndarray:
+    """(n_deteccoes,) bool: o (`game`, `frame`) da deteccao e a ancora `frame`
+    de algum reinicio do gabarito (grupo `bola_parada`).
+
+    So essas podem ser acerto, logo `soma / n` e o teto de PRECISAO. As demais
+    sao os intervalos mortos sem reinicio anotado ("espurios")."""
+    tipos = cfg["avaliacao"]["grupos"]["bola_parada"]
+    ancoras = eventos.loc[eventos["type"].isin(tipos), ["game", "frame"]]
+    return pd.MultiIndex.from_frame(deteccoes[["game", "frame"]]).isin(
+        pd.MultiIndex.from_frame(ancoras))
 
 
 def _tabela_f1(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict,
@@ -727,23 +746,28 @@ def rodar_bola_parada(cfg: dict, mapeamento: dict, jogos, gravar_em=None):
 
     print("")
     print("  (1) CONTRA OS TETOS PREVISTOS (plano 04 sec. 2)")
-    print("  {:>6s}{:>12s}{:>12s}{:>12s}{:>10s}".format(
-        "jogo", "transicoes", "deteccoes", "reinicios", "precisao"))
+    print("  {:>6s}{:>12s}{:>12s}{:>12s}{:>10s}{:>10s}".format(
+        "jogo", "transicoes", "deteccoes", "reinicios", "na_ancora", "teto_P"))
     transicoes = {
         g: bola_parada.corridas_mortas(base[g]["frames"]["ball_live"])[0].size
         for g in jogos
     }
+    na_ancora = deteccoes_na_ancora(deteccoes, eventos, cfg)
     for game in list(jogos) + [0]:
-        det = deteccoes if game == 0 else deteccoes[deteccoes["game"] == game]
+        sel = np.ones(len(deteccoes), bool) if game == 0 else (
+            deteccoes["game"] == game).to_numpy()
         gab = reinicios if game == 0 else reinicios[reinicios["game"] == game]
         n_trans = sum(transicoes.values()) if game == 0 else transicoes[game]
-        print("  {:>6s}{:12d}{:12d}{:12d}{:9.1f}%".format(
-            "TOTAL" if game == 0 else str(game), n_trans, len(det), len(gab),
-            100.0 * len(gab) / len(det)))
-    print("  o teto de precisao e `reinicios / deteccoes`: o detector emite UMA")
-    print("  bola parada por transicao, e a Metrica tem mais transicoes que")
-    print("  reinicios porque a bola fica NaN em buracos curtos de rastreamento")
-    print("  que nao sao paradas de jogo (plano 04 sec. 2.2).")
+        print("  {:>6s}{:12d}{:12d}{:12d}{:10d}{:9.1f}%".format(
+            "TOTAL" if game == 0 else str(game), n_trans, int(sel.sum()), len(gab),
+            int(na_ancora[sel].sum()), 100.0 * na_ancora[sel].sum() / sel.sum()))
+    print("  teto de precisao = `na_ancora / deteccoes`: so a deteccao que cai na")
+    print("  ancora `frame` de um reinicio anotado pode ser acerto. NAO e")
+    print("  `reinicios / deteccoes` (61,5 %, superado em 2026-11-04): os 13")
+    print("  `no_dead_ball_before` nao tem transicao morta -> viva, logo nenhuma")
+    print("  deteccao casa com eles. O detector emite UMA bola parada por")
+    print("  transicao, e a Metrica tem mais transicoes que reinicios porque a")
+    print("  bola fica NaN em buracos curtos de rastreamento (plano 04 sec. 2.2).")
 
     print("")
     print("  REVOCACAO DE GATILHO -- a geometria contra o gabarito, sem hierarquia")
@@ -813,8 +837,10 @@ def rodar_bola_parada(cfg: dict, mapeamento: dict, jogos, gravar_em=None):
         cfg_d = copy.deepcopy(cfg)
         cfg_d["bola_parada"]["duracao_minima_morta_s"] = minimo
         det_d = detectar_jogos(base, cfg_d, jogos)
-        print("    minimo {:4.1f} s: {:4d} deteccoes | teto de precisao {:5.1f}%".format(
-            minimo, len(det_d), 100.0 * len(reinicios) / len(det_d)))
+        ancora_d = deteccoes_na_ancora(det_d, eventos, cfg)
+        print("    minimo {:4.1f} s: {:4d} deteccoes | {:4d} na ancora | teto de precisao "
+              "{:5.1f}%".format(minimo, len(det_d), int(ancora_d.sum()),
+                                100.0 * ancora_d.sum() / len(det_d)))
         if minimo:
             _tabela_f1(eventos, det_d, cfg, [principal], ["frame"])
 
@@ -899,6 +925,301 @@ def rodar_bola_parada(cfg: dict, mapeamento: dict, jogos, gravar_em=None):
     return deteccoes, resultado, confusao
 
 
+def rotular_jogos(base: dict, deteccoes: pd.DataFrame, jogos) -> pd.DataFrame:
+    """Tabela `src.events.passes.PASSES` dos jogos, concatenada.
+
+    `deteccoes` sao as de bola parada de `detectar_jogos`, no mesmo `cfg`.
+    """
+    return pd.concat(
+        [
+            passes_mod.rotular(
+                base[g]["perdas"], base[g]["ganhos"], base[g]["control"],
+                base[g]["frames"], deteccoes[deteccoes["game"] == g],
+            )
+            for g in jogos
+        ],
+        ignore_index=True,
+    )
+
+
+def decompor_fn(eventos: pd.DataFrame, passes: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """Cada `PASS` nao casado no criterio PRINCIPAL (ancora `frame`) em
+    EXATAMENTE uma causa, nesta ordem (plano 05 §6, bloco 6):
+
+      `a` nenhuma perda do jogador anotado a <= janela;
+      `b` ha perda, mas todas foram suprimidas como bola parada;
+      `c` ha perda nao suprimida, mas nenhuma e `completo`;
+      `d` ha perda `completo`, e o casamento um-para-um a deu a outro `PASS`.
+
+    Entrada: `eventos` (esquema `EVENTS`) e `passes` (esquema `PASSES`).
+    Saida: DataFrame com `game`, `frame`, `player_id`, `causa` e `desfecho`
+    (so na causa `c`: o da perda nao suprimida mais proxima no tempo, empate
+    com a anterior -- regra de apresentacao, nao de deteccao; vazio nas
+    demais).
+
+    `d` e exata por maximalidade do casamento: uma perda `completo` livre na
+    janela aumentaria o numero de pares. Isso e CONFERIDO aqui, nao assumido:
+    estoura se alguma perda `completo` de um caso `d` nao estiver casada.
+    """
+    principal = cfg["avaliacao"]["criterio_principal"]
+    eixos = cfg["avaliacao"]["criterios"][principal]
+    janela = eixos["janela_s"]
+    grupo = evaluate.grupo_por_tipo(cfg)["pass"]
+    gab = eventos[eventos["type"] == "pass"].reset_index(drop=True)
+    gab = gab.assign(grupo=grupo, t=gab["frame"] / cfg["tracking"]["fps"])
+    det = passes_mod.para_casador(passes, so_completo=True).assign(grupo=grupo)
+    i_gab, i_det = evaluate.casar(
+        gab, det, janela, eixos["casa_tipo"], eixos["casa_jogador"]
+    )
+
+    sem_par = (
+        gab.drop(index=i_gab)[["game", "frame", "t", "player_id"]]
+        .reset_index(names="i_gab")
+    )
+    cand = sem_par.merge(
+        passes[["game", "player_id", "frame", "t", "e_bola_parada", "desfecho"]]
+        .rename(columns={"frame": "frame_p", "t": "t_p"}),
+        on=["game", "player_id"],
+    )
+    cand["dt"] = (cand["t_p"] - cand["t"]).abs()
+    cand = cand[cand["dt"] <= janela]       # mesma janela inclusiva do casador
+    livre = cand[~cand["e_bola_parada"]]
+    completo = livre[livre["desfecho"] == "completo"]
+    i = sem_par["i_gab"]
+    causa = np.select(
+        [~i.isin(cand["i_gab"]), ~i.isin(livre["i_gab"]), ~i.isin(completo["i_gab"])],
+        ["a", "b", "c"],
+        default="d",
+    )
+    proxima = (
+        livre.sort_values(["i_gab", "dt", "frame_p"], kind="stable")
+        .drop_duplicates("i_gab")
+        .set_index("i_gab")["desfecho"]
+    )
+    desfecho = np.where(causa == "c", i.map(proxima).fillna(""), "")
+
+    casadas = det.iloc[i_det][["game", "player_id", "frame"]]
+    de_d = completo[completo["i_gab"].isin(i[causa == "d"])]
+    conferido = de_d.merge(
+        casadas.rename(columns={"frame": "frame_p"}),
+        on=["game", "player_id", "frame_p"], how="left", indicator=True,
+    )
+    if (conferido["_merge"] != "both").any():
+        raise RuntimeError("decompor_fn: perda `completo` livre num caso (d); casamento nao maximo")
+
+    return pd.DataFrame(
+        {
+            "game": sem_par["game"].to_numpy(),
+            "frame": sem_par["frame"].to_numpy(),
+            "player_id": sem_par["player_id"].to_numpy(),
+            "causa": causa,
+            "desfecho": desfecho,
+        }
+    )
+
+
+def _tabela_passe(resultado: pd.DataFrame, cfg: dict, jogos) -> None:
+    """P/R/F1 e contagem absoluta de `pass`, ancora `frame`, por criterio e por
+    jogo, mais o agregado (`game = 0`, soma). So `frame`: para passe
+    `anchor_shift = 0` e as duas ancoras coincidem (plano 05 §3.4; ha teste)."""
+    print("    {:14s}{:>7s}{:>7s}{:>7s}{:>7s}{:>7s}{:>8s}{:>8s}{:>8s}".format(
+        "criterio", "jogo", "n_gab", "n_det", "tp", "fp", "P", "R", "F1"))
+    for criterio in cfg["avaliacao"]["criterios"]:
+        for game in list(jogos) + [0]:
+            linha = resultado[
+                (resultado["criterio"] == criterio) & (resultado["ancora"] == "frame")
+                & (resultado["game"] == game) & (resultado["type"] == "pass")
+            ].iloc[0]
+            print("    {:14s}{:>7s}{:7d}{:7d}{:7d}{:7d}".format(
+                criterio, "TOTAL" if game == 0 else str(game), linha["n_gabarito"],
+                linha["n_detectado"], linha["tp_diag"], linha["fp"])
+                + "".join("{:8.3f}".format(linha[c]) for c in ("precisao", "revocacao", "f1")))
+
+
+def _bloco_9(base: dict, deteccoes: pd.DataFrame, passes: pd.DataFrame,
+             eventos: pd.DataFrame, cfg: dict, jogos) -> None:
+    """Supressao alternativa "so se a perda for do executor detectado".
+
+    Leitura implementada: a MESMA perda que o principal suprime (a primeira da
+    corrida viva) so sai se o seu jogador for o executor da deteccao; senao ela
+    volta a ser passe. `free_kick?` nao tem executor, logo nada suprime. E a
+    alternativa descartada no plano 05 §3.1, pedida como sensibilidade na
+    revisao de 2026-11-04. Nao altera `passes` (trabalha numa copia).
+    """
+    executor = np.full(len(passes), "", dtype=object)
+    for game in jogos:
+        sel = np.flatnonzero((passes["game"] == game).to_numpy())
+        det_g = deteccoes[deteccoes["game"] == game].reset_index(drop=True)
+        origem = passes_mod.suprimir(passes.iloc[sel], det_g, base[game]["frames"])
+        executor[sel[origem >= 0]] = det_g["player_id"].to_numpy()[origem[origem >= 0]]
+    alt = passes.assign(
+        e_bola_parada=passes["e_bola_parada"] & (passes["player_id"].to_numpy() == executor))
+    gab_sec = evaluate.gabarito_secundario(eventos, cfg)
+    principal = cfg["avaliacao"]["criterio_principal"]
+    print("")
+    print("  (9) EXPLORATÓRIO — decidido depois de ver o resultado; o principal não muda")
+    print("  supressao so se a perda de reinicio for do EXECUTOR detectado")
+    print("    passes: {} (principal: {})".format(
+        len(passes_mod.para_casador(alt)), len(passes_mod.para_casador(passes))))
+    print("    {:11s}{:9s}{:>7s}{:>7s}{:>7s}{:>7s}{:>8s}{:>8s}{:>8s}".format(
+        "gabarito", "criterio", "jogo", "n_gab", "n_det", "tp", "P", "R", "F1"))
+    for rotulo, gab, det in (
+        ("principal", eventos, passes_mod.para_casador(alt, so_completo=True)),
+        ("secundario", gab_sec, passes_mod.para_casador(alt)),
+    ):
+        res, _ = evaluate.avaliar(gab, det, cfg)
+        for game in list(jogos) + [0]:
+            linha = res[(res["criterio"] == principal) & (res["ancora"] == "frame")
+                        & (res["game"] == game) & (res["type"] == "pass")].iloc[0]
+            print("    {:11s}{:9s}{:>7s}{:7d}{:7d}{:7d}".format(
+                rotulo, principal, "TOTAL" if game == 0 else str(game),
+                linha["n_gabarito"], linha["n_detectado"], linha["tp_diag"])
+                + "".join("{:8.3f}".format(linha[c]) for c in ("precisao", "revocacao", "f1")))
+
+
+def rodar_passes(cfg: dict, mapeamento: dict, jogos, gravar_em=None, exploratorio=True):
+    """Rotula as perdas como passes e imprime os 8 blocos do plano 05 §6, mais o
+    bloco 9 exploratorio se `exploratorio` (ele so imprime; nao altera nada).
+
+    Saida: (passes, resultado_principal, resultado_secundario).
+    """
+    base = _carregar_base(cfg, mapeamento, jogos)
+    eventos = pd.concat([base[g]["eventos"] for g in jogos], ignore_index=True)
+    deteccoes = detectar_jogos(base, cfg, jogos)
+    passes = rotular_jogos(base, deteccoes, jogos)
+    janela = cfg["avaliacao"]["criterios"][cfg["avaliacao"]["criterio_principal"]]["janela_s"]
+    gab_passe = eventos[eventos["type"] == "pass"]
+    nao_supr = passes[~passes["e_bola_parada"]]
+
+    # Diagnostico da supressao: quem e o executor da bola parada de cada perda
+    # suprimida, e se o intervalo morto e espurio.
+    espuria_det = ~deteccoes_na_ancora(deteccoes, eventos, cfg)
+    supr = []
+    for game in jogos:
+        det_g = deteccoes[deteccoes["game"] == game].reset_index(drop=True)
+        perdas = base[game]["perdas"]
+        origem = passes_mod.suprimir(perdas, det_g, base[game]["frames"])
+        s = origem >= 0
+        supr.append(pd.DataFrame({
+            "game": game,
+            "t": perdas["t"].to_numpy()[s],
+            "player_id": perdas["player_id"].to_numpy()[s],
+            "executor": det_g["player_id"].to_numpy()[origem[s]],
+            "frame_bp": det_g["frame"].to_numpy()[origem[s]],
+            "espuria": espuria_det[(deteccoes["game"] == game).to_numpy()][origem[s]],
+        }))
+    supr = pd.concat(supr, ignore_index=True)
+    # Intervalo morto ESPURIO = deteccao de bola parada cujo quadro nao e a
+    # ancora (`frame`) de nenhum reinicio do gabarito no mesmo jogo: 198 =
+    # 481 - 283, isto e os 185 de `481 - 296` mais os 13 `no_dead_ball_before`
+    # (revisao da Fatia 5, 2026-11-04).
+    perto = supr.reset_index(names="i").merge(
+        gab_passe[["game", "player_id", "t"]].rename(columns={"t": "t_g"}),
+        on=["game", "player_id"])
+    supr["perto_de_pass"] = supr.index.isin(
+        perto.loc[(perto["t_g"] - perto["t"]).abs() <= janela, "i"])
+
+    print("=" * 78)
+    print("PASSES DE JOGO CORRIDO (R_pz = {:g} m)".format(cfg["posse"]["r_pz_m"]))
+    print("")
+    print("  (1) CONTAGENS. Passe = perda de posse que nao e a perda de reinicio")
+    print("  de uma bola parada (plano 05 sec. 3.1, independe do jogador).")
+    print("  {:>6s}{:>9s}{:>11s}{:>12s}{:>14s}{:>9s}{:>10s}".format(
+        "jogo", "perdas", "suprimidas", "!= executor", "(free_kick?)", "passes",
+        "identid."))
+    for game in list(jogos) + [0]:
+        p = passes if game == 0 else passes[passes["game"] == game]
+        s = supr if game == 0 else supr[supr["game"] == game]
+        n_passes = int((~p["e_bola_parada"]).sum())
+        print("  {:>6s}{:9d}{:11d}{:12d}{:14d}{:9d}{:>10s}".format(
+            "TOTAL" if game == 0 else str(game), len(p), len(s),
+            int((s["player_id"] != s["executor"]).sum()), int((s["executor"] == "").sum()),
+            n_passes, "ok" if n_passes == len(p) - len(s) else "FALHOU"))
+    print("  deteccoes de bola parada: {} | suprimidas <= deteccoes: {}".format(
+        len(deteccoes), len(supr) <= len(deteccoes)))
+    print("  `!= executor` inclui os `free_kick?`, que nao tem executor (coluna")
+    print("  seguinte). Diagnostico, nao decisao (plano 05 sec. 3.1).")
+
+    print("")
+    print("  (2) DESFECHO dos passes (nao suprimidos), por jogo")
+    # Categoria explicita: desfecho com contagem zero aparece como 0, nao some.
+    desfecho = pd.Categorical(nao_supr["desfecho"], categories=passes_mod.DESFECHOS)
+    print(pd.crosstab(nao_supr["game"], desfecho, margins=True, dropna=False,
+                      colnames=["desfecho"]).to_string())
+    print("  recepcao em quadro de duelo, por desfecho:")
+    print(pd.crosstab(desfecho, nao_supr["recepcao_em_duelo"].to_numpy(), margins=True,
+                      dropna=False, rownames=["desfecho"],
+                      colnames=["recepcao_em_duelo"]).to_string())
+
+    print("")
+    print("  (3) PRINCIPAL: passes `completo` x `PASS`. `estrito` e NOSSO (D8).")
+    res_principal, _ = evaluate.avaliar(
+        eventos, passes_mod.para_casador(passes, so_completo=True), cfg)
+    _tabela_passe(res_principal, cfg, jogos)
+
+    print("")
+    print("  (4) SECUNDARIO: todos os passes x uniao sem tiro de meta (D10).")
+    gab_sec = evaluate.gabarito_secundario(eventos, cfg)
+    res_secundario, _ = evaluate.avaliar(gab_sec, passes_mod.para_casador(passes), cfg)
+    _tabela_passe(res_secundario, cfg, jogos)
+
+    print("")
+    print("  (5) DIAGNOSTICO: todos os passes x `PASS` (sem o filtro de desfecho).")
+    res_diag, _ = evaluate.avaliar(eventos, passes_mod.para_casador(passes), cfg)
+    _tabela_passe(res_diag, cfg, jogos)
+
+    print("")
+    print("  (6) DECOMPOSICAO DOS FN DO PRINCIPAL, criterio {}, ancora `frame`".format(
+        cfg["avaliacao"]["criterio_principal"]))
+    print("  a = sem perda do jogador a <= {:g} s | b = perda suprimida como bola".format(janela))
+    print("  parada | c = perda com desfecho != completo | d = perda `completo`")
+    print("  consumida por outro PASS no casamento um-para-um")
+    dec = decompor_fn(eventos, passes, cfg)
+    fn = res_principal[
+        (res_principal["criterio"] == cfg["avaliacao"]["criterio_principal"])
+        & (res_principal["ancora"] == "frame") & (res_principal["type"] == "pass")
+    ].set_index("game")["fn"]
+    tabela = pd.crosstab(dec["game"], pd.Categorical(dec["causa"], categories=list("abcd")),
+                         margins=True, margins_name="TOTAL", dropna=False, colnames=["causa"])
+    tabela["fn_avaliar"] = [int(fn.loc[g]) for g in list(jogos) + [0]]
+    print(tabela.to_string())
+    print("  causa c por desfecho da perda mais proxima:")
+    c = dec[dec["causa"] == "c"]
+    print(pd.crosstab(c["game"], pd.Categorical(c["desfecho"], categories=[
+        d for d in passes_mod.DESFECHOS if d != "completo"]), margins=True, dropna=False,
+        colnames=["desfecho"]).to_string())
+
+    print("")
+    print("  (7) TABELAS 3 E 4 SEM AS PERDAS `de_lacuna_5` (requisito das Fatias 3-4)")
+    sem = passes[~passes["de_lacuna_5"]]
+    print("    passes sem lacuna 5: {} (com: {}; perdas de lacuna 5 nao suprimidas: {})".format(
+        int((~sem["e_bola_parada"]).sum()), len(nao_supr), int(nao_supr["de_lacuna_5"].sum())))
+    print("  -- principal")
+    _tabela_passe(evaluate.avaliar(
+        eventos, passes_mod.para_casador(sem, so_completo=True), cfg)[0], cfg, jogos)
+    print("  -- secundario")
+    _tabela_passe(evaluate.avaliar(
+        gab_sec, passes_mod.para_casador(sem), cfg)[0], cfg, jogos)
+
+    print("")
+    print("  (8) CUSTO DOS INTERVALOS MORTOS ESPURIOS (D1 sem duracao minima)")
+    print("  espurio = deteccao cujo quadro nao e ancora de reinicio do gabarito")
+    print("  `perto de PASS` = a perda suprimida esta a <= {:g} s de um `PASS`".format(janela))
+    print("  anotado do MESMO jogador: e o passe verdadeiro que a supressao custou.")
+    print("    deteccoes espurias: {} de {}".format(int(espuria_det.sum()), len(deteccoes)))
+    print(pd.crosstab(supr["espuria"].rename("espuria"),
+                      supr["perto_de_pass"].rename("perto_de_PASS"), margins=True).to_string())
+    if exploratorio:
+        _bloco_9(base, deteccoes, passes, eventos, cfg, jogos)
+    print("=" * 78)
+
+    destino = RAIZ_REPO / "outputs" / "passes.csv" if gravar_em is None else gravar_em
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    passes.to_csv(destino, index=False)
+    print("gravado: {} ({} linhas)".format(destino, len(passes)))
+    return passes, res_principal, res_secundario
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python -m src.run", description=__doc__)
     parser.add_argument("--inspect", action="store_true", help="imprime o resumo dos jogos")
@@ -908,13 +1229,15 @@ def main(argv=None) -> int:
                         help="mede tau_posse e aplica a escada pre-registrada")
     parser.add_argument("--bola-parada", action="store_true",
                         help="roda o Passo 2 (bolas paradas) e o relatorio do plano 04")
+    parser.add_argument("--passes", action="store_true",
+                        help="rotula e avalia os passes (relatorio do plano 05)")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
     args = parser.parse_args(argv)
 
     cfg = carregar_config(args.config)
     if not (args.inspect or args.tau or args.posse or args.tau_posse
-            or args.bola_parada):
-        parser.error("escolha --inspect, --tau, --posse, --tau-posse ou --bola-parada")
+            or args.bola_parada or args.passes):
+        parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada ou --passes")
     mapeamento = carregar_mapeamento(cfg)
     if args.inspect:
         inspecionar(cfg, mapeamento, cfg["dados"]["jogos"])
@@ -926,6 +1249,8 @@ def main(argv=None) -> int:
         medir_tau_posse(cfg, mapeamento, cfg["dados"]["jogos"])
     if args.bola_parada:
         rodar_bola_parada(cfg, mapeamento, cfg["dados"]["jogos"])
+    if args.passes:
+        rodar_passes(cfg, mapeamento, cfg["dados"]["jogos"])
     return 0
 
 

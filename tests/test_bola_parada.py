@@ -31,15 +31,21 @@ import copy
 import pandas as pd
 import pytest
 
-from src import evaluate
+from src import evaluate, run
 from src.events import bola_parada, gatilhos, hierarquia
 from src.tau import grade_de_posicoes
 
 # Plano 04 §2.2: transicoes morta -> viva por jogo, e reinicios anotados.
 DETECCOES_PREVISTAS = {1: 154, 2: 168, 3: 159}
 REINICIOS_PREVISTOS = 296
-# Plano 04 §2.2: com minimo de 1 s sobram 312 transicoes e a precisao vai a 94,9 %.
+# Plano 04 §2.2: com minimo de 1 s sobram 312 transicoes.
 DETECCOES_COM_MINIMO_DE_1_S = 312
+# Teto de precisao = deteccoes na ancora `frame` de um reinicio / deteccoes.
+# Corrigido na revisao da Fatia 5 (2026-11-04): era `reinicios / deteccoes`
+# (61,5 % e 94,9 %), que conta os 13 `no_dead_ball_before`, sem transicao
+# morta -> viva e portanto sem deteccao possivel.
+NA_ANCORA = 283              # de 481 -> 58,8 %
+NA_ANCORA_COM_MINIMO_DE_1_S = 282   # de 312 -> 90,4 %
 # Plano 04 §2.1: revocacao de gatilho dos jogos 1 e 2 somados, (ativa, n), EXATA.
 # Medido em 2026-11-04 e conferido contra a revisao de 2026-11-02 (33 e 13).
 TETO_DE_GATILHO = {
@@ -100,13 +106,16 @@ def test_numero_de_deteccoes_por_jogo(jogo, posse_real, cfg):
 
 
 def test_teto_de_precisao(jogo, posse_real, eventos, cfg):
-    """481 deteccoes contra 296 reinicios anotados = 61,5 % de teto."""
+    """481 deteccoes, 283 na ancora de um reinicio anotado = 58,8 % de teto.
+    `reinicios / deteccoes` (61,5 %) esta superado: ver NA_ANCORA."""
     det = _todos(jogo, posse_real, cfg)
     gab = _gabarito(eventos)
     reinicios = gab[gab["type"].isin(cfg["avaliacao"]["grupos"]["bola_parada"])]
     assert len(reinicios) == REINICIOS_PREVISTOS
     assert len(det) == 481
-    assert round(100.0 * len(reinicios) / len(det), 1) == 61.5
+    na_ancora = int(run.deteccoes_na_ancora(det, gab, cfg).sum())
+    assert na_ancora == NA_ANCORA
+    assert round(100.0 * na_ancora / len(det), 1) == 58.8
 
 
 @pytest.mark.parametrize("tipo", sorted(TETO_DE_GATILHO))
@@ -217,7 +226,7 @@ def test_penalty_nao_e_detectado_e_isso_e_perda_de_revocacao(jogo, posse_real,
 
 
 def test_sensibilidade_da_duracao_minima(jogo, posse_real, eventos, cfg):
-    """Com minimo de 1 s: 312 deteccoes nos tres jogos e precisao ~94,9 %.
+    """Com minimo de 1 s: 312 deteccoes nos tres jogos, 282 na ancora (90,4 %).
 
     O principal NAO aplica minimo (plano §3.1); este e o teste da variante
     declarada. O corte e INCLUSIVO (`dur >= 1 s`), e e o que reproduz os 312.
@@ -227,7 +236,9 @@ def test_sensibilidade_da_duracao_minima(jogo, posse_real, eventos, cfg):
     det = _todos(jogo, posse_real, cfg, duracao_minima_morta_s=1.0)
     assert len(det) == DETECCOES_COM_MINIMO_DE_1_S
     assert (det["dur_morta_s"] >= 1.0).all()
-    assert round(100.0 * REINICIOS_PREVISTOS / len(det), 1) == 94.9
+    na_ancora = int(run.deteccoes_na_ancora(det, _gabarito(eventos), cfg).sum())
+    assert na_ancora == NA_ANCORA_COM_MINIMO_DE_1_S
+    assert round(100.0 * na_ancora / len(det), 1) == 90.4
     # e o minimo e de fato um parametro: 0,0 devolve as 481
     assert len(_todos(jogo, posse_real, cfg, duracao_minima_morta_s=0.0)) == 481
 

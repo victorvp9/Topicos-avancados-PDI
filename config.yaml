@@ -52,7 +52,10 @@ avaliacao:
       janela_s: 3.0
       casa_tipo: true
       casa_jogador: false
-  denominador_passe_secundario: events   # 1009/1131/1358. decisoes.md
+  # `pass_secundario` E `type` fora do grupo `bola_parada`: 987/1115/1347.
+  # decisoes.md, 2026-11-04 (refinamento do D10, plano 05 §3.2). O valor antigo
+  # `events` (1009/1131/1358) estoura.
+  denominador_passe_secundario: events_sem_bola_parada
   ancoras: [frame, annotated_frame]      # sensibilidade, 01-definicoes.md
   # Uma matriz de confusao POR GRUPO, nao uma matriz unica, e `free_kick?` como
   # categoria propria: suplementar S2, p. 3, e Fig. S1, p. 2.

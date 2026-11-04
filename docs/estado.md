@@ -123,14 +123,35 @@ o algoritmo **acha** os reinícios e erra o **tipo**.
    pênalti por 48 cm. É o que explica o teto abaixo dos ~90 % do artigo **sem que
    o algoritmo esteja errado**.
 2. **A matriz do critério Vidal-Codina mostrou o erro previsto desde o G1**: dos
-   10 escanteios perdidos, 7 viram tiro livre e 3 viram lateral.
+   10 escanteios perdidos, 6 viram tiro livre, 3 viram lateral e 1 fica sem
+   casamento (corrigido em 2026-11-04; o "7 + 3" era meu, ver `decisoes.md`
+   2026-11-02).
 3. **O goleiro mora na pequena área**, logo o gatilho de tiro de meta fica quase
    sempre completo — e daí saiu a previsão pré-registrada para a Fatia 6.
 
+## Fatia 5 — ACEITA (2026-11-04), tag `teto`
+
+Plano em `docs/fatias/05-plano.md`. **418 testes.** Duas rodadas do revisor, com
+reprodução independente e mutação.
+
+**Teto do projeto** (critério estrito, `R_pz` = 0,50 m, 3 jogos):
+
+| | P | R | F1 |
+|---|---|---|---|
+| passe principal (`completo` × `PASS`, n = 2650) | 0,967 | 0,825 | **0,890** |
+| passe secundário (todos × união sem tiro de meta, n = 3449) | 0,922 | 0,801 | 0,857 |
+| bola parada, micro sem pênalti | 0,482 | 0,786 | 0,598 |
+
+FN de passe: 297 sem perda a ≤ 1 s (= 2650 − 2353, fecha com a Fatia 3), 144
+suprimidos como bola parada, 22 com desfecho errado. **Erro meu nº 8:** o teto de
+precisão de bola parada é 58,8 %, não 61,5 %. Exploratório: suprimir só a perda
+do executor daria F1 de passe 0,911 (89 + 48 casos; ver `decisoes.md`).
+
 ## Próximo passo
 
-**Fatia 5 — passes**, que fecha o marco `teto`. Primeiro o plano em
-`docs/fatias/05-plano.md` (critério D10 congelado no G1).
+**Fatia 6 — simulador de broadcast.** Plano em `docs/fatias/06-plano.md`, com a
+visibilidade por posição como requisito e a previsão pré-registrada do tiro de
+meta. Dívidas obrigatórias para a Fatia 8 em `decisoes.md` (N4, N5).
 
 ## Portões
 

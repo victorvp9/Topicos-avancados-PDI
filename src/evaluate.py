@@ -248,6 +248,35 @@ def media_ponderada_f1(resultado: pd.DataFrame) -> float:
     return float(np.nansum(resultado["f1"].to_numpy() * peso) / peso.sum())
 
 
+def _conferir_denominador_secundario(cfg: dict) -> None:
+    """So `events_sem_bola_parada` esta implementado. O valor antigo `events`
+    (1009/1131/1358) ESTOURA: nao ha caminho silencioso para o numero velho
+    (plano 05 §3.2; decisoes.md, 2026-11-04)."""
+    valor = cfg["avaliacao"]["denominador_passe_secundario"]
+    if valor != "events_sem_bola_parada":
+        raise NotImplementedError(
+            "avaliacao.denominador_passe_secundario={!r} nao implementado; o normativo e "
+            "`events_sem_bola_parada` (987/1115/1347, decisoes.md 2026-11-04)".format(valor)
+        )
+
+
+def gabarito_secundario(eventos: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """Gabarito SECUNDARIO de passe (D10, refinado em 2026-11-04).
+
+    Entrada: `eventos` no esquema `src.io.schema.EVENTS`. Saida: as linhas com
+    `pass_secundario` e `type` fora do grupo `bola_parada` de
+    `config.yaml:avaliacao.grupos`, com `type` reescrito para `pass` (a uniao
+    `PASS` U `BALL LOST` U `BALL OUT` sem `THEFT` e o que o detector chama de
+    passe), mesmo esquema. Nos tres jogos: 987 / 1115 / 1347.
+
+    O tiro de meta sai porque o detector o rotula `goal_kick` e suprime a perda
+    correspondente (plano 05 §3.2): mante-lo seria falso negativo estrutural.
+    """
+    _conferir_denominador_secundario(cfg)
+    fora = eventos["type"].isin(cfg["avaliacao"]["grupos"]["bola_parada"])
+    return eventos[eventos["pass_secundario"] & ~fora].assign(type="pass").reset_index(drop=True)
+
+
 def avaliar(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict):
     """Casa, conta e devolve `(resultado, confusao)` nos esquemas deste modulo.
 
@@ -278,13 +307,7 @@ def avaliar(eventos: pd.DataFrame, deteccoes: pd.DataFrame, cfg: dict):
     # alternativa de cada uma nao esta implementada (plano §10, nao generalizar).
     if not avaliacao["janela_inclusiva"]:
         raise NotImplementedError("avaliacao.janela_inclusiva=false nao implementado")
-    if avaliacao["denominador_passe_secundario"] != "events":
-        raise NotImplementedError(
-            "avaliacao.denominador_passe_secundario={!r} nao implementado; o normativo e "
-            "`events` (1009/1131/1358, decisoes.md)".format(
-                avaliacao["denominador_passe_secundario"]
-            )
-        )
+    _conferir_denominador_secundario(cfg)
     if avaliacao["criterio_principal"] not in avaliacao["criterios"]:
         raise ValueError(
             "avaliacao.criterio_principal={!r} nao esta em avaliacao.criterios".format(

@@ -154,7 +154,7 @@ Todos medidos em 2026-10-29 sobre o commit
 
 | número | base |
 |---|---|
-| teto de revocação de passe ~97 % com `R_pz` = 0,50 m e ~98 % com 1,00 m | [prev] distribuição de `docs/inspecao-metrica.md` §6.4; **não** vem de rodar o detector |
+| ~~teto de revocação de passe ~97 % com `R_pz` = 0,50 m e ~98 % com 1,00 m~~ | **OBSOLETO** (plano 05 §2.2; `decisoes.md` 2026-11-04): substituído por `tp_diag` estrito ≤ 2353 (R ≤ 0,888), seção Fatia 3 |
 | teto de revocação de bola parada: lateral 92 %, pontapé inicial 92 %, tiro de meta 89 %, escanteio 56 % | [prev] geometria dos gatilhos, §6.2; não inclui posse, hierarquia nem hierarquia de reserva |
 | ~96 h de CPU para a grade de exemplo (1920 execuções × 3 min) | [prev] 3 min/partida do artigo (§3, p. 9) extrapolado; **medir uma execução real antes do G4** |
 
@@ -220,11 +220,163 @@ independentemente pelo revisor** com script próprio.
 válidas como réplica do S3 (mesmo estimador), mas **não** como porteiro da janela
 de ±1 s — a grandeza é inválida para isso neste dataset. Ver `docs/decisoes.md`.
 
+## Fatia 3 — Passo 1 e `τ_posse` (2026-10-30 a 2026-11-04)
+
+Todos `R_pz` = 0,50 m, `R_dz` = 1,00 m, política `acompanha_r_pz`, salvo
+indicação. "Bloco" = cabeçalho de `docs/decisoes.md`. Conferido em 2026-11-04
+rodando o comando indicado com o código atual; onde o registro e o comando
+divergem, a linha diz e a divergência vai para a lista no fim da seção.
+
+| número | onde | comando |
+|---|---|---|
+| perdas 1017 / 1120 / 1322 | [nosso] "Fatia 3 fechada", 2026-10-31 (era 1011/1110/1311 antes da correção da sequência) | `--posse` |
+| ganhos 1127 / 1278 / 1635 (0,50 m); 1200 / 1354 / 1583 (3,00 m) | [nosso] "Revisão da Fatia 3" e "Correção 3", 2026-10-31 | `--posse` |
+| jogo 1, 3,00 m: perdas 729 (`acompanha`) contra 791 (`fixo_1m`) | [nosso] "Fatia 3 fechada", 2026-10-31 | `--posse` |
+| empates exatos de distância: 112 / 110 / 32 quadros | [nosso] "Fatia 3 — achados", 2026-10-30 | `--posse` |
+| passes 2650; **220 sem perda (8,30 %)**, por jogo 44 / 73 / 103 | [nosso] "Fatia 3 fechada", 2026-10-31, e "Fatia 5 — plano", 2026-11-04 | `--tau-posse` |
+| **2430 com perda** (678 / 816 / 936); **3,17 %** acima de 1,0 s | [nosso] idem; `docs/01-definicoes.md` corrigido em 2026-11-04 | `--tau-posse` |
+| **2353** com perda a `\|τ_posse\|` ≤ 1,0 s (662 / 799 / 892) | [nosso] "Fatia 5 — plano", 2026-11-04 | `--tau-posse` (= com perda × (1 − fração > 1 s), por jogo) |
+| mediana de `τ_posse` −0,040 s (um quadro); p95 de `\|τ_posse\|` 0,16 s | [nosso] "DECISAO DO PORTAO", 2026-10-30, mantida em "Fatia 3 fechada" | `--tau-posse` |
+| escada {1,0; 1,5; 2,0; 3,0} s → janela **1,0 s** | [nosso] "DECISAO DO PORTAO", 2026-10-30 | `--tau-posse` |
+| `R_pz` 1,00 m: 6,87 % sem perda, 2,71 % > 1 s | [nosso] "AMEACA A VALIDADE", 2026-10-31 | `--tau-posse` (sensibilidade) |
+| `R_pz` 2,50 m: 25,13 % sem perda, 9,93 % > 1 s, 7,61 % > 3 s (escada esgotada) | [nosso] idem | `--tau-posse` |
+| `R_pz` 3,00 m: 32,87 % sem perda, 12,65 % > 1 s, 10,23 % > 3 s (escada esgotada) | [nosso] idem | `--tau-posse` |
+| deriva: mediana de `τ_posse` −0,040 s (0,50 m) → −0,280 s (3,00 m) | [nosso] "Correção 2", 2026-10-31, medido pelo revisor | **nenhum comando imprime a de 3,00 m** |
+| cauda > 1 s com `τ < 0`: 53 % → 48 % | [nosso] "Correção 2", 2026-10-31, revisor | **sem comando no repositório** |
+| bloqueios pela condição 2: 224 → 25; quadros com condição 1: 3553 → 2162 (−39 %) | [nosso] "Correção 1", 2026-10-31, revisor | **sem comando no repositório** |
+| lacuna 5 a 3,00 m: 263 perdas; `free_kick` 46 % dos 130 a 0,50 m (21/41, 24/54, 15/35), 33 % dos 263 a 3,00 m | [nosso] "Fatia 3 — itens menores", 2026-10-31 | `--posse` (bloco "PESO DA LACUNA 5") |
+| trocas de dono por duelo a 3,00 m: 62 a 65 % dos duelos com 2+ donos | [nosso] "Revisão da Fatia 3", itens menores, 2026-10-31 | `--bola-parada` bloco 7 (61,6 / 63,2 / 65,1 %) |
+| parede: `calcular` 0,31–0,38 s; célula 0,85–1,15 s; I/O 64,2 %; grade 30,8 min sem cache e 11,0 com | [nosso] "Revisão da Fatia 3", 2026-10-31 | `--posse` (tempo varia com a máquina; hoje 0,37–0,49 e 0,98–1,28 s) |
+| ganhos com quebra de sequência (leitura errada): +23,0 / +28,2 / +31,7 % a 3,00 m | [nosso] "Correção 3", 2026-10-31 | **sem comando** (o código não tem mais a leitura errada) |
+| leitura A do duelo: 1754 / 1981 / 2254 ganhos a 3 m, 90 a 115 quadros com ganho duplo | [nosso] "Fatia 3 fechada", 2026-10-31 | **sem comando** (contrafactual descartado) |
+| 319 testes | [nosso] "Fatia 3 ACEITA", 2026-10-31 | `uv run pytest` no commit da Fatia 3 |
+
+**Divergências da Fatia 3** (registro × comando atual, ou dois registros):
+
+1. `τ_posse`: **237 sem perda (8,94 %), 2413 com perda, 3,27 % > 1 s** ("DECISAO
+   DO PORTAO", 2026-10-30; "Fatia 3: tau_posse confirmada", 2026-10-31) contra
+   **220 (8,30 %), 2430, 3,17 %** ("Fatia 3 fechada", 2026-10-31; "Fatia 5 —
+   plano", 2026-11-04). Vale o segundo; o comando dá o segundo.
+2. `R_pz` 1,00 m: 3,06 % > 1 s (2026-10-30) contra 2,71 % (2026-10-31). Vale 2,71 %.
+3. Decomposição dos sem perda: registrada **125 PZ + 112 regra = 237** (19/33/73 e
+   29/45/38, "DECISAO DE DESENHO", 2026-10-31), **anterior** à correção da
+   sequência. O comando atual dá **112 + 108 = 220** (17/29/66 e 27/44/37).
+   **Nenhum registro em `decisoes.md` com os números pós-correção.**
+4. `perdas_termina_corrida` registrado 151 / 156 / 153 (2026-10-30); o comando
+   dá **152 / 159 / 154**. Sem registro posterior.
+5. `so_por_lacuna_5` registrado 41 / 52 / 38 (2026-10-30); o comando dá **41 /
+   54 / 35** — que é o que o bloco "itens menores" de 2026-10-31 já usa
+   (21/41, 24/54, 15/35). Dois valores em `decisoes.md`.
+6. Lacuna 5 a 3,00 m: **80 / 104 / 87** ("Revisão da Fatia 3", 2026-10-31) contra
+   **263** = 80 / 100 / 83 ("itens menores", mesmo dia; e o comando). Vale 263.
+7. Corridas vivas sem posse: registrado 4 / 12 / 6 (2026-10-30); o comando dá
+   **3 / 9 / 5**. Sem registro posterior.
+8. Quadros falso-positivos do §2.3.3: registrado 647 / 676 / 721 (2026-10-30); o
+   comando dá **527 / 433 / 597**. Sem registro posterior.
+9. Trocas de dono por duelo a 0,50 m: registrado 0,27 a 0,46 por duelo e 21 a
+   28 % com 2+ donos (2026-10-31); `--bola-parada` bloco 7 dá **0,25 a 0,44** e
+   **20,9 a 28,2 %**. Sem registro posterior.
+
+Itens 4, 5 (primeira parte), 7, 8 e 9 parecem ser números de antes da correção
+da sequência (2026-10-31) que nunca foram reescritos — mesma classe do 3,27 %.
+
+## Fatia 4 — bolas paradas (2026-11-01 a 2026-11-04)
+
+Padrão `goal_kick_no_problema_3: depois_de_cto` (desde 2026-11-02), critério
+estrito, âncora `frame`, 3 jogos, micro sem pênalti, salvo indicação.
+
+| número | onde | comando |
+|---|---|---|
+| 481 detecções (154 / 168 / 159) contra 296 reinícios (99 / 96 / 101) | [dado] "Fatia 4 — plano", 2026-11-01 | `--bola-parada` bloco 1 |
+| ~~teto de precisão 61,5 % (64,3 / 57,1 / 63,5 %)~~ **SUPERADO** | [dado] "Fatia 4 — plano", 2026-11-01; ver divergência 9 | — |
+| **teto de precisão 58,8 % = 283 / 481** (89/154 = 57,8 %, 93/168 = 55,4 %, 101/159 = 63,5 %): detecções na âncora `frame` de um reinício anotado | [nosso] revisão da Fatia 5, 2026-11-04 | `--bola-parada` bloco 1 |
+| detecções sem reinício na âncora: **198 = 185 + 13** (185 = 481 − 296; 13 = os `no_dead_ball_before`, sem transição morta→viva) | [nosso] revisão da Fatia 5, 2026-11-04 | `--bola-parada` bloco 1 (481 − 283); `--passes` bloco 8 |
+| mínimo de 1 s: 312 transições; ~~teto 94,9 % (296/312)~~ **SUPERADO** → **90,4 % = 282 / 312** | [dado] "Fatia 4 — plano", 2026-11-01; corrigido na revisão da Fatia 5, 2026-11-04 | `--bola-parada` bloco 4 |
+| p10 da duração da bola morta = 0,04 s | [dado] idem | **sem comando no repositório** |
+| **micro P 0,482 / R 0,786 / F1 0,598 (0,5979); `tp_diag` 232; `n_gabarito` 295** | [nosso] "Fatia 4 ACEITA", 2026-11-04 | `--bola-parada` bloco 2 |
+| F1 por tipo: `kickoff` 0,971, `throw_in` 0,912, `corner_kick` 0,762, `goal_kick` **0,396**, `free_kick` 0,500 | [nosso] `docs/estado.md` (2026-11-04); `goal_kick` em "Fatia 4 ACEITA" | `--bola-parada` bloco 2 |
+| `goal_kick` nas três leituras: 0,649 (`nao`) / **0,396** (`depois_de_cto`) / 0,383 (`antes_de_cto`); revocação 0,735 nas três | [nosso] "Revisão da Fatia 4", 2026-11-02, e "Fatia 4 ACEITA" | `--bola-parada` bloco 8 |
+| `antes_de_cto`: micro 0,590; `nao` e `depois_de_cto`: micro idêntico | [nosso] "A ambiguidade da Fig. S1", 2026-11-01, e 2026-11-02 | `--bola-parada` bloco 8 |
+| 71 detecções mudam entre `nao` e `depois_de_cto`, todas `free_kick?` ↔ `goal_kick` | [nosso] "Fatia 4 — a ambiguidade fechada", 2026-11-02 | `--bola-parada` bloco 8 |
+| escanteios perdidos (vidal_codina): 6 → `free_kick`, 3 → `throw_in`, 1 sem casamento | [nosso] "Três números meus errados", 2026-11-02 | `--bola-parada`, matriz `vidal_codina` |
+| teto de gatilho, jogos 1+2: corner 10/18, throw_in 55/60, goal_kick 33/38, kickoff 13/14 | [nosso] "Fatia 4 ACEITA", 2026-11-04 | `--bola-parada` bloco 1, "REVOCACAO DE GATILHO" |
+| curva `eps_c`: 3 m → F1 escanteio 0,762; 5 m → 0,902 (baixa confiança) | [nosso] "O que a Fatia 4 já mostrou", 2026-11-01 | `--bola-parada` bloco 5 |
+| `eps_f` roteia 31 a 36 % das transições ao problema 3; deslocamento ≤ 1 m em 64 / 64 / 72 % | [nosso] "a bifurcação do S1", 2026-11-01 | **sem comando no repositório** |
+| 481 de 481 transições com a bola a ≤ 0,5 m de alguém no 1º quadro vivo | [nosso] idem | **sem comando no repositório** |
+| bracketing de `eps_f`: 0,4484 (0) → 0,5979 (1 m) → 0,6134 (∞) | [nosso] "Três números meus errados", 2026-11-02, revisor | **sem comando no repositório** |
+| leitura alternativa do `else` do S1: micro 0,6495, `tp_diag` 252 | [nosso] "Achado de desenho", 2026-11-02, revisor (cópia fora do repositório) | **sem comando** |
+| lacuna "sem passe do executor": vale 14 acertos; micro 0,634 e `tp_diag` 246 se tratada como "não se deslocou" | [nosso] idem, revisor | **sem comando** (o bloco 2 mostra só a contagem por motivo) |
+| pênalti: cobrador a \|y\| = 1,478 m, falha por 0,478 m | [nosso] "o pênalti", 2026-11-01 | **sem comando no repositório** |
+| M12 (`abs` na profundidade): `tp_diag` 233, micro 0,6005 | [nosso] "Dois mutantes", 2026-11-02 | mutante, fora do repositório |
+| 378 testes | [nosso] "Fatia 4 ACEITA", 2026-11-04 | `uv run pytest` no commit `db7c080` |
+
+**Divergências da Fatia 4:**
+
+1. Micro F1: **0,599** ("O que a Fatia 4 já mostrou", 2026-11-01, antes da caixa
+   quadrada do pênalti) contra **0,5979** ("o pênalti", 2026-11-01, e "Fatia 4
+   ACEITA"). Vale 0,5979.
+2. `free_kick` F1: **0,492** (2026-11-01) contra **0,500** (`docs/estado.md`,
+   2026-11-04, e o comando).
+3. `goal_kick` F1: 0,649 (2026-11-01, leitura `nao`) contra 0,396 (padrão desde
+   2026-11-02). Não é erro: mudou o padrão. Vale 0,396.
+4. `free_kick?`: **117** (2026-11-01) → **122** (2026-11-02, leitura `nao`) → o
+   comando atual dá **51** no padrão `depois_de_cto` (122 − 71). O "47 dos 122
+   `free_kick?` vêm de sem passe" (2026-11-02) é da leitura `nao`; no padrão
+   atual o comando dá 19 `free_kick?` com `sem_passe_do_executor`. **Nenhum
+   registro de 51 em `decisoes.md`.**
+5. Escanteios perdidos: 7 + 3 (2026-11-01; e ainda em `docs/estado.md`) contra 6 +
+   3 + 1 (2026-11-02, e o comando). Vale 6 + 3 + 1. **`docs/estado.md` está
+   desatualizado neste ponto.**
+6. Sensibilidade de âncora: micro 0,599 → **0,596** (2026-11-01) contra o comando
+   atual 0,598 → **0,595** (`tp_diag` 231). O registro é de antes da correção do
+   pênalti; sem registro posterior.
+7. `so_por_lacuna_5`: **8** de 481 rótulos mudam (2026-11-01, leitura `nao`)
+   contra **7** no comando atual (`depois_de_cto`). Micro idêntico nos dois.
+8. Topo do bracketing de `eps_f`: 0,643 (2026-11-01) contra 0,6134 (2026-11-02).
+   Vale 0,6134; o 0,643 era outra medida (a leitura alternativa, 0,6495).
+9. **Teto de precisão: 61,5 % (296/481) e 94,9 % (296/312) estão SUPERADOS por
+   58,8 % (283/481) e 90,4 % (282/312)** (revisão da Fatia 5, 2026-11-04). O
+   numerador antigo eram os 296 reinícios anotados, mas 13 deles (os
+   `no_dead_ball_before`) não têm transição morta → viva, logo nenhuma detecção
+   pode casar com eles; o numerador certo são as detecções que caem na âncora
+   `frame` de um reinício. Os "185 FP estruturais" (481 − 296) passam a **198**
+   (481 − 283 = 185 + 13). Com mínimo de 1 s uma das 283 sai (282): o intervalo
+   morto dela dura menos de 1 s.
+
+## Fatia 5 — passes (2026-11-04)
+
+Produzidos por `src/events/passes.py`, `src/evaluate.py:gabarito_secundario` e
+`python -m src.run --passes`. **Ainda sem revisão independente.** Critério
+principal = passes `completo` × `PASS`; secundário = todos × `pass_secundario`
+sem o grupo `bola_parada`; âncora `frame` (para passe as duas coincidem, com
+teste).
+
+| número | onde | comando |
+|---|---|---|
+| denominador principal 722 / 889 / 1039 = 2650 | [nosso] contrato do `docs/fatias/05-plano.md` §2.1 | `--passes` blocos 3 e 5 |
+| denominador secundário 987 / 1115 / 1347 = 3449 (= 1009/1131/1358 − 22/16/11 tiros de meta) | [nosso] plano 05 §2.1; "Fatia 5 — plano", 2026-11-04 | `--passes` bloco 4 |
+| perdas 3459 = 1017 / 1120 / 1322; suprimidas como bola parada 464 = 151 / 159 / 154; passes 2995 = 866 / 961 / 1168 | [nosso] | `--passes` bloco 1 |
+| suprimidas de jogador ≠ executor: 137 (44 / 51 / 42), dos quais 48 são `free_kick?` (sem executor) | [nosso] | `--passes` bloco 1 |
+| desfecho: completo 2262, interceptado 366, bola_morta 365, próprio 2, fim_de_periodo 0; recepção em duelo 76 | [nosso] | `--passes` bloco 2 |
+| **principal estrito: P 0,967 / R 0,825 / F1 0,890; `tp_diag` 2187, `n_det` 2262** | [nosso] | `--passes` bloco 3 |
+| principal por jogo, F1 estrito: 0,912 / 0,904 / 0,864 | [nosso] | `--passes` bloco 3 |
+| principal vidal_codina F1 0,898 (`tp` 2205); mills 0,914 (`tp` 2244) | [nosso] | `--passes` bloco 3 |
+| secundário estrito: P 0,922 / R 0,801 / F1 0,857; `tp_diag` 2761, `n_det` 2995 | [nosso] | `--passes` bloco 4 |
+| diagnóstico (todos × `PASS`) estrito `tp_diag` 2209 (≤ teto 2353); vidal_codina 2246 (≤ 2430) | [nosso] | `--passes` bloco 5 |
+| decomposição dos 463 FN do principal estrito: a 297, b 144, c 22, d 0 (por jogo 111 / 148 / 204, = `fn`) | [nosso] | `--passes` bloco 6 |
+| (a) = 297 = 2650 − 2353, exatamente o complemento do teto da Fatia 3 | [nosso] | `--passes` bloco 6 e `--tau-posse` |
+| sem lacuna 5: 2884 passes (111 a menos); F1 principal estrito 0,890, secundário 0,859 | [nosso] | `--passes` bloco 7 |
+| detecções "espúrias" (quadro não é âncora de reinício anotado): 198 de 481 = 185 + 13 (ver divergência 9 da Fatia 4) | [nosso] | `--passes` bloco 8 |
+| supressões a ≤ 1 s de um `PASS` do mesmo jogador: 144 de 464; 114 delas por detecção espúria | [nosso] | `--passes` bloco 8 |
+| decomposição por jogo: a 60 / 90 / 147, b 45 / 51 / 48, c 6 / 7 / 9, d 0 (travada em teste) | [nosso] revisão da Fatia 5, 2026-11-04 | `--passes` bloco 6 |
+| **EXPLORATÓRIO** (bloco 9, supressão só se a perda for do executor): 3132 passes; principal estrito P 0,967 / R 0,861 / F1 0,911 (`tp_diag` 2282); secundário estrito P 0,921 / R 0,837 / F1 0,877 (`tp_diag` 2886) | [nosso] revisão da Fatia 5, 2026-11-04 — decidido depois de ver o resultado; o principal não muda | `--passes` bloco 9 |
+| 418 testes | [nosso] | `uv run pytest` |
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |
 |---|---|---|
 | ~~distribuição de `τ` pelo argmin de distância~~ | ~~Fatia 2~~ | **FEITO: disparou com 45,36 %, mas a grandeza é inválida; decisão adiada** |
-| `\|τ_posse\|` = \|quadro anotado − quadro de perda de posse\| | **Fatia 3** | **G3 pela escada {1,0; 1,5; 2,0; 3,0} s, regra escrita antes** |
+| ~~`\|τ_posse\|` = \|quadro anotado − quadro de perda de posse\|~~ | ~~Fatia 3~~ | **FEITO: 3,17 % > 1,0 s, janela 1,0 s; seção Fatia 3** |
 | curva F1(`eps_c`) no jogo 3 | Fatia 8 | sem gatilho, mas **baixa confiança obrigatória**: n = 8 escanteios, 3 cobradores |
 | tempo de parede de uma execução real | antes da Fatia 8 | **G4 se o orçamento passar de 2 h de CPU** |

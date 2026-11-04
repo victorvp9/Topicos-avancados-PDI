@@ -15,6 +15,7 @@ import pytest
 
 from src import gabarito, possession
 from src.config import carregar_config, carregar_mapeamento
+from src.events import bola_parada, passes
 from src.io import carregar_jogo, schema
 
 JOGOS = (1, 2, 3)
@@ -92,6 +93,33 @@ def _posse_real(game: int, **posse):
         frames, tracking, _ = _jogo(game)
         _POSSE_REAL[chave] = possession.calcular(frames, tracking, novo)
     return _POSSE_REAL[chave]
+
+
+_PASSES_REAL = {}
+
+
+def _passes_real(game: int, **posse):
+    """(passes, deteccoes de bola parada) no dado real, memorizado por (jogo,
+    parametros de `posse`). As deteccoes usam o MESMO `cfg`, porque o padrao
+    de bola parada tambem depende de `R_pz`."""
+    chave = (game, tuple(sorted(posse.items())))
+    if chave not in _PASSES_REAL:
+        novo = copy.deepcopy(_cfg())
+        novo["posse"].update(posse)
+        frames, tracking, periods = _jogo(game)
+        p1 = _posse_real(game, **posse)
+        det = bola_parada.detectar(frames, tracking, periods, p1["perdas"], novo)
+        _PASSES_REAL[chave] = (
+            passes.rotular(p1["perdas"], p1["ganhos"], p1["control"], frames, det),
+            det,
+        )
+    return _PASSES_REAL[chave]
+
+
+@pytest.fixture(scope="session")
+def passes_real():
+    """Funcao (game, **posse) -> (passes, deteccoes de bola parada), memorizado."""
+    return _passes_real
 
 
 @pytest.fixture(scope="session")
