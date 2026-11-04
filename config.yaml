@@ -161,3 +161,99 @@ tau:
   faixas_tau_s: [1.0, 3.0, 5.0, 7.5]   # as faixas de |tau| do supl. S3, p. 5
   faixas_d_m: [0.5, 1.0, 1.5]          # as faixas de distancia do supl. S3, pp. 5-6
   faixa_sanidade_d_m: 0.5              # a faixa da inspecao-metrica.md §6.4
+
+# Simulador de broadcast (Fatia 6). Plano docs/fatias/06-plano.md §4 e §5.
+simulador:
+  # Suposicao de modelagem SEM fonte publicada, fixada antes de medir e nao
+  # escolhida pelo ajuste. Plano 06 §4.3; decisoes.md 2026-11-04.
+  d_cam_m: 30.0
+  sensibilidade_d_cam_m: [15.0, 60.0]   # diagnostico, plano 06 §4.3 e §6 bloco 6
+  # Savitzky-Golay da homografia estimada no Bassek, Metodos, p. 4,
+  # REAPROVEITADO como suavidade da camera (plano 06 §4.1, declarado).
+  sg_janela: 31
+  sg_grau: 3
+  # Filtro das posicoes: Bassek, Metodos, p. 4 (Butterworth 3a ordem, 1 Hz).
+  butter_ordem: 3
+  butter_corte_hz: 1.0
+  theta_busca_graus: [5.0, 180.0]   # intervalo da busca de theta*, plano 06 §4.4 passo 3
+  bissecao_tol_taxa: 1.0e-4         # |delta taxa| da bissecao dos niveis, plano 06 §4.4
+  # RESTRICAO do ajuste dos cortes (nao mais validacao): trocas on<->off
+  # esperadas por minuto em B8 (c = 1), 3 jogos juntos, todos os quadros.
+  # Bassek, Discussao, p. 8; restricao desde a emenda §10 do plano 06.
+  cortes_por_minuto_max: 10.9
+  # Tolerancia da restricao na saida (folga < isto = restricao ATIVA) e no teste.
+  # Orquestrador, 2026-11-04, emenda §10 ("tolerancia de 1e-6").
+  tol_restricao: 1.0e-6
+  # Tolerancia de "confere" (bloco 4 do --simulador) e do T8, relativa e absoluta.
+  # A dispersao do otimizador entre pontos iniciais e ~2e-5 relativo; 1e-6
+  # matava mutantes por ruido. Abs 1e-9 tambem e o limiar de "a_vivo ~ 0".
+  # Revisao independente da Fatia 6, 2026-11-04 (I1).
+  tol_confere_rel: 1.0e-4
+  tol_confere_abs: 1.0e-9
+  # Numerico, NAO parametro do modelo (emenda §10: ">= 3 pontos iniciais").
+  # Pontos iniciais do SLSQP em (alpha_vivo, alpha_morto, b), a_s = (1 - b) alpha_s.
+  # Com o ftol padrao (1e-6) o ponto (0.1, 0.3, 0.3) parava num minimo local
+  # (custo 0,01295 contra 0,01121) e os demais discordavam em b a ~1 %; com
+  # 1e-10 os quatro concordam (sondagem do codificador, 2026-11-04). Fica o de
+  # menor custo; todos saem no bloco 1 do `--simulador`.
+  cortes_pontos_iniciais: [[0.5, 0.5, 0.5], [0.01, 0.01, 0.01], [0.1, 0.3, 0.3], [0.001, 0.002, 0.001]]
+  cortes_ftol: 1.0e-10
+  alvos:
+    # Bassek, Resultados, p. 6 (TV). P(off|vivo) = 0,21*0,38/0,56 = 0,1425 e
+    # P(off|morto) = 0,79*0,38/0,44 = 0,6823 saem destes cinco (plano 06 §4.4).
+    frac_0_visiveis: 0.38
+    frac_ativo_quando_0: 0.21
+    frac_parado_quando_0: 0.79
+    frac_ativo: 0.56
+    frac_parado: 0.44
+    p_off_lateral: 0.468   # laterais cujo quadro cai em replay, FOOTPASS §3.2, p. 6
+    # distancia percorrida visivel (TV), Bassek, Resultados, p. 6, TEXTO. Alvo do theta*.
+    dist_visivel: {"GK": 0.14, "DEF": 0.40, "MID": 0.52, "OFF": 0.46}
+    # razao das medias da Tabela 1 (p. 7, coluna TV), so como incerteza do alvo
+    # (plano 06 §2, achado 1). Nao entra no ajuste.
+    dist_visivel_tabela1: {"GK": 0.139, "DEF": 0.366, "MID": 0.462, "OFF": 0.421}
+  # n por posicao, Bassek, Tabela 1, p. 7 (GK vem de is_gk). Plano 06 §4.4 passo 2.
+  proporcoes_papel: {"DEF": 28, "MID": 17, "OFF": 14}   # aspas: o YAML 1.1 le OFF como booleano
+  # Escada de niveis, plano 06 §4.4 passo 4 (tabela). Nivel k: taxa geometrica
+  # esperada = 1 - fracao_geometrica[k] * (1 - r5); 0 = theta infinito, 1 = theta*.
+  escada:
+    fracao_geometrica: [0.0, 0.25, 0.5, 0.75, 1.0, 1.0, 1.0, 1.0]
+    c: [0.0, 0.0, 0.0, 0.0, 0.0, 0.3333333333333333, 0.6666666666666666, 1.0]
+  # Validacoes pre-registradas, plano 06 §4.5. Nao entram no ajuste.
+  validacoes:
+    crang_camera1_sem_gk: [0.56, 0.64]   # Crang, Tabela 1, p. 5 (limite inferior)
+    crang_pgm_sem_gk: [0.36, 0.42]       # Crang, Tabela 1, p. 5 (limite inferior)
+    moda_visiveis_por_time: 7            # Bassek, Resultados, p. 6
+    frac_9_ou_mais: 0.20                 # Bassek, Resultados, p. 6
+    frac_11: 0.03                        # Bassek, Discussao, p. 8
+    residuo_max: 0.05                    # 5 pontos, plano 06 §4.5
+  semente_base: 20261104                 # plano 06 §5
+  n_sementes: 5                          # docs/03-plano.md, Fatia 8
+  # Saida de `python -m src.run --simulador`, 2026-11-04 (plano 06 §4.4 passo 4),
+  # REGERADA depois da emenda §10 (cortes com restricao de trocas por minuto).
+  # Cortes, theta* e os 8 niveis por variante. NAO editar a mao: o teste T8
+  # (tests/test_simulador_real.py) recalibra e trava a reproducao.
+  calibrado:
+    a_vivo: 9.675717174256642e-19
+    a_morto: 0.005949783758574941
+    b: 0.0030117754278549953
+    theta_estrela_graus: 24.559781683118526
+    niveis:
+      B:
+        - {theta_graus: .inf, c: 0.0, taxa: 1.0}
+        - {theta_graus: 65.0830078125, c: 0.0, taxa: 0.8751716478916542}
+        - {theta_graus: 45.46142578125, c: 0.0, taxa: 0.7503155952920161}
+        - {theta_graus: 33.4423828125, c: 0.0, taxa: 0.6254508730729657}
+        - {theta_graus: 24.559781683118526, c: 0.0, taxa: 0.5005772697803711}
+        - {theta_graus: 24.559781683118526, c: 0.3333333333333333, taxa: 0.4183683074778136}
+        - {theta_graus: 24.559781683118526, c: 0.6666666666666666, taxa: 0.3744683782282694}
+        - {theta_graus: 24.559781683118526, c: 1.0, taxa: 0.34705607154509044}
+      A:
+        - {L_m: .inf, taxa: 1.0}
+        - {L_m: 83.49321833821881, taxa: 0.8752124585391311}
+        - {L_m: 65.07445375910818, taxa: 0.7502535335042728}
+        - {L_m: 53.36519695213489, taxa: 0.6254838599175583}
+        - {L_m: 43.417509753290325, taxa: 0.5006543448114865}
+        - {L_m: 37.26496884254662, taxa: 0.41841475797594413}
+        - {L_m: 34.0267894158394, taxa: 0.37441802536519186}
+        - {L_m: 32.01911817128094, taxa: 0.3469633495011163}

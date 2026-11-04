@@ -33,6 +33,10 @@ contador de trocas de dono por duelo). Grava `outputs/deteccoes.csv`.
 tres criterios contra o gabarito principal (`PASS`) e o secundario, e decompoe
 os falsos negativos do principal por causa (docs/fatias/05-plano.md §6). Grava
 `outputs/passes.csv`.
+
+`python -m src.run --simulador` calibra o simulador de broadcast e imprime os
+sete blocos do docs/fatias/06-plano.md §6. NAO avalia nada sobre tracking
+degradado: nenhum P/R/F1 e nenhuma contagem de deteccao (plano §6).
 """
 
 import argparse
@@ -42,7 +46,7 @@ import time
 import numpy as np
 import pandas as pd
 
-from src import evaluate, gabarito, possession, tau as tau_mod, tau_posse as tau_posse_mod
+from src import broadcast, evaluate, gabarito, possession, tau as tau_mod, tau_posse as tau_posse_mod
 from src.config import RAIZ_REPO, carregar_config, carregar_mapeamento
 from src.events import bola_parada, gatilhos, hierarquia, passes as passes_mod
 from src.io import carregar_jogo
@@ -608,17 +612,23 @@ def revocacao_de_gatilho(base: dict, cfg: dict, jogos) -> pd.DataFrame:
     return tabela
 
 
-def _carregar_base(cfg: dict, mapeamento: dict, jogos) -> dict:
+def _carregar_base(cfg: dict, mapeamento: dict, jogos, degradacao=None) -> dict:
     """Carrega uma vez por jogo tudo o que o Passo 2 consome.
 
     Saida: `game -> dict` com `frames`, `tracking`, `periods`, `eventos`,
     `perdas` (Passo 1 no `R_pz` do config), `control`, `sequencias` e as
     matrizes de posicao, para que a varredura de `eps_c` e as variantes nao
     repitam carga nem Passo 1.
+
+    `degradacao = (variante, nivel, semente)` troca SO o `tracking` pelo de
+    `src.broadcast.degradar`, antes do Passo 1 e da grade de posicoes. `frames`,
+    `periods` e `eventos` vem do carregamento completo, intactos (plano 06 §5).
     """
     base = {}
     for game in jogos:
         frames, tracking, periods = carregar_jogo(game, cfg)
+        if degradacao is not None:
+            tracking = broadcast.degradar(tracking, frames, cfg, *degradacao)
         passo1 = possession.calcular(frames, tracking, cfg)
         crus = gabarito.carregar_eventos_crus(game, cfg, mapeamento)
         jogadores, px, py, _, _ = tau_mod.grade_de_posicoes(frames, tracking)
@@ -1220,6 +1230,247 @@ def rodar_passes(cfg: dict, mapeamento: dict, jogos, gravar_em=None, exploratori
     return passes, res_principal, res_secundario
 
 
+def _base_leve(cfg: dict, mapeamento: dict, jogos) -> dict:
+    """`game -> dict` com `frames`, `tracking`, `periods`, `eventos`, sem Passo 1:
+    o simulador nao precisa de posse (plano 06 §4.4)."""
+    base = {}
+    for game in jogos:
+        frames, tracking, periods = carregar_jogo(game, cfg)
+        crus = gabarito.carregar_eventos_crus(game, cfg, mapeamento)
+        base[game] = {"frames": frames, "tracking": tracking, "periods": periods,
+                      "eventos": gabarito.construir_gabarito(game, crus, frames, cfg)}
+    return base
+
+
+def _faixa(valor: float, lo: float, hi: float) -> str:
+    return "dentro" if lo <= valor <= hi else ("acima" if valor > hi else "abaixo")
+
+
+def _confere(novo: float, velho, rel: float, abs_: float) -> bool:
+    """`novo` e `velho` iguais a tolerancia relativa `rel` OU absoluta `abs_`
+    (`simulador.tol_confere_*`, a mesma do T8)."""
+    if velho is None:
+        return False
+    if np.isinf(novo) or np.isinf(velho):
+        return novo == velho
+    return abs(novo - velho) <= max(rel * max(abs(velho), abs(novo)), abs_)
+
+
+def rodar_simulador(cfg: dict, mapeamento: dict, jogos) -> dict:
+    """Calibra o simulador e imprime os blocos 1-7 do plano 06 §6.
+
+    PROIBIDO aqui (plano 06 §6): `avaliar`/`micro` sobre tracking degradado,
+    P/R/F1 degradado e contagem de deteccoes degradadas por tipo. Nada disso e
+    chamado. Devolve o dict de `broadcast.calibrar`.
+    """
+    s = cfg["simulador"]
+    antigo = s.get("calibrado", {})
+    base = _base_leve(cfg, mapeamento, jogos)
+    cal = broadcast.calibrar(base, cfg, jogos)
+    d = cal["diag"]
+    cfg_cal = copy.deepcopy(cfg)
+    cfg_cal["simulador"]["calibrado"] = {k: cal[k] for k in
+                                         ("a_vivo", "a_morto", "b", "theta_estrela_graus", "niveis")}
+    papeis_ord = broadcast.PAPEIS
+    zero = s["tol_confere_abs"]
+
+    def confere(novo, velho):
+        return _confere(novo, velho, s["tol_confere_rel"], zero)
+
+    print("=" * 78)
+    print("BLOCO 1 - CORTES (minimos quadrados, pesos iguais, valor esperado,")
+    print("          SUJEITO A trocas/min em B8 <= {} -- emenda, plano 06 secao 10)".format(
+        s["cortes_por_minuto_max"]))
+    for k in ("a_vivo", "a_morto", "b"):
+        print("  {:8s} = {!r}  ({} com o config)".format(
+            k, cal[k], "confere" if confere(cal[k], antigo.get(k)) else "DIFERE"))
+    if cal["a_vivo"] < zero:
+        print("  a_vivo ~ 0 (limite inferior ativo): nenhum corte comeca com a bola viva")
+    print("  a_morto / (1 - b) = {:.6f}  (1 = no limite do acoplamento c a_s <= 1 - b)".format(
+        cal["a_morto"] / (1.0 - cal["b"])))
+    for nome, alvo, obt in zip(("P(off | vivo)", "P(off | morto)",
+                                "P(off) ancora das {} laterais".format(d["n_laterais"])),
+                               d["alvos_cortes"], d["obtidos_cortes"]):
+        print("  {:34s} alvo {:.4f}  obtido {:.4f}  residuo {:+.4f}".format(nome, alvo, obt, obt - alvo))
+    print("  trocas on<->off por minuto em B8 (c = 1, esperado): {:.4f} | teto {} | folga {:.4f}"
+          " -> restricao {}".format(
+              d["cortes_por_min"], s["cortes_por_minuto_max"], d["folga"],
+              "ATIVA" if d["folga"] < s["tol_restricao"] else "INATIVA"))
+    print("    INATIVA no otimo, mas SELETORA DE BACIA: sem ela o otimo global e outro.")
+    fr_todos, lateral = broadcast.cortes_juntos(base, jogos)
+    sem = copy.deepcopy(cfg)
+    sem["simulador"]["cortes_por_minuto_max"] = np.inf
+    livre = broadcast.calibrar_cortes(fr_todos, lateral, sem)
+    print("    otimo SEM a restricao (teto = inf, mesmos pontos iniciais): a_vivo {:.6f} "
+          "a_morto {:.6f} b {:.6f} custo {:.10f} trocas/min {:.2f}".format(
+              livre["a_vivo"], livre["a_morto"], livre["b"], livre["custo"],
+              livre["trocas_por_min"]))
+    print("      partidas sem restricao: " + "; ".join(
+        "x0 {} -> b {:.6f} custo {:.3g}".format(q["x0"], q["b"], q["custo"])
+        for q in livre["partidas"]))
+    fps = cfg["tracking"]["fps"]
+    entra, _ = broadcast.transicoes(fr_todos, cal, 1.0)
+    minutos = len(fr_todos) / fps / 60.0
+    por_jogo = pd.Series(entra).groupby(fr_todos["game"].to_numpy()).sum()
+    print("  episodios off esperados em B8 (entradas on -> off): {:.4f} por minuto; por jogo: {}".format(
+        entra.sum() / minutos, "  ".join("jogo {} {:.1f}".format(g, n) for g, n in por_jogo.items())))
+    print("    NAO e a taxa de cortes do Bassek (10,9/min conta trocas de plano, inclusive")
+    print("    de angulo); e o numero de vezes que a cadeia sai da camera principal.")
+    print("  duracao media esperada dos episodios, s (taxa de saida constante, isto e se o")
+    print("  estado da bola nao mudasse; on sai com prob. a_s, off com prob. b, por quadro):")
+    for nome, a in (("viva ", cal["a_vivo"]), ("morta", cal["a_morto"])):
+        on = "inf (a_s no limite 0)" if a < zero else "{:.2f}".format(1.0 / a / fps)
+        print("    bola {}: on {:>22s}  off {:8.2f}".format(nome, on, 1.0 / cal["b"] / fps))
+    print("  pontos iniciais do SLSQP (alpha_vivo, alpha_morto, b), ftol {}:".format(s["cortes_ftol"]))
+    for q in d["partidas"]:
+        print("    x0 {} -> a_vivo {:.6e} a_morto {:.8f} b {:.8f} custo {:.10f} trocas/min {:.4f}"
+              " {}".format(q["x0"], q["a_vivo"], q["a_morto"], q["b"], q["custo"],
+                           q["trocas_por_min"], "ok" if q["sucesso"] else "FALHOU: " + q["mensagem"]))
+    def _rel(k):
+        valores = [q[k] for q in d["partidas"] if q["sucesso"]]
+        return (max(valores) - min(valores)) / max(abs(cal[k]), 1e-300)
+    print("    dispersao relativa entre partidas: a_morto {:.1e}  b {:.1e}".format(
+        _rel("a_morto"), _rel("b")))
+
+    print("=" * 78)
+    print("BLOCO 2 - PAPEIS (x medio no sentido de ataque, m)")
+    pap = d["papeis"]
+    contagem = pap.groupby(["game", "team", "papel"]).size().unstack(fill_value=0)
+    print(contagem.reindex(columns=list(papeis_ord), fill_value=0).to_string())
+    for linha in pap.sort_values(["game", "team", "x_medio"]).itertuples():
+        print("  jogo {} {:4s} {:14s} {:3s} {:+8.2f}".format(
+            linha.game, linha.team, linha.player_id, linha.papel, linha.x_medio))
+
+    print("=" * 78)
+    print("BLOCO 3 - THETA* = {!r} graus ({} com o config)".format(
+        cal["theta_estrela_graus"],
+        "confere" if confere(cal["theta_estrela_graus"], antigo.get("theta_estrela_graus"))
+        else "DIFERE"))
+    print("  d_cam = {} m, c = 1. Distancia visivel esperada por papel:".format(s["d_cam_m"]))
+    print("  {:4s} {:>9s} {:>10s} {:>9s} {:>10s} {:>9s} {:>13s}".format(
+        "", "obtido", "texto p.6", "residuo", "Tabela 1", "residuo", "tempo visivel"))
+    for k in papeis_ord:
+        a, t1 = s["alvos"]["dist_visivel"][k], s["alvos"]["dist_visivel_tabela1"][k]
+        print("  {:4s} {:9.4f} {:10.3f} {:+9.4f} {:10.3f} {:+9.4f} {:13.4f}".format(
+            k, d["dist_visivel"][k], a, d["dist_visivel"][k] - a, t1,
+            d["dist_visivel"][k] - t1, d["tempo_visivel"][k]))
+    print("  segmentos de presenca: {}; curtos (padlen = len - 1): {}".format(
+        d["n_segmentos"], d["n_curtos"]))
+
+    print("=" * 78)
+    print("BLOCO 4 - NIVEIS (taxa = linhas visiveis / linhas presentes)")
+    n_sem = s["n_sementes"]
+    print("  sementes efetivas (SeedSequence): " + "; ".join(
+        str(broadcast.semente_efetiva(cfg, g, r)) for g in jogos for r in range(n_sem)))
+    antigos = antigo.get("niveis", {})
+    for variante, chave in (("B", "theta_graus"), ("A", "L_m")):
+        for i, lv in enumerate(cal["niveis"][variante]):
+            nivel = i + 1
+            esp = d["taxas"][variante][i]
+            velho = (antigos.get(variante) or [None] * 8)[i]
+            ok = velho is not None and confere(lv[chave], velho[chave]) and \
+                abs(lv["taxa"] - velho["taxa"]) < s["bissecao_tol_taxa"] and \
+                (variante == "A" or confere(lv["c"], velho["c"]))
+            print("  {}{} {}={!r}{} | esperada: todas {:.4f} sem GK {:.4f} viva {:.4f} | {}".format(
+                variante, nivel, chave, lv[chave],
+                " c={:.4f}".format(lv["c"]) if variante == "B" else "",
+                esp["todas"], esp["sem_gk"], esp["viva"], "confere" if ok else "DIFERE"))
+            for g in jogos:
+                fr, tr = base[g]["frames"], base[g]["tracking"]
+                gk = tr["is_gk"].to_numpy()
+                viva = fr["ball_live"].to_numpy()[tr["frame"].to_numpy() - 1]
+                amostras = np.array([
+                    [m.mean(), m[~gk].mean(), m[viva].mean()]
+                    for m in (broadcast.mascara(tr, fr, cfg_cal, variante, nivel, r)
+                              for r in range(n_sem))
+                ])
+                print("      jogo {}: amostrada todas {:.4f}-{:.4f}  sem GK {:.4f}-{:.4f}  "
+                      "viva {:.4f}-{:.4f}".format(g, *np.ravel(
+                          np.c_[amostras.min(axis=0), amostras.max(axis=0)])))
+
+    print("=" * 78)
+    print("BLOCO 5 - VALIDACOES PRE-REGISTRADAS (nao entram no ajuste)")
+    v = s["validacoes"]
+    b5, b8 = d["taxas"]["B"][4]["sem_gk"], d["taxas"]["B"][7]["sem_gk"]
+    print("  B5 sem GK {:.4f} vs Crang Camera 1 {}-{}: {} (limite inferior)".format(
+        b5, *v["crang_camera1_sem_gk"], _faixa(b5, *v["crang_camera1_sem_gk"])))
+    print("  B8 sem GK {:.4f} vs Crang PGM {}-{}: {} (limite inferior)".format(
+        b8, *v["crang_pgm_sem_gk"], _faixa(b8, *v["crang_pgm_sem_gk"])))
+    dv = d["dist_visiveis_por_time"]
+    moda = int(np.argmax(dv[1:]) + 1)
+    print("  B8 distribuicao de visiveis por time (esperada): " + " ".join(
+        "{}:{:.3f}".format(k, x) for k, x in enumerate(dv)))
+    print("    moda (k >= 1) {} ({:.3f}) vs ~{}: {}".format(
+        moda, dv[moda], v["moda_visiveis_por_time"], _faixa(moda, *[v["moda_visiveis_por_time"]] * 2)))
+    print("    P(>= 9) {:.4f} vs ~{}: {}".format(
+        dv[9:].sum(), v["frac_9_ou_mais"], _faixa(dv[9:].sum(), *[v["frac_9_ou_mais"]] * 2)))
+    print("    P(11) {:.4f} vs ~{}: {}".format(dv[11], v["frac_11"], _faixa(dv[11], *[v["frac_11"]] * 2)))
+    print("  RESTRICAO (emenda secao 10, nao validacao): B8 trocas on<->off por minuto {:.4f} "
+          "<= {}: {}".format(d["cortes_por_min"], s["cortes_por_minuto_max"],
+                             _faixa(d["cortes_por_min"], 0.0, s["cortes_por_minuto_max"])))
+    alvos, obtidos = d["alvos_cortes"], d["obtidos_cortes"]
+    f = d["f_viva"]
+    print("  B8 P(0 visiveis) marginal {:.4f} vs {} do Bassek: {} (diferente por desenho)".format(
+        dv[0], s["alvos"]["frac_0_visiveis"], _faixa(dv[0], *[s["alvos"]["frac_0_visiveis"]] * 2)))
+    print("    P(off) marginal previsto (f_viva {:.4f}): pelos ALVOS dos cortes {:.4f}; "
+          "pelos cortes AJUSTADOS {:.4f}".format(
+              f, alvos[0] * f + alvos[1] * (1 - f), obtidos[0] * f + obtidos[1] * (1 - f)))
+    residuos = [("cortes, " + nome, obt - alvo) for nome, alvo, obt in
+                zip(("vivo", "morto", "lateral"), alvos, d["obtidos_cortes"])]
+    residuos += [("distancia visivel, " + k, d["dist_visivel"][k] - s["alvos"]["dist_visivel"][k])
+                 for k in papeis_ord]
+    for nome, r in residuos:
+        print("  residuo ({}) {:+.4f}: {}".format(
+            nome, r, "dentro de {:g} pontos".format(100 * v["residuo_max"])
+            if abs(r) <= v["residuo_max"]
+            else "LIMITACAO REGISTRADA (secao 4.5)"))
+    menor = min(d["dist_visivel"], key=d["dist_visivel"].get)
+    print("  " + "#" * 74)
+    print("  ##  CRITERIO DE PARADA: papel menos visivel em B8 = {} -> {}".format(
+        menor, "GK e o menos visivel, segue" if menor == "GK" else "PARAR, G3"))
+    print("  " + "#" * 74)
+
+    print("=" * 78)
+    print("BLOCO 6 - SENSIBILIDADE A d_cam (diagnostico; d_cam NAO muda)")
+    linhas = [(s["d_cam_m"], cal["theta_estrela_graus"], d["dist_visivel"])] + [
+        (dc, th, dist) for dc, (th, dist) in d["sensibilidade"].items()]
+    for dc, th, dist in linhas:
+        print("  d_cam {:5.1f} m: theta* {:8.4f} graus | residuo ".format(dc, th) + " ".join(
+            "{} {:+.4f}".format(k, dist[k] - s["alvos"]["dist_visivel"][k]) for k in papeis_ord))
+
+    print("=" * 78)
+    print("BLOCO 7 - PRECURSOR (so visibilidade esperada, sem detector, gabarito)")
+    pre = broadcast.precursor(base, cfg_cal, cfg["avaliacao"]["grupos"]["bola_parada"], jogos)
+    n = pre[(pre["variante"] == "B") & (pre["nivel"] == 1)].set_index("type")
+    print("  n por tipo: " + "  ".join("{} {} (com corrida morta antes {})".format(
+        t, r.n, r.n_corrida) for t, r in n.iterrows()))
+    for col, titulo in (("exec_frame", "executor anotado visivel na ancora `frame`"),
+                        ("exec_anotado", "executor anotado visivel no `annotated_frame`"),
+                        ("area_time", "corrida morta: algum do time na propria pequena area visivel"
+                                      " (em A1/B1, tudo visivel: mede PRESENCA na zona)"),
+                        ("area_gk", "corrida morta: o GK do time na propria pequena area visivel"
+                                    " (em A1/B1, tudo visivel: mede PRESENCA na zona)")):
+        tab = pre.assign(nv=pre["variante"] + pre["nivel"].astype(str)).pivot(
+            index="nv", columns="type", values=col)
+        tab = tab.reindex([v_ + str(k) for v_ in ("A", "B") for k in range(1, 9)])
+        print("  {}:".format(titulo))
+        print("\n".join("    " + l for l in tab.to_string(float_format="{:.3f}".format).splitlines()))
+
+    print("=" * 78)
+    print("TRECHO PARA config.yaml (simulador.calibrado):")
+    print("  calibrado:")
+    for k in ("a_vivo", "a_morto", "b", "theta_estrela_graus"):
+        print("    {}: {!r}".format(k, cal[k]))
+    print("    niveis:")
+    for variante, chave in (("B", "theta_graus"), ("A", "L_m")):
+        print("      {}:".format(variante))
+        for lv in cal["niveis"][variante]:
+            par = ".inf" if np.isinf(lv[chave]) else repr(lv[chave])
+            extra = ", c: {!r}".format(lv["c"]) if variante == "B" else ""
+            print("        - {{{}: {}{}, taxa: {!r}}}".format(chave, par, extra, lv["taxa"]))
+    return cal
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python -m src.run", description=__doc__)
     parser.add_argument("--inspect", action="store_true", help="imprime o resumo dos jogos")
@@ -1231,13 +1482,16 @@ def main(argv=None) -> int:
                         help="roda o Passo 2 (bolas paradas) e o relatorio do plano 04")
     parser.add_argument("--passes", action="store_true",
                         help="rotula e avalia os passes (relatorio do plano 05)")
+    parser.add_argument("--simulador", action="store_true",
+                        help="calibra o simulador de broadcast (relatorio do plano 06)")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
     args = parser.parse_args(argv)
 
     cfg = carregar_config(args.config)
     if not (args.inspect or args.tau or args.posse or args.tau_posse
-            or args.bola_parada or args.passes):
-        parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada ou --passes")
+            or args.bola_parada or args.passes or args.simulador):
+        parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes "
+                     "ou --simulador")
     mapeamento = carregar_mapeamento(cfg)
     if args.inspect:
         inspecionar(cfg, mapeamento, cfg["dados"]["jogos"])
@@ -1251,6 +1505,8 @@ def main(argv=None) -> int:
         rodar_bola_parada(cfg, mapeamento, cfg["dados"]["jogos"])
     if args.passes:
         rodar_passes(cfg, mapeamento, cfg["dados"]["jogos"])
+    if args.simulador:
+        rodar_simulador(cfg, mapeamento, cfg["dados"]["jogos"])
     return 0
 
 

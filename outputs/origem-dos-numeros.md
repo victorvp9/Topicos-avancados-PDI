@@ -370,7 +370,49 @@ teste).
 | supressões a ≤ 1 s de um `PASS` do mesmo jogador: 144 de 464; 114 delas por detecção espúria | [nosso] | `--passes` bloco 8 |
 | decomposição por jogo: a 60 / 90 / 147, b 45 / 51 / 48, c 6 / 7 / 9, d 0 (travada em teste) | [nosso] revisão da Fatia 5, 2026-11-04 | `--passes` bloco 6 |
 | **EXPLORATÓRIO** (bloco 9, supressão só se a perda for do executor): 3132 passes; principal estrito P 0,967 / R 0,861 / F1 0,911 (`tp_diag` 2282); secundário estrito P 0,921 / R 0,837 / F1 0,877 (`tp_diag` 2886) | [nosso] revisão da Fatia 5, 2026-11-04 — decidido depois de ver o resultado; o principal não muda | `--passes` bloco 9 |
-| 418 testes | [nosso] | `uv run pytest` |
+| 418 testes (até a Fatia 5) | [nosso] | `uv run pytest` |
+
+## Fatia 6 — simulador de broadcast (2026-11-04, com a emenda §10)
+
+Produzidos por `src/broadcast.py` e `python -m src.run --simulador` (74 s de
+parede). Rótulos do bloco 1 e do bloco 5 revistos na revisão independente
+(2026-11-04, I1–I4); os números calibrados não mudaram. **Ainda sem revisão independente.** Tudo em valor esperado, sem sorteio,
+exceto as taxas "amostradas" do bloco 4. **Nenhum P/R/F1 nem contagem de detecção
+sobre tracking degradado** (plano 06 §6). Parâmetros e os 16 níveis em
+`config.yaml:simulador.calibrado`, travados pelo T8. **Todos os números abaixo
+são da rodada DEPOIS da emenda §10** (trocas por minuto como restrição do ajuste);
+os da rodada anterior (`b` = 0,3245, 332,5 trocas/min) estão superados.
+
+| número | onde | comando |
+|---|---|---|
+| alvos dos cortes 0,1425 (vivo) / 0,6823 (morto) / 0,468 (âncora de 110 laterais) | [lit] Bassek p. 6 e FOOTPASS §3.2 p. 6, derivados no código | `--simulador` bloco 1 |
+| restrição: trocas on↔off esperadas em B8 ≤ 10,9/min | [lit] Bassek, Discussão, p. 8; emenda §10 | `--simulador` blocos 1 e 5 |
+| `a_vivo` ≈ 0 (9,7e-19, no limite inferior), `a_morto` 0,0059498, `b` 0,0030118 | [nosso] | `--simulador` bloco 1 |
+| obtido 0,1648 / 0,5695 / 0,5639; resíduos +0,0223 / **−0,1128 / +0,0959** (os dois últimos > 5 pontos: limitação registrada, §4.5) | [nosso] | `--simulador` blocos 1 e 5 |
+| trocas/min em B8 2,8704; folga 8,0296; **restrição INATIVA no ótimo, mas seletora de bacia** | [nosso] | `--simulador` bloco 1 |
+| ótimo SEM a restrição (teto = ∞, mesmos 4 pontos iniciais): `a_vivo` 0,052890, `a_morto` 0,675492, `b` 0,324508, custo 3,816e-5, 332,53 trocas/min (3 dos 4 pontos; o 4º cai na bacia interior, `b` 0,003012) | [nosso] diagnóstico | `--simulador` bloco 1 |
+| episódios `off` esperados em B8 (entradas on → off): 1,4414 por minuto; 142,9 / 145,8 / 124,4 por jogo — **não** é a taxa de cortes do Bassek | [nosso] | `--simulador` bloco 1 |
+| duração esperada dos episódios (taxa de saída constante): `off` 13,28 s nos dois estados; `on` 6,72 s em bola morta, ∞ em bola viva (`a_vivo` ≈ 0, abaixo de `tol_confere_abs` = 1e-9: "limite inferior ativo") | [nosso] | `--simulador` bloco 1 |
+| 4 pontos iniciais do SLSQP, mesma solução: custo 0,0112062359 em todos, dispersão relativa 2,6e-5 (`a_morto`) e 1,8e-5 (`b`) | [nosso] | `--simulador` bloco 1 |
+| papéis por (jogo, time) e o `x` médio de cada jogador | [nosso] | `--simulador` bloco 2 |
+| `θ*` = 24,5598° (`d_cam` 30 m, `c` = 1) | [nosso] | `--simulador` bloco 3 |
+| distância visível GK / DEF / MID / OFF = 0,1913 / 0,4038 / 0,4927 / 0,4622 (alvo texto 0,14 / 0,40 / 0,52 / 0,46; GK com resíduo +0,0513, limitação registrada) | [nosso] contra [lit] Bassek p. 6 | `--simulador` blocos 3 e 5 |
+| resíduos contra a Tabela 1 (0,139 / 0,366 / 0,462 / 0,421): +0,0523 / +0,0378 / +0,0307 / +0,0412 | [nosso] | `--simulador` bloco 3 |
+| tempo visível GK / DEF / MID / OFF = 0,1166 / 0,3394 / 0,4181 / 0,3781 | [nosso] | `--simulador` bloco 3 |
+| 152 segmentos de presença, 0 curtos | [nosso] | `--simulador` bloco 3 |
+| níveis B: `θ` = ∞ / 65,083 / 45,461 / 33,442 / 24,560 (×4), `c` = 0 ×5, 1/3, 2/3, 1; taxa esperada 1,0000 / 0,8752 / 0,7503 / 0,6255 / 0,5006 / 0,4184 / 0,3745 / 0,3471 | [nosso] | `--simulador` bloco 4 |
+| níveis A: `L` = ∞ / 83,493 / 65,074 / 53,365 / 43,418 / 37,265 / 34,027 / 32,019 m, mesmas taxas (\|Δ\| < 1e-4) | [nosso] | `--simulador` bloco 4 |
+| taxas sem GK e só em bola viva, esperadas e amostradas por jogo (mín.–máx. em 5 sementes) | [nosso] | `--simulador` bloco 4 |
+| sementes efetivas `[20261104, jogo, 0..4]` | [nosso] plano 06 §5 | `--simulador` bloco 4 |
+| B5 sem GK 0,5321 vs Crang Camera 1 0,56–0,64: **abaixo** do limite inferior | [nosso] contra [lit] Crang Tabela 1 p. 5 | `--simulador` bloco 5 |
+| B8 sem GK 0,3701 vs Crang PGM 0,36–0,42: dentro | [nosso] contra [lit] | `--simulador` bloco 5 |
+| B8 visíveis por time: P(0) 0,331; moda (k ≥ 1) 7 (0,114); P(≥ 9) 0,0728 (alvo ~0,20, abaixo); P(11) 0,0066 (alvo ~0,03, abaixo) | [nosso] contra [lit] Bassek pp. 6 e 8 | `--simulador` bloco 5 |
+| B8 P(0 visíveis) marginal 0,3310 vs 38 %; P(off) marginal previsto pelos ALVOS 0,3446 e pelos cortes AJUSTADOS 0,3163 (f_viva 0,6256) | [nosso] | `--simulador` bloco 5 |
+| critério de parada: GK é o papel menos visível em B8 → segue | [nosso] plano 06 §4.5 | `--simulador` bloco 5; travado no T8 |
+| sensibilidade: `d_cam` 15 m → `θ*` 31,822°, resíduo GK +0,0721; 60 m → 16,756°, GK +0,0317 | [nosso] diagnóstico | `--simulador` bloco 6 |
+| precursor: visibilidade esperada do executor anotado e da própria pequena área na corrida morta, por nível e tipo (em A1/B1 as áreas medem **presença** na zona, não visibilidade) | [nosso] só visibilidade | `--simulador` bloco 7 |
+| tiro de meta em B5: executor visível 0,980 na âncora; área do time 0,844, GK 0,803 (B1: 0,847 / 0,807); em B8: 0,448 / 0,374 / 0,353 | [nosso] | `--simulador` bloco 7 |
+| 483 testes (65 da Fatia 6: `test_broadcast.py` 21, `test_simulador_real.py` 44) | [nosso] | `uv run pytest` |
 
 ## Números pendentes de medição, com gatilho de portão
 
