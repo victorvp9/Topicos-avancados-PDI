@@ -353,7 +353,9 @@ janela de ±10 s casaria o evento errado.
   > A medição certa — `quadro anotado − quadro de perda de posse`, §2.3.2, p. 5 —
   > foi feita na Fatia 3 sobre os 2650 passes dos 3 jogos: **mediana de `τ_posse`
   > = −0,040 s, exatamente um quadro**, p95 de `|τ_posse|` = 0,16 s, e apenas
-  > **3,27 %** acima de 1,0 s, contra o limiar de 5 % pré-registrado. A regra da
+  > **3,17 %** dos 2430 com perda acima de 1,0 s (220 sem perda), contra o limiar
+  > de 5 % pré-registrado (corrigido em 2026-11-04: o 3,27 % era de uma rodada
+  > intermediária; o código aceito dá 3,17 %). A regra da
   > escada selecionou o **primeiro degrau**, logo nada mudou e nada foi
   > recalculado. A mesma conclusão em `R_pz` = 1,00 m.
   >

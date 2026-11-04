@@ -186,10 +186,12 @@ O evento de maior volume e o que mais vale acertar.
 - **Testes:** (a) sequência sintética A → B → C gera exatamente dois passes;
   (b) A perde e um adversário ganha → passe + interceptação; (c) A perde e a bola
   sai → **ainda é passe**, não exclusão; (d) mudar `R_pz` muda a contagem.
-- **Marco `teto`:** o teto está estabelecido. **Esperado**: revocação de passe
+- **Marco `teto`:** o teto está estabelecido. ~~Esperado: revocação de passe
   próxima de 97 % com `R_pz` = 0,50 m e 98 % com 1,00 m, pela distribuição de
-  distância jogador-bola (`docs/inspecao-metrica.md` §6.4). Divergência grande =
-  bug nosso.
+  distância jogador-bola (`docs/inspecao-metrica.md` §6.4).~~ **Obsoleto
+  (2026-11-04):** a distância no quadro anotado foi substituída pela perda de
+  posse na Fatia 3. O contrato vale de `docs/fatias/05-plano.md` §2: no critério
+  estrito, `tp_diag` de passe ≤ 2353 de 2650 (R ≤ 0,888). Acima disso = bug nosso.
 
 ### Fatia 6 — Simulador de broadcast (ordem 6)
 O coração da contribuição. **Duas variantes**, as duas com origem publicada
