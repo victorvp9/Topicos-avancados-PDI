@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-04 (Fatia 5 aceita, tag `teto`; plano da Fatia 6 escrito)
+Atualizado: 2026-11-04 (Fatia 6 aceita)
 
 ## Onde estamos
 
@@ -147,18 +147,53 @@ suprimidos como bola parada, 22 com desfecho errado. **Erro meu nº 8:** o teto 
 precisão de bola parada é 58,8 %, não 61,5 %. Exploratório: suprimir só a perda
 do executor daria F1 de passe 0,911 (89 + 48 casos; ver `decisoes.md`).
 
+## Fatia 6 — ACEITA (2026-11-04)
+
+Plano em `docs/fatias/06-plano.md`, com a emenda §10 (mudança declarada) e o
+resultado em §10.1. **483 testes.** Revisão independente, que reproduziu tudo com
+Δ = 0, testou 16 mutantes e matou 13, mais uma re-revisão focada, que matou os 9
+mutantes pedidos.
+
+Os níveis, sempre medidos como a taxa = linhas visíveis / presentes, nos 3 jogos e
+em valor esperado:
+
+- **Variante B (cunha que segue a bola, mais cortes):** B1 = 1,000; B5 ("Camera 1",
+  `θ*` = 24,56°, sem cortes) = 0,501; B8 ("PGM", com cortes) = 0,347.
+- **Variante A (janela fixa):** pareada em taxa com a B, nível a nível.
+
+Como cada número se comportou:
+
+- **Calibrados contra alvos publicados:** distância visível por papel (DEF, MID,
+  OFF a menos de 3 pontos do Bassek) e cortes.
+- **Validações pré-registradas reprovadas, só registradas:** B5 sem GK = 0,532,
+  abaixo do limite inferior de 0,56 do Crang; P(≥ 9 visíveis por time) = 0,07
+  contra 0,20.
+- **Validação dentro do alvo:** B8 sem GK = 0,370, dentro da faixa do Crang PGM.
+
+Três achados:
+
+1. **O ajuste livre dos cortes dava pisca-pisca** (332 trocas/min). A restrição de
+   ≤ 10,9 trocas/min (Bassek) escolhe a bacia dos cortes longos (~13 s, 2,9
+   trocas/min); está declarada como mudança. Os resíduos de −11 e +9,6 pontos são
+   **estruturais** à cadeia sem memória.
+2. **Nenhum corte começa com a bola viva** (`a_vivo` ≈ 0): o apagão em jogo é
+   corte herdado da paralisação e se concentra logo depois dos reinícios.
+3. **Contra a minha previsão do tiro de meta**, só em visibilidade: a cunha mostra
+   o goleiro na bola parada antes do tiro de meta (0,80 em B5). Toda a queda vem
+   dos cortes, e em B8 o executor do tiro de meta é **mais** visível (0,45) que o
+   do escanteio (0,34) e o da lateral (0,43). O F1 da Fatia 8 decide.
+
 ## Próximo passo
 
-**Fatia 6 — simulador de broadcast, em andamento.** Plano em
-`docs/fatias/06-plano.md` (G2 por mim, registro em `decisoes.md`):
-- variante A, a janela fixa;
-- variante B, a cunha que segue a bola mais os cortes editoriais (cadeia de
-  Markov dirigida pelo estado da bola);
-- 8 níveis ancorados em "Camera 1" e "PGM" do Crang;
-- calibração contra o Bassek e o FOOTPASS, com validações pré-registradas.
+**Fatia 7 — reconstrução** (interpolação linear; `visible=False` nas linhas
+imputadas; erro comparado ao do Crang). Depois, a Fatia 8, cujas dívidas
+obrigatórias estão em `decisoes.md`:
 
-Sem F1 degradado nesta fatia. Dívidas obrigatórias para a Fatia 8 em
-`decisoes.md` (N4, N5).
+- N4 e N5;
+- a correlação entre degradação e eventos;
+- o eixo x pela taxa amostrada;
+- o número de sementes;
+- a declaração do vazamento da calibração.
 
 ## Portões
 
