@@ -99,9 +99,9 @@ O alvo de calibração **não depende de baixar dataset nenhum**. Está publicad
 | cortes por partida | **981, ou 10,9/min** | Bassek, p. 8 |
 | jogo ativo quando 0 jogadores visíveis (TV) | 21 % ativo, 79 % parado | Bassek, p. 6 |
 | tempo de jogo ativo | 56 % ativo, 44 % parado | Bassek, p. 6 |
-| visibilidade por posição (TV, distância visível) | GK 14 %, DEF 40 %, MID 52 %, OFF 46 % | Bassek, Tabela 1, p. 6 |
+| visibilidade por posição (TV, distância visível) | GK 14 %, DEF 40 %, MID 52 %, OFF 46 % | Bassek, Resultados, **texto da p. 6** (corrigido 2026-11-04: não é a Tabela 1, que está na p. 7 e cuja razão das médias dá 13,9 / 36,6 / 46,2 / 42,1 %) |
 | laterais caindo em replay | **46,8 %** | FOOTPASS, §3.2, p. 6 |
-| taxa de detecção por feed | tático 89–96 %, Camera 1 56–64 %, PGM 36–42 % | Crang, Tabela 1, p. 5 |
+| taxa de detecção por feed | tático 89–96 %, Camera 1 56–64 %, PGM 36–42 % | Crang, Tabela 1, p. 5. **Detecção, não visibilidade (p. 3), e sem goleiros (p. 3)**: limite inferior da nossa visibilidade sem GK |
 | RMSE de posição em quadro **não detectado** | 4,58 a 19,38 m | Crang, Tabela 2, p. 6 |
 | RMSE de posição em quadro **detectado** | 0,44 a 16,24 m | Crang, Tabela 2, p. 6 |
 

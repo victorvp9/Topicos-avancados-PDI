@@ -202,7 +202,7 @@ O coração da contribuição. **Duas variantes**, as duas com origem publicada
 2. **Frustum 2D que segue a bola**, abertura parametrizável, movimento suavizado
    (câmera real não teleporta) **e cortes editoriais**.
 
-- Marca `visible=False` para quem cai fora. Um parâmetro varre a taxa de detecção
+- ~~Marca `visible=False` para quem cai fora.~~ **Corrigido em 2026-11-04:** quem cai fora **perde a linha** naquele quadro; `visible` mantém o significado único do `docs/02` (False = imputado, escrito pela Fatia 7). Caminho dos níveis e calibração em `docs/fatias/06-plano.md`. Um parâmetro varre a taxa de detecção
   de ~100 % a ~35 %. **A bola nunca é removida** (D2) e `ball_live` nunca muda
   (D1b).
 - **Testes:** (a) **abertura infinita e sem cortes → taxa 100 % e saída idêntica

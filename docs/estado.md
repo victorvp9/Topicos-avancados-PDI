@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-04 (Fatia 4 aceita)
+Atualizado: 2026-11-04 (Fatia 5 aceita, tag `teto`; plano da Fatia 6 escrito)
 
 ## Onde estamos
 
@@ -149,9 +149,16 @@ do executor daria F1 de passe 0,911 (89 + 48 casos; ver `decisoes.md`).
 
 ## Próximo passo
 
-**Fatia 6 — simulador de broadcast.** Plano em `docs/fatias/06-plano.md`, com a
-visibilidade por posição como requisito e a previsão pré-registrada do tiro de
-meta. Dívidas obrigatórias para a Fatia 8 em `decisoes.md` (N4, N5).
+**Fatia 6 — simulador de broadcast, em andamento.** Plano em
+`docs/fatias/06-plano.md` (G2 por mim, registro em `decisoes.md`):
+- variante A, a janela fixa;
+- variante B, a cunha que segue a bola mais os cortes editoriais (cadeia de
+  Markov dirigida pelo estado da bola);
+- 8 níveis ancorados em "Camera 1" e "PGM" do Crang;
+- calibração contra o Bassek e o FOOTPASS, com validações pré-registradas.
+
+Sem F1 degradado nesta fatia. Dívidas obrigatórias para a Fatia 8 em
+`decisoes.md` (N4, N5).
 
 ## Portões
 
@@ -180,12 +187,10 @@ código.
 - ~~Conferir se o `events-definitions.pdf` de `refs/` e o de
   `data/metrica-sample-data/documentation/` são o mesmo arquivo.~~ **Fechada:**
   são, sha256 `5afb1ee34931447223ef8b9dc6a30b827fd0ba57ac9b6e2d7125ee87b083a866`.
-- Não medi a defasagem `τ` da anotação. É entregável da Fatia 2 e pode derrubar a
-  janela de ±1 s do D8 (G3).
+- ~~Não medi a defasagem `τ` da anotação.~~ **Fechada** na Fatia 3 (janela de ±1 s confirmada).
 - Não medi distância jogador-bola nem gatilhos no jogo 3 — de propósito, para ele
   seguir sendo conjunto não visto para `eps_c`. As contagens já foram feitas.
-- Não medi a distribuição de `eps_s`, `eps_v`, `eps_theta` na Metrica — é a
-  Fatia 3.
+- ~~Não medi a distribuição de `eps_s`, `eps_v`, `eps_theta` na Metrica.~~ **Fechada** na Fatia 3.
 - Não baixei a SkillCorner nem o suplementar do Bassek. A calibração usa os alvos
   publicados (tabela em `docs/02-dados.md`).
 - Dataset alternativo não avaliado: Bassek et al. 2025, 7 partidas da Bundesliga
