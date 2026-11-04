@@ -171,7 +171,7 @@ Pontapé inicial, escanteio, lateral, tiro de meta, tiro livre residual **e
   tiro livre; (g) mudar `eps_c` muda a contagem de escanteios.
 - **Marco `teto`:** primeira tabela de F1 real. **Esperado**, pela geometria
   medida (`docs/inspecao-metrica.md` §6.2): revocação próxima de 92 % em lateral
-  e pontapé inicial, 89 % em tiro de meta e **~56 % em escanteio**, com os
+  e pontapé inicial, ~~89 %~~ 86,8 % em tiro de meta [corrigido 2026-11-04, auditoria pós-Fatia 6] e **~56 % em escanteio**, com os
   escanteios perdidos aparecendo como falsos positivos de tiro livre. Se a tabela
   divergir muito disso, o bug é nosso. Comparar com o artigo **só como indicação**
   (D7).

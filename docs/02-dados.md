@@ -255,7 +255,7 @@ explícito, não espalhado em `if`s. Conferido contra os CSVs reais:
    intervalo de bola morta, **não** no `Start Frame`. Em
    `BALL LOST`/`GOAL KICK-INTERCEPTION` o `Start Frame` é o ponto da
    interceptação: no quadro 77582 do jogo 1 o executor passa de 49,55 m para
-   4,52 m da linha de fundo quando medido corretamente (§6.3).
+   4,52 m da linha de fundo quando medido corretamente (§6.3). **[Errado corrigido 2026-11-04, auditoria pós-Fatia 6: 49,55 m é a distância da BOLA; o executor está a 5,45 m no quadro anotado e a 4,52 m no primeiro quadro em jogo — `inspecao-metrica.md` §6.3.]**
 
 ---
 
@@ -274,4 +274,4 @@ explícito, não espalhado em `if`s. Conferido contra os CSVs reais:
 - Jogo 3 em formato diferente, com `CARRY` e subtipos em lista — loader separado,
   **dentro** do escopo (D6).
 - O `events-definitions.pdf` existe em `refs/` e em
-  `data/metrica-sample-data/documentation/`. Não conferi se são o mesmo arquivo.
+  `data/metrica-sample-data/documentation/`. ~~Não conferi se são o mesmo arquivo.~~ **São** (sha256 `5afb1ee3…`, `decisoes.md`).

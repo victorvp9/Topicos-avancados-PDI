@@ -389,7 +389,7 @@ porque define o que o artigo chama de "passe".)
 
 Reportar precisão, revocação, F1 e a **contagem absoluta** por tipo. Com classes
 pequenas, um único acerto move o F1 de forma dramática: são **26 escanteios, 18
-pontapés iniciais e 109 laterais nos três jogos somados**
+pontapés iniciais e 109 laterais nos três jogos somados** (110 com `THROW IN-RETAKEN`, que o gabarito usa; [corrigido 2026-11-04, auditoria pós-Fatia 6])
 (`docs/inspecao-metrica.md` §3.2).
 
 **Evento não detectado é perda de revocação, nunca exclusão.** Vale inclusive
@@ -414,8 +414,8 @@ porque não há intervalo de bola morta antes dele (`docs/inspecao-metrica.md`
 > **Mitigação obrigatória:** reportar P/R/F1 de bola parada nas **duas** âncoras,
 > em `frame` e em `annotated_frame`, como análise de sensibilidade. A Fatia 1 já
 > guarda as duas colunas, então não custa código. Espera-se diferença pequena: os
-> tetos de gatilho são **idênticos** nas duas âncoras (tiro de meta 33/38 e 34/38
-> com `eps_g` = 0 e 0,5; lateral 27 e 28; escanteio 6 e 4).
+> tetos de gatilho são **idênticos** nas duas âncoras (tiro de meta ~~33/38 e 34/38~~
+> com `eps_g` = 0 e 0,5; lateral 27 e 28; escanteio 6 e 4; **números do bug do `abs()` e de antes da guarda de 10 s: o split correto é 32/38 e 33/38, `inspecao-metrica.md` §6.2** [corrigido 2026-11-04, auditoria pós-Fatia 6]).
 
 ---
 
@@ -438,7 +438,7 @@ bootstrap por jogo** (com 3 jogos há só 10 reamostragens distintas).
 **O teto já está limitado pela geometria, antes de qualquer degradação.** Medido
 na Metrica com tracking perfeito e as tolerâncias publicadas
 (`docs/inspecao-metrica.md` §6.2): lateral 92 % (n=60), pontapé inicial 92 %
-(n=13), tiro de meta 89 % (n=38), **escanteio 56 % (n=18)**. Não interprete o
+(~~n=13~~ n = 14 com `KICK OFF-RETAKEN`, fração não remedida), tiro de meta ~~89 %~~ **86,8 % (33/38)** (n=38) [corrigido 2026-11-04, auditoria pós-Fatia 6], **escanteio 56 % (n=18)**. Não interprete o
 teto como limite do algoritmo: é limite da convenção de anotação deste dataset.
 
 **Comparação com o artigo é indicativa (D7).** Vidal-Codina reporta escanteio

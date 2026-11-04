@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-04 (Fatia 6 aceita)
+Atualizado: 2026-11-04 (auditoria pós-Fatia 6 fechada; Fatia 7 em implementação)
 
 ## Onde estamos
 
@@ -12,8 +12,6 @@ Atualizado: 2026-11-04 (Fatia 6 aceita)
 - Os 7 PDFs de `refs/` foram lidos por inteiro (Vidal-Codina e suplementar,
   Mills, Bassek, Crang, FOOTPASS, definições da Metrica). A lista "AINDA NÃO
   CONFERIDO" do briefing está encerrada.
-- **Ainda não existe código.** `src/`, `tests/`, `config.yaml` e `pyproject.toml`
-  não foram criados.
 - Prazo: sem prazo fixo (Victor, 28/10). As semanas do `03-plano` valem só como
   ordem.
 
@@ -112,18 +110,18 @@ até agora.
 **A primeira tabela de F1 real do projeto** (critério estrito, âncora `frame`,
 3 jogos, micro sem pênalti): **P 0,482 / R 0,786 / F1 0,598**. Por tipo: pontapé
 inicial 0,971, lateral 0,912, escanteio 0,762, tiro de meta **0,396** (era 0,649 antes de a Fig. S1 ser lida; ver `decisoes.md`), tiro livre
-0,500. A precisão baixa é o teto de 61,5 % previsto; a revocação alta mostra que
+0,500. A precisão baixa é o teto de precisão previsto (~~61,5 %~~ **58,8 %**, erro meu nº 8, Fatia 5); a revocação alta mostra que
 o algoritmo **acha** os reinícios e erra o **tipo**.
 
 **Três achados de fundo:**
 
 1. **As tolerâncias publicadas não transferem para a Metrica**, com três
-   instâncias medidas: `ε_c` = 3 m pega 10 de 18 escanteios, `ε_f` = 1 m roteia
-   31–36 % das transições para o problema 3 do S1, e `ε_p2` = 2 m perde o único
+   instâncias medidas: `ε_c` = 3 m pega 10 de 18 escanteios (gatilho, jogos 1+2), `ε_f` = 1 m roteia
+   31–36 % das transições para o problema 3 do S1 (remedido na auditoria: 36,4 / 36,3 / 30,8 %), e `ε_p2` = 2 m perde o único
    pênalti por 48 cm. É o que explica o teto abaixo dos ~90 % do artigo **sem que
    o algoritmo esteja errado**.
 2. **A matriz do critério Vidal-Codina mostrou o erro previsto desde o G1**: dos
-   10 escanteios perdidos, 6 viram tiro livre, 3 viram lateral e 1 fica sem
+   10 escanteios perdidos nos **3 jogos** (26 − 16 casados como escanteio), 6 viram tiro livre, 3 viram lateral e 1 fica sem
    casamento (corrigido em 2026-11-04; o "7 + 3" era meu, ver `decisoes.md`
    2026-11-02).
 3. **O goleiro mora na pequena área**, logo o gatilho de tiro de meta fica quase
@@ -183,9 +181,17 @@ Três achados:
    dos cortes, e em B8 o executor do tiro de meta é **mais** visível (0,45) que o
    do escanteio (0,34) e o da lateral (0,43). O F1 da Fatia 8 decide.
 
+## Auditoria pós-Fatia 6 (2026-11-04, pedida pelo Victor)
+
+Dois revisores refizeram os resultados das Fatias 1 a 6 pelo CLI e por código
+próprio. **Tudo reproduz; nenhum achado bloqueante; nenhum resultado mudou.** Os
+achados eram de documento (números superados sem marca, páginas trocadas, rótulos
+velhos) e foram corrigidos com a marca `[corrigido 2026-11-04, auditoria
+pós-Fatia 6]`. Detalhe em `decisoes.md`, seção "Auditoria pós-Fatia 6".
+
 ## Próximo passo
 
-**Fatia 7 — reconstrução** (interpolação linear; `visible=False` nas linhas
+**Fatia 7 — reconstrução**, plano em `docs/fatias/07-plano.md` (interpolação linear; `visible=False` nas linhas
 imputadas; erro comparado ao do Crang). Depois, a Fatia 8, cujas dívidas
 obrigatórias estão em `decisoes.md`:
 
@@ -223,8 +229,9 @@ código.
   `data/metrica-sample-data/documentation/` são o mesmo arquivo.~~ **Fechada:**
   são, sha256 `5afb1ee34931447223ef8b9dc6a30b827fd0ba57ac9b6e2d7125ee87b083a866`.
 - ~~Não medi a defasagem `τ` da anotação.~~ **Fechada** na Fatia 3 (janela de ±1 s confirmada).
-- Não medi distância jogador-bola nem gatilhos no jogo 3 — de propósito, para ele
-  seguir sendo conjunto não visto para `eps_c`. As contagens já foram feitas.
+- Não medi os gatilhos de bola parada no jogo 3 antes da Fatia 4 — de propósito, para ele
+  seguir sendo conjunto não visto para `eps_c`. (A distância passador–bola do jogo 3 foi medida
+  na Fatia 2: 90,01 % a < 0,5 m.)
 - ~~Não medi a distribuição de `eps_s`, `eps_v`, `eps_theta` na Metrica.~~ **Fechada** na Fatia 3.
 - Não baixei a SkillCorner nem o suplementar do Bassek. A calibração usa os alvos
   publicados (tabela em `docs/02-dados.md`).

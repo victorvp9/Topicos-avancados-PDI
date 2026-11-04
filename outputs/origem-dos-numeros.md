@@ -94,10 +94,10 @@ revisão independente.
 | 56 % do tempo ativo, 44 % parado | [lit] Resultados, p. 6 |
 | TV com 0 visíveis: 21 % ativo, 79 % parado | [lit] Resultados, p. 6 |
 | **981 cortes por partida, 10,9 por minuto** | [lit] Discussão, p. 8 |
-| distância visível em TV: GK 14 %, DEF 40 %, MID 52 %, OFF 46 % | [lit] Tabela 1 e Resultados, p. 6 |
+| distância visível em TV: GK 14 %, DEF 40 %, MID 52 %, OFF 46 % | [lit] ~~Tabela 1 e Resultados, p. 6~~ **texto de Resultados, p. 6** (a Tabela 1 fica na p. 7 e a razão das médias dela dá 13,9 / 36,6 / 46,2 / 42,1 %; mesma correção de `docs/02-dados.md`) [corrigido 2026-11-04, auditoria pós-Fatia 6] |
 | distância visível em SF: GK 25 %, linha ~80 % | [lit] Resultados, p. 6 |
 | alta intensidade visível em TV: GK 31 %, DEF 49 %, MID 48 %, OFF 52 % | [lit] Resultados, p. 6 |
-| formação, top-1/3/5: GT 31,3/60,9/75,2; SF 31,3/60,6/74,0; TV 26,4/52,0/66,7 | [lit] Tabela 2, p. 7 |
+| formação, top-1/3/5: GT 31,3/60,9/75,2; SF 31,3/60,6/74,0; TV 26,4/52,0/66,7 | [lit] Tabela 2, ~~p. 7~~ **p. 8** (página do PDF; no Bassek a impressa é a do PDF − 1) [corrigido 2026-11-04, auditoria pós-Fatia 6] |
 | jogadores de linha igualmente ativos dentro e fora do quadro | [lit] Discussão, p. 8 |
 | crítica à janela de 40×40 m de Mortensen e Bornn | [lit] Introdução, p. 3 |
 | suplementar = "preprocessed intermediate data", **não** séries de visibilidade | [lit] Data and code availability, p. 10 |
@@ -110,7 +110,7 @@ revisão independente.
 | **46,8 % dos laterais caem em segmento de replay** | [lit] §3.2, p. 6 |
 | cobertura de caixa do jogador ativo: média 81,5 %; **lateral 43,8 %**, tackle 62,1 %, cabeceio 66,7 %, cruzamento 70,7 %, bloqueio 78,4 %, passe 81,5 %, finalização 81,6 %, condução 85,7 % | [lit] §3.2, p. 6 |
 | ao vivo: cabeceio 95,4 %, bloqueio 95 %, finalização 99,5 % | [lit] §3.2, p. 6 |
-| tolerância de casamento ±12 quadros (0,48 s), mesmo jogador e classe | [lit] §4.1, p. 6 |
+| tolerância de casamento ±12 quadros (0,48 s), mesmo jogador e classe | [lit] §4.1, ~~p. 6~~ **p. 7** [corrigido 2026-11-04, auditoria pós-Fatia 6] |
 | 54 partidas, 102 992 eventos, 8 classes | [lit] Tabela 1, p. 3, e §4.1, p. 6 |
 | 17 % dos EPTS certificados pela FIFA são de broadcast | [lit] §1.2, p. 2 (citando FIFA 2026) |
 | dataset alternativo: Bassek et al. 2025, 7 partidas da Bundesliga com GT multicâmera + eventos — **licença e disponibilidade não conferidas** | [lit] §2.1, p. 4 |
@@ -137,15 +137,15 @@ Todos medidos em 2026-10-29 sobre o commit
 | os 8 escanteios do jogo 3 são de **3 cobradores**, 6 de um só time | [dado] §3.2 |
 | `GOAL KICK` em 3 `Type`; total 22 / 16 / 11 | [dado] §3.3 |
 | `SET PIECE` sempre seguido do mesmo jogador, Δquadro mediano 0 (157 de 157) | [dado] §3.4 |
-| `Start X`/`Start Y` NaN em 0 de 77 e 0 de 80 `SET PIECE` | [dado] §3 |
+| `Start X`/`Start Y` NaN em ~~0 de 77 e 0 de 80~~ **77 de 77 e 80 de 80** linhas `SET PIECE` (zero não nulos) [corrigido 2026-11-04, auditoria pós-Fatia 6] | [dado] §3 |
 | `THEFT` = 21 / 38; união `PASS`∪`BALL LOST`∪`BALL OUT` = 1107 / 1246 | [dado] §3.5 |
 | 0 de 799 e 0 de 964 `PASS` em quadro com bola NaN | [dado] §5.2 |
 | 32 de 1935 eventos do jogo 2 dentro de NaN, todos de bola morta | [dado] §5.2 |
-| fração de NaN nos 2 s antes de bola parada: 0,93 a 1,00 | [dado] §5.2 |
+| fração de NaN nos 2 s antes de bola parada: 0,93 a 1,00 **sem tiro de meta**; `PASS/GOAL KICK` 0,62 a 0,92 [corrigido 2026-11-04, auditoria pós-Fatia 6] | [dado] §5.2 |
 | **escanteio: 10/18 = 56 % com `eps_c` = 3 m; 83 % a 5 m; 94 % a 8 m** | [dado] §6.2 |
 | lateral: 55/60 = 92 % com `eps_t` = 0,5 m; 98 % a 1 m | [dado] §6.2 |
-| tiro de meta: 34/38 = 89 % com `eps_g` = 0,5 m | [dado] §6.2 |
-| pontapé inicial: 12/13 = 92 %; o do quadro 1 do jogo 1 é indetectável | [dado] §6.2 |
+| tiro de meta: ~~34/38 = 89 %~~ **33/38 = 86,8 %** com `eps_g` = 0,5 m (nota "ERRO MEU, corrigido em 2026-11-01", split autoritativo) [corrigido 2026-11-04, auditoria pós-Fatia 6] | [dado] §6.2 |
+| pontapé inicial: 12/13 = 92 %; o do quadro 1 do jogo 1 é indetectável; ~~n = 13~~ **n = 14 contando `KICK OFF-RETAKEN` (8 no jogo 2); a fração com n = 14 não foi remedida** [corrigido 2026-11-04, auditoria pós-Fatia 6] | [dado] §6.2 |
 | padrão (bola na PZ do executor): `d` = 0,00 m, satisfeito em 88–100 % | [dado] §6.2 |
 | distância jogador anotado-bola no passe: < 0,5 m em 96,7 % e 97,4 %, mediana 0,08–0,09 m | [dado] §6.4 |
 | jogo 3 legível sem `kloppy`: 11 `DataFormatSpecification`, 44 `PlayerChannelRef` | [dado] §4 |
@@ -155,7 +155,7 @@ Todos medidos em 2026-10-29 sobre o commit
 | número | base |
 |---|---|
 | ~~teto de revocação de passe ~97 % com `R_pz` = 0,50 m e ~98 % com 1,00 m~~ | **OBSOLETO** (plano 05 §2.2; `decisoes.md` 2026-11-04): substituído por `tp_diag` estrito ≤ 2353 (R ≤ 0,888), seção Fatia 3 |
-| teto de revocação de bola parada: lateral 92 %, pontapé inicial 92 %, tiro de meta 89 %, escanteio 56 % | [prev] geometria dos gatilhos, §6.2; não inclui posse, hierarquia nem hierarquia de reserva |
+| teto de revocação de bola parada: lateral 92 %, pontapé inicial 92 % (**n = 14 com `KICK OFF-RETAKEN`, fração não remedida**), tiro de meta ~~89 %~~ **86,8 % (33/38)**, escanteio 56 % [corrigido 2026-11-04, auditoria pós-Fatia 6] | [prev] geometria dos gatilhos, §6.2; não inclui posse, hierarquia nem hierarquia de reserva |
 | ~96 h de CPU para a grade de exemplo (1920 execuções × 3 min) | [prev] 3 min/partida do artigo (§3, p. 9) extrapolado; **medir uma execução real antes do G4** |
 
 ## Dados — medidos na Fatia 1 (2026-10-29)
@@ -176,9 +176,9 @@ Medidos por script efêmero independente do código do projeto, sobre o dado cru
 | jogo 3 **não** tem recorte em ±0,05: `max\|y\|` = **39,2952 m** (vs 37,4000 nos jogos 1 e 2) | [dado] relatório da Fatia 1 |
 | `pass_secundario` **cru** (descritivo): 1086 / 1208 / 1447 (= 1107 − 21 e 1246 − 38); com `GOAL KICK` excluído daria 1064 / 1192 | [dado] §3.5 + Fatia 1 |
 | `pass_secundario` na tabela `events` (**denominador normativo de avaliação**): 1009 / 1131 / 1358 | [dado] revisão da Fatia 1 |
-| tetos de gatilho são **idênticos** nas duas âncoras: tiro de meta 33/38 (`eps_g`=0) e 34/38 (0,5); lateral 27 e 28; escanteio 6 e 4 | [dado] revisão da Fatia 1 |
+| tetos de gatilho são **idênticos** nas duas âncoras: tiro de meta ~~33/38 (`eps_g`=0) e 34/38 (0,5)~~ **32/38 e 33/38** (números antigos são do bug do `abs()`; split correto em `docs/inspecao-metrica.md` §6.2) [corrigido 2026-11-04, auditoria pós-Fatia 6]; lateral 27 e 28; escanteio 6 e 4 | [dado] revisão da Fatia 1 |
 | `refs/events-definitions.pdf` == `data/.../documentation/`: sha256 `5afb1ee3…` | [dado] revisão da Fatia 1 |
-| margem do `attack_dir`: goleiro 39,1 a 42,6 m; média do time 2,24 a 11,11 m | [dado] revisão da Fatia 1 |
+| margem do `attack_dir`: goleiro ~~39,1 a 42,6 m~~ **39,06 a 46,36 m** com o jogo 3 (a faixa antiga só cobria os jogos 1 e 2; `\|gk_mean_x\|` de `carregar_jogo`) [corrigido 2026-11-04, auditoria pós-Fatia 6]; média do time 2,24 a 11,11 m | [dado] revisão da Fatia 1 |
 | fusão `SET PIECE` + execução: **247 de 247** nos 3 jogos | [dado] Fatia 1 |
 | ancorar pelo quadro do rótulo daria `anchor_shift` positivo em 12 de 77 e 9 de 80 | [dado] Fatia 1 |
 
@@ -301,7 +301,7 @@ estrito, âncora `frame`, 3 jogos, micro sem pênalti, salvo indicação.
 | escanteios perdidos (vidal_codina): 6 → `free_kick`, 3 → `throw_in`, 1 sem casamento | [nosso] "Três números meus errados", 2026-11-02 | `--bola-parada`, matriz `vidal_codina` |
 | teto de gatilho, jogos 1+2: corner 10/18, throw_in 55/60, goal_kick 33/38, kickoff 13/14 | [nosso] "Fatia 4 ACEITA", 2026-11-04 | `--bola-parada` bloco 1, "REVOCACAO DE GATILHO" |
 | curva `eps_c`: 3 m → F1 escanteio 0,762; 5 m → 0,902 (baixa confiança) | [nosso] "O que a Fatia 4 já mostrou", 2026-11-01 | `--bola-parada` bloco 5 |
-| `eps_f` roteia 31 a 36 % das transições ao problema 3; deslocamento ≤ 1 m em 64 / 64 / 72 % | [nosso] "a bifurcação do S1", 2026-11-01 | **sem comando no repositório** |
+| `eps_f` roteia 31 a 36 % das transições ao problema 3; deslocamento ≤ 1 m em ~~64 / 64 / 72 %~~ **63,6 / 63,7 / 69,2 %** (`confirmado` = 98/154, 107/168, 110/159); **36,4 / 36,3 / 30,8 %** vão ao problema 3 (`anda_mais_que_eps_f` + `sem_passe_do_executor` = 56, 61, 49); o 72 % do jogo 3 não reproduz [corrigido 2026-11-04, auditoria pós-Fatia 6] | [nosso] "a bifurcação do S1", 2026-11-01; remedido na auditoria | crosstab de `game` × `motivo_reserva1` em `outputs/deteccoes.csv` (gravado por `--bola-parada`) |
 | 481 de 481 transições com a bola a ≤ 0,5 m de alguém no 1º quadro vivo | [nosso] idem | **sem comando no repositório** |
 | bracketing de `eps_f`: 0,4484 (0) → 0,5979 (1 m) → 0,6134 (∞) | [nosso] "Três números meus errados", 2026-11-02, revisor | **sem comando no repositório** |
 | leitura alternativa do `else` do S1: micro 0,6495, `tp_diag` 252 | [nosso] "Achado de desenho", 2026-11-02, revisor (cópia fora do repositório) | **sem comando** |
@@ -325,8 +325,8 @@ estrito, âncora `frame`, 3 jogos, micro sem pênalti, salvo indicação.
    atual o comando dá 19 `free_kick?` com `sem_passe_do_executor`. **Nenhum
    registro de 51 em `decisoes.md`.**
 5. Escanteios perdidos: 7 + 3 (2026-11-01; e ainda em `docs/estado.md`) contra 6 +
-   3 + 1 (2026-11-02, e o comando). Vale 6 + 3 + 1. **`docs/estado.md` está
-   desatualizado neste ponto.**
+   3 + 1 (2026-11-02, e o comando). Vale 6 + 3 + 1. ~~**`docs/estado.md` está
+   desatualizado neste ponto.**~~ **Resolvida: `docs/estado.md` já diz 6 + 3 + 1.** [corrigido 2026-11-04, auditoria pós-Fatia 6]
 6. Sensibilidade de âncora: micro 0,599 → **0,596** (2026-11-01) contra o comando
    atual 0,598 → **0,595** (`tp_diag` 231). O registro é de antes da correção do
    pênalti; sem registro posterior.
@@ -346,7 +346,7 @@ estrito, âncora `frame`, 3 jogos, micro sem pênalti, salvo indicação.
 ## Fatia 5 — passes (2026-11-04)
 
 Produzidos por `src/events/passes.py`, `src/evaluate.py:gabarito_secundario` e
-`python -m src.run --passes`. **Ainda sem revisão independente.** Critério
+`python -m src.run --passes`. ~~**Ainda sem revisão independente.**~~ **Revistos (revisão independente aceita em 2026-11-04;** `docs/decisoes.md`, "Revisao da Fatia 5"). [corrigido 2026-11-04, auditoria pós-Fatia 6] Critério
 principal = passes `completo` × `PASS`; secundário = todos × `pass_secundario`
 sem o grupo `bola_parada`; âncora `frame` (para passe as duas coincidem, com
 teste).
@@ -376,7 +376,7 @@ teste).
 
 Produzidos por `src/broadcast.py` e `python -m src.run --simulador` (74 s de
 parede). Rótulos do bloco 1 e do bloco 5 revistos na revisão independente
-(2026-11-04, I1–I4); os números calibrados não mudaram. **Ainda sem revisão independente.** Tudo em valor esperado, sem sorteio,
+(2026-11-04, I1–I4); os números calibrados não mudaram. ~~**Ainda sem revisão independente.**~~ **Revistos (revisão independente aceita em 2026-11-04;** `docs/decisoes.md`, "Revisao da Fatia 6"). [corrigido 2026-11-04, auditoria pós-Fatia 6] Tudo em valor esperado, sem sorteio,
 exceto as taxas "amostradas" do bloco 4. **Nenhum P/R/F1 nem contagem de detecção
 sobre tracking degradado** (plano 06 §6). Parâmetros e os 16 níveis em
 `config.yaml:simulador.calibrado`, travados pelo T8. **Todos os números abaixo

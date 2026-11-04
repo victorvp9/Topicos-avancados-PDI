@@ -70,10 +70,12 @@ O detector emite **uma bola parada por transição morta → viva**. Medido:
 | 3 | 159 | 101 | 63,5 % | 58 |
 | **total** | **481** | **296** | **61,5 %** | **185** |
 
+> [superado; corrigido 2026-11-04, auditoria pós-Fatia 6] Medido com o código aceito: **283/481 = 58,8 %** (89/154, 93/168, 101/159) e **198 FP estruturais** (= 185 + 13). Erro meu nº 8, `estado.md`, Fatia 5.
+
 Causa: a bola da Metrica fica `NaN` em buracos curtos de rastreamento que **não
 são paradas de jogo**. A distribuição de duração das corridas mortas é bimodal, com
 **p10 = 0,04 s, isto é UM QUADRO**. Com um corte mínimo de 1 s sobrariam 312
-transições e o teto de precisão subiria a **94,9 %**.
+transições e o teto de precisão subiria a ~~**94,9 %**~~ **90,4 % (282/312)** [superado; corrigido 2026-11-04, auditoria pós-Fatia 6].
 
 **Os 185 falsos positivos vão cair quase todos em `free_kick`**, porque é o ramo
 `else` da hierarquia. Espere precisão de tiro livre muito baixa, e isso é
@@ -303,11 +305,11 @@ dependem dela**. Escanteio, lateral e pontapé inicial não.
 |---|---|
 | nº de detecções | **154 / 168 / 159**, igual ao nº de transições morta → viva |
 | teto de precisão | detecções = 481 contra 296 reinícios anotados nos 3 jogos |
-| revocação de gatilho, jogos 1+2 | lateral ~92 % (n=60), pontapé inicial ~92 % (n=13), tiro de meta ~89 % (n=38), **escanteio ~56 % (n=18)**, tolerância de ±1 evento |
+| revocação de gatilho, jogos 1+2 | lateral ~92 % (n=60), pontapé inicial ~92 % (~~n=13~~ n = 14), tiro de meta ~~~89 %~~ 86,8 % (n=38) [superado; marcado 2026-11-04, auditoria pós-Fatia 6], **escanteio ~56 % (n=18)**, tolerância de ±1 evento |
 | escanteios perdidos caem em tiro livre | a matriz de confusão mostra `(corner_kick, free_kick)` > 0 |
 | os 13 `no_dead_ball_before` ficam no denominador | revocação calculada sobre o gabarito inteiro |
 | pênalti | 1 detecção possível no jogo 2; `micro()` levanta se receber `penalty` |
-| sensibilidade de duração | com mínimo de 1 s: **312** detecções nos 3 jogos e precisão ~94,9 % |
+| sensibilidade de duração | com mínimo de 1 s: **312** detecções nos 3 jogos e precisão ~~~94,9 %~~ 90,4 % (282/312) [superado; corrigido 2026-11-04, auditoria pós-Fatia 6] |
 | `via` quantifica a reserva | reportar a distribuição de `via`; é o nosso análogo dos "85 % → 95 %" do S1 |
 
 ### 7.5 Contra falha silenciosa
@@ -334,7 +336,7 @@ o nº de transições.
 
 ## 9. Riscos conhecidos
 
-1. **O teto de precisão de 61,5 % vai dominar o F1 agregado.** É esperado e
+1. **O teto de precisão de ~~61,5 %~~ 58,8 % [superado; corrigido 2026-11-04, auditoria pós-Fatia 6] vai dominar o F1 agregado.** É esperado e
    medido; não é bug. O que seria bug é o nº de detecções divergir do nº de
    transições.
 2. **O escanteio a 56 % é o resultado mais citável e o mais frágil.** n = 18 nos

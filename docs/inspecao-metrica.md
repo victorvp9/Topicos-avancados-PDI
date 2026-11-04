@@ -35,7 +35,7 @@ sha256:
 | `documentation/events-definitions.pdf` | `5afb1ee34931447223ef8b9dc6a30b827fd0ba57ac9b6e2d7125ee87b083a866` |
 
 O `events-definitions.pdf` de `documentation/` tem o mesmo nome do que está em
-`refs/`; os hashes não foram comparados entre as duas pastas.
+`refs/`; ~~os hashes não foram comparados entre as duas pastas.~~ **São o mesmo arquivo** (sha256 `5afb1ee3…`).
 
 ---
 
@@ -86,7 +86,7 @@ Normalizadas, mas **extrapolam [0,1]**:
 | quadros com bola fora de [0,1] | 2423 (1,671 %) | 550 (0,390 %) |
 
 Os valores de jogador batem **exatamente** em −0,05 e 1,05 (jogo 1: 71 e 663
-ocorrências; jogo 2: 819 e 215), o que indica recorte (*clipping*) em ±0,05, isto
+ocorrências; jogo 2: 819 e 215 — **o 215 soma x e y (204 + 11), enquanto o jogo 1 conta só y** [corrigido 2026-11-04, auditoria pós-Fatia 6]), o que indica recorte (*clipping*) em ±0,05, isto
 é ±5,25 m em x e ±3,40 m em y. O conversor não pode assumir [0,1].
 
 ### 2.3 Sentido de ataque
@@ -504,8 +504,8 @@ jogos 1 e 2, antes de qualquer degradação, antes de posse e hierarquia):
 | evento | teto | n |
 |---|---|---|
 | lateral | 92 % | 60 |
-| tiro de meta | 89 % | 38 |
-| pontapé inicial | 92 % | 13 |
+| tiro de meta | ~~89 %~~ **86,8 % (33/38)** | 38 |
+| pontapé inicial | 92 % (12/13) | ~~13~~ **14 com `KICK OFF-RETAKEN`; fração não remedida** |
 | **escanteio** | **56 %** | **18** |
 
 ### 6.3 Dois problemas de gabarito encontrados
@@ -623,7 +623,7 @@ e `docs/03-plano.md`, Fatia 2.
 
 - **Não medi a defasagem `τ` da anotação** (o equivalente direto do S3). É
   entregável obrigatório da Fatia 2 e pode derrubar a janela de ±1 s do D8.
-- Não comparei o `events-definitions.pdf` de `documentation/` com o de `refs/`.
+- ~~Não comparei o `events-definitions.pdf` de `documentation/` com o de `refs/`.~~ **Fechado: mesmo arquivo.**
 - Não medi distância jogador-bola no jogo 3 nem seus gatilhos de bola parada. As
   **contagens** do jogo 3 estão em §3.1 e §3.2; a geometria ficou de propósito
   sem medir, para o jogo 3 continuar sendo conjunto não visto para `ε_c`.

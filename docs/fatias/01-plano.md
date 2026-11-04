@@ -249,7 +249,7 @@ melhora — é o sinal de que a mudança não é perseguição de resultado.
 Justificativa e caso concreto em `docs/inspecao-metrica.md` §6.3: em
 `BALL LOST`/`GOAL KICK-INTERCEPTION` o `Start Frame` é o ponto da interceptação, e
 o quadro 77582 do jogo 1 passa de 49,55 m para 4,52 m da linha de fundo quando
-ancorado certo.
+ancorado certo. **[Errado corrigido 2026-11-04, auditoria pós-Fatia 6: 49,55 m é a distância da BOLA; o executor está a 5,45 m no quadro anotado e a 4,52 m no primeiro quadro em jogo — `inspecao-metrica.md` §6.3.]**
 
 Eventos de jogo corrido (`pass`) **não** são ancorados: `frame = annotated_frame`.
 
@@ -353,7 +353,7 @@ Todos têm de passar. Um teste que "quase passa" reprova a fatia.
 | **fusão** | o gabarito tem **247** eventos de bola parada no total, **não 494**; nenhuma linha de execução fundida gera um `pass` extra |
 | fusão, casamento | para todos os 247, `source_rows` tem 2 índices e os dois têm o mesmo `From` e `Period` |
 | ancoragem | todo evento de bola parada tem `anchor_shift <= 0` (o primeiro quadro vivo nunca é depois do anotado) e `ball_live[frame] == True`, **exceto** o caso de `no_dead_ball_before` |
-| quadro 1 do jogo 1 | existe um `kickoff` com `game=1, frame=1, no_dead_ball_before=True`. É o **único** `no_dead_ball_before` nos 3 jogos |
+| quadro 1 do jogo 1 | existe um `kickoff` com `game=1, frame=1, no_dead_ball_before=True`. É o **único** `no_dead_ball_before` nos 3 jogos. **[Superado pela guarda de 10 s: são 13, e o teste exige 13. corrigido 2026-11-04, auditoria pós-Fatia 6]** |
 | caso 77582 | o `goal_kick` com `annotated_frame=77582` (jogo 1) tem `frame` tal que o executor está a menos de 6,0 m da própria linha de fundo |
 | subtipo desconhecido | injetar um subtipo inventado num CSV de teste faz o loader **levantar exceção**, não cair em `fora_do_escopo` |
 | nada é apagado | nº de eventos no gabarito + nº de linhas fundidas = nº de linhas cruas, nos 3 jogos |

@@ -111,7 +111,7 @@ Consequências declaradas, que vão ao relatório como falso positivo esperado:
   perda do cobrador sai como passe;
 - os 12 eventos sem âncora (`no_dead_ball_before`, guarda de 10 s) não têm
   intervalo morto antes, logo a execução deles sai como passe;
-- os intervalos mortos espúrios (os 185 FP estruturais da Fatia 4) também
+- os intervalos mortos espúrios (os ~~185~~ **198** FP estruturais da Fatia 4 [superado; corrigido 2026-11-04, auditoria pós-Fatia 6]) também
   suprimem uma perda cada — que era passe de verdade. **Medir quantas** dessas
   supressões caem a ≤ 1 s de um `PASS` anotado do mesmo jogador: é o custo, em
   revocação de passe, do D1 sem duração mínima.
