@@ -350,11 +350,39 @@ Alternativas descartadas:
   que mais importa para bola parada.
 - **Trocar para uma cadeia com duração explícita:** constantes novas sem fonte.
 
-**B5 sem GK = 0,545, abaixo do limite inferior de 0,56 do Crang Camera 1.** Fica
-como validação reprovada por 1,5 pontos, só registrada (§4.5). Jogo e estádio são
+**B5 sem GK = 0,5321 depois da emenda (era 0,545 antes dela), abaixo do limite inferior de 0,56 do Crang Camera 1.** Fica
+como validação reprovada por 2,8 pontos, só registrada (§4.5). Jogo e estádio são
 outros, e `θ*` vem do Bassek.
 
 **T7.** O meu critério "|Δ| < 0,01 por quadro em média com 1000 amostras" era
 inviável: só o ruído de Monte Carlo dá ≈ 0,013. Fica a leitura do codificador
 (|média Δ| < 0,01; média |Δ|/σ_MC < 1; idem nos quadros de transição). Erro meu de
 plano.
+
+### 10.1 Resultado da emenda e leitura da revisão (2026-11-04)
+
+- **A restrição fica INATIVA no ótimo (2,87 trocas/min), mas é ela que escolhe a
+  bacia.** Sem ela, o ótimo volta ao pisca-pisca (`b` = 0,3245, custo 3,8e-5, 332
+  trocas/min). Com ela, todos os pontos iniciais caem no mínimo interior (custo
+  0,0112). Os parâmetros ficam assim:
+  - `a_vivo` ≈ 0: nenhum corte começa com a bola viva;
+  - `a_morto` = 0,00595;
+  - `b` = 0,00301, o que dá episódios `off` de ~13 s.
+- **Os resíduos de −11 pontos em `P(off|morto)` e +9,6 pontos na lateral são
+  ESTRUTURAIS, não falha de ajuste** (demonstração do revisor):
+  - dentro de uma corrida morta, `p` sobe de forma monotônica;
+  - logo `P(off)` no primeiro quadro vivo é maior ou igual à média da corrida morta;
+  - os alvos pedem o contrário: 0,468 na âncora contra 0,682 na bola morta.
+
+  O menor resíduo máximo possível é ~10,3 pontos, com ou sem restrição. Leitura: o
+  modelo esconde a lateral **mais** que o FOOTPASS e a bola morta **menos** que o
+  Bassek. Causa provável: a bola morta do Bassek pesa as paradas longas, e as
+  definições de "inativo" diferem. Fica como limitação, pela §4.5.
+- **Validações reprovadas, todas registradas e nenhuma reajustada:**
+  - B5 sem GK: 0,532 contra ≥ 0,56;
+  - B8 P(≥ 9 por time): 0,073 contra ~0,20;
+  - B8 P(11): 0,007 contra ~0,03;
+  - GK +5,1 pontos acima do alvo.
+
+  O padrão sugere que a cunha de abertura fixa sub-representa os planos abertos
+  (zoom, fora do escopo pela §8).
