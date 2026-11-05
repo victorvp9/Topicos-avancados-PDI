@@ -1,0 +1,2842 @@
+{
+ "commit": "48224e06589e67f63bc39096dfbb01c6c150da27",
+ "working_tree_sujo": false,
+ "sha256_config": "ba2343237e5220a5c51149ae76309eaeaa6fa6f267fd3c86b3282c1b654c0eaa",
+ "dados": {
+  "jogo_1": {
+   "Sample_Game_1_RawEventsData.csv": "803f312a07572912b9ca2dc9482d31a75e573eae825773253b4ca9472e7760c0",
+   "Sample_Game_1_RawTrackingData_Away_Team.csv": "380e1b23affe778a7e1e8480983291798f118f71b1dbcf8f9729c06977669101",
+   "Sample_Game_1_RawTrackingData_Home_Team.csv": "ed7289a72d41f280b5316647655b1934575d3506c34e181c343294ceafdcb280"
+  },
+  "jogo_2": {
+   "Sample_Game_2_RawEventsData.csv": "c2296e8e0caf6f5bb832d5ecf9ebb52c13b18815b1fdbbf79a886238a01d6472",
+   "Sample_Game_2_RawTrackingData_Away_Team.csv": "f887c6c9227e56c01d1bf62d8d5bc66cdbc1da0c3e9b397c0e9499a0bc6dcb20",
+   "Sample_Game_2_RawTrackingData_Home_Team.csv": "92cc3ae1b5ac74530e21a899ab71cf12ee3a58c16592e87add6197f88a042b31"
+  },
+  "jogo_3": {
+   "Sample_Game_3_events.json": "ce12d8bf2b8242825e343fe12a06a0731f2d35e0ffb130603ef746f79fbf0b09",
+   "Sample_Game_3_metadata.xml": "0011881426043ff4d404b3445381eafb69086a02d95ac3bcf213a062fae74502",
+   "Sample_Game_3_tracking.txt": "bd33b0a6f89d5617275eac373b3fd043247c581759484e8f566f7701d09975c9"
+  },
+  "mapeamento": "e3d29d828f53071827c563942db5438e2dd5a771d0590be718c14ca69f3dd717"
+ },
+ "versoes": {
+  "python": "3.12.15",
+  "numpy": "2.5.4",
+  "pandas": "3.1.0",
+  "scipy": "1.18.1"
+ },
+ "unidades": [
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.008577800006606
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 20.14362240000628
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 18.236073400010355
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 27.92849209997803
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 16.743283400079235
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 16.41509679995943
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 26.11148530000355
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 33.17316759994719
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 19.813291699974798
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 19.851867499994114
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 19.7966062000487
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 19.763020399957895
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 19.834172900067642
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 18.917789999977686
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 18.965908300015144
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 19.03127759997733
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 18.994787800009362
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 19.224236399983056
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 18.389825999969617
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 18.179934000014327
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 18.140578699996695
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 18.06506569997873
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 18.097132200025953
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 28.202732300036587
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 28.173633600003086
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 28.10456210002303
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 28.174242899985984
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 27.83387380000204
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 16.550772699993104
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 16.55237210006453
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 16.61281429999508
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 16.53305900003761
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 16.453159100026824
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 16.151084700017236
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 16.450534300063737
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 16.769222700037062
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 16.37272539990954
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 16.102161000017077
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 25.913497800007463
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 26.020492600044236
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 25.966124299913645
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 25.70133640000131
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 25.659978799987584
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 19.063703599967994
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 18.412606099969707
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 17.626107699936256
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 27.171264000004157
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 16.331407199962996
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 15.986567199928686
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 25.199113800073974
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 31.76954729994759
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 18.99532669992186
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 19.110642100102268
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 19.05795050004963
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 19.115949200000614
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 19.002153900102712
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 18.304864900070243
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 18.27208799996879
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 18.488812800031155
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 18.527656899997965
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 18.271159299998544
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 17.384568899986334
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 18.14343509997707
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 18.3917532999767
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 18.61442660004832
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 18.584257500013337
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 27.59020969993435
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 27.424291900009848
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 28.23635360004846
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 28.480483900057152
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 28.619927700026892
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 16.71441729995422
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 17.069147000089288
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 17.066838500089943
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 17.0580080000218
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 16.82317869993858
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 16.917800900060683
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 16.759481499902904
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 16.68303569999989
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 16.625053499941714
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 16.379124500090256
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 26.827066900092177
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 26.49455790000502
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 26.36582599999383
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 26.44570089993067
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 26.224116299999878
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 23.992091799969785
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 23.49372519995086
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 22.24899400002323
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 34.17763789999299
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 20.201930499984883
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 20.232913599931635
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 32.36535839992575
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 40.451265300041996
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.358794300002046
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 24.083349999971688
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 24.129440999939106
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 23.79081470007077
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 23.870333999977447
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 21.88240440003574
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 22.110362399951555
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 22.111642600037158
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 22.201730399974622
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 22.17091910005547
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 21.443110499996692
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 21.20386529993266
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 21.205250300001353
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 21.17837540002074
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 21.27353000000585
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 32.769046999979764
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 32.79167020006571
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 32.51905490003992
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 32.56405679997988
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 32.665643199929036
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 19.570553199970163
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 19.768594500026666
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 19.6764889000915
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 19.724863599985838
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 19.771266800002195
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 19.30711070005782
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 19.356214300030842
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 19.125642400002107
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 18.981323200045153
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 19.206351300003007
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 30.619695200002752
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 30.831523500033654
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 30.807292900048196
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 30.57060310000088
+  },
+  {
+   "condicao": "bruto",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 30.556592599954456
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.59466419997625
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.497620799927972
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.544755000039004
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 34.03528399998322
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.40784190001432
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.27755200001411
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "A",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 33.947740899981
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 34.09884679992683
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.575751599972136
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 21.528295899974182
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 21.607319899951108
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 21.656973300036043
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 21.562677399953827
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.611573399975896
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 21.867437800043263
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 21.796242599957623
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 21.54721879994031
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 21.442146100103855
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.392079700017348
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 21.54342010000255
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 21.510635299957357
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 21.415061800042167
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 21.47393740003463
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 34.278720700065605
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 34.08072940004058
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 34.09655729995575
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 34.11762050003745
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 34.271541099995375
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.558312200009823
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 21.32302410004195
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 21.277170000015758
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 21.4269656999968
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 21.35780410002917
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 21.31864180008415
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 21.41663500003051
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 21.07093539997004
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 21.126154799945652
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 21.426496099913493
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;1;0",
+   "cache": "desligado",
+   "tempo_s": 34.05596659996081
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 1,
+   "semente_efetiva": "20261104;1;1",
+   "cache": "desligado",
+   "tempo_s": 33.81254920002539
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 2,
+   "semente_efetiva": "20261104;1;2",
+   "cache": "desligado",
+   "tempo_s": 33.81922710000072
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 3,
+   "semente_efetiva": "20261104;1;3",
+   "cache": "desligado",
+   "tempo_s": 33.85290789999999
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 4,
+   "semente_efetiva": "20261104;1;4",
+   "cache": "desligado",
+   "tempo_s": 34.00357140006963
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.68860980006866
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.91294149996247
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.667015200015157
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 32.917032999917865
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.62426399998367
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.532915399991907
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "A",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 32.8745078999782
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 32.61177489999682
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.693893100018613
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 20.70909479993861
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 20.890345699968748
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 20.872927900054492
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 20.919121300103143
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.637878499925137
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 20.785904600052163
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 20.86135420005303
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 21.05592670000624
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 20.869858300080523
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.80177639995236
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 20.677801600075327
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 20.78593859996181
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 20.613123600021936
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 20.639832700020634
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 32.745944599970244
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 32.99670859996695
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 32.86110410001129
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 32.89996259997133
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 32.75845590000972
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.52767939993646
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 20.453608000068925
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 20.58640779997222
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 20.488143200054765
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 20.543453899910673
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 20.55555330007337
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 20.501839000033215
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 20.615926600061357
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 20.48712229996454
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 20.470394799951464
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;2;0",
+   "cache": "desligado",
+   "tempo_s": 32.53542570001446
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 1,
+   "semente_efetiva": "20261104;2;1",
+   "cache": "desligado",
+   "tempo_s": 32.565628799959086
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 2,
+   "semente_efetiva": "20261104;2;2",
+   "cache": "desligado",
+   "tempo_s": 32.33853409998119
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 3,
+   "semente_efetiva": "20261104;2;3",
+   "cache": "desligado",
+   "tempo_s": 32.541970400023274
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 4,
+   "semente_efetiva": "20261104;2;4",
+   "cache": "desligado",
+   "tempo_s": 32.5330915999366
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.887708300026134
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.605758300051093
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.807708500069566
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 39.38903009996284
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.85068729997147
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.671501800068654
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "A",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 39.18145270005334
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 39.58832350000739
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.659525399911217
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 24.81775980000384
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 24.46275639999658
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 24.69119210005738
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 2,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 24.55465780000668
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 25.076681399950758
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 24.78398670000024
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 25.033740099985152
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 24.806970400037244
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 3,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 24.82377119990997
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.55959229997825
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 24.520859699929133
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 24.43605420005042
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 24.78826239996124
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 4,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 24.634429899975657
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 39.29127510008402
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 39.03550860006362
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 39.97850430000108
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 39.4874452999793
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 5,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 40.047539700055495
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.664374300045893
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 24.358606500085443
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 24.450781600084156
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 24.19514089997392
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 6,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 24.39501339988783
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 24.092552299960516
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 24.53897729993332
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 24.24574569996912
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 24.385235300054774
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 7,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 24.272094299900346
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 0,
+   "semente_efetiva": "20261104;3;0",
+   "cache": "desligado",
+   "tempo_s": 39.12310870003421
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 1,
+   "semente_efetiva": "20261104;3;1",
+   "cache": "desligado",
+   "tempo_s": 38.702715599909425
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 2,
+   "semente_efetiva": "20261104;3;2",
+   "cache": "desligado",
+   "tempo_s": 39.09469669999089
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 3,
+   "semente_efetiva": "20261104;3;3",
+   "cache": "desligado",
+   "tempo_s": 38.64518670004327
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "B",
+   "nivel": 8,
+   "rep": 4,
+   "semente_efetiva": "20261104;3;4",
+   "cache": "desligado",
+   "tempo_s": 37.47536719997879
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 4.032597600016743,
+   "eps_c_m": 1.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.9346865999978036,
+   "eps_c_m": 1.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.737879200023599,
+   "eps_c_m": 1.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.684625199995935,
+   "eps_c_m": 2.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.6268070000223815,
+   "eps_c_m": 2.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.7299108000006527,
+   "eps_c_m": 2.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.9646023999666795,
+   "eps_c_m": 3.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.897629000013694,
+   "eps_c_m": 3.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.710982399992645,
+   "eps_c_m": 3.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.6276451000012457,
+   "eps_c_m": 4.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.5143868000013754,
+   "eps_c_m": 4.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.7645599000388756,
+   "eps_c_m": 4.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 4.043966199969873,
+   "eps_c_m": 5.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.932398399920203,
+   "eps_c_m": 5.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.7500237999483943,
+   "eps_c_m": 5.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.8759224000386894,
+   "eps_c_m": 6.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.749879099894315,
+   "eps_c_m": 6.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.7293258999707177,
+   "eps_c_m": 6.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 1,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.73331539996434,
+   "eps_c_m": 8.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 2,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.6312767000636086,
+   "eps_c_m": 8.0
+  },
+  {
+   "condicao": "reconstruido",
+   "jogo": 3,
+   "variante": "AB",
+   "nivel": 1,
+   "rep": 0,
+   "semente_efetiva": "nenhuma",
+   "cache": "desligado",
+   "tempo_s": 3.738221399951726,
+   "eps_c_m": 8.0
+  }
+ ]
+}

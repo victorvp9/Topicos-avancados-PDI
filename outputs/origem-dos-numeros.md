@@ -480,6 +480,51 @@ comando rodando sozinho.
 | 22 mutantes das duas revisões (R6, F1, lacuna 5, cobertura do cache, `papel`, bordas de igualdade, NaN no R8, grade de `ε_c`), todos mortos, cada um por um teste nomeado | [nosso] | relatório do codificador da 8a |
 | 560 testes (45 da Fatia 8a em `tests/test_experimento.py`) | [nosso] | `uv run pytest` (5 min 44 s, sozinho) |
 
+## Fatia 8b — rodada final (2026-11-05)
+
+Rodada final ÚNICA, produzida por `src/experiment.py` (`--experimento`) no commit
+`48224e0`, working tree limpo. Tabelas e figuras regeneradas depois só com
+`--tabelas-figuras` (lê os CSV, não recalcula; sha256 das 5 tabelas idêntico
+antes e depois da mudança de apresentação das figuras). Salvo indicação:
+critério `estrito`, âncora `frame`, `acompanha_r_pz`, com lacuna 5, `R_pz` =
+`R0` = 0,5 m; contagens somadas sobre os 3 jogos e as sementes (5 em B, 1 em A
+e no teto); F1 = `2·tp/(n_det + n_gab)`. Formato das contagens: `tp_diag` /
+`n_detectado` / `n_gabarito`. Pasta: `outputs/experimento/`.
+
+| número | origem | arquivo / filtro / coluna |
+|---|---|---|
+| nível 1 (teto, `AB`), as duas condições: bola parada micro 232 / 481 / 295, F1 0,5979; passe principal 2187 / 2262 / 2650, F1 0,8905 | [nosso] | `tabelas/tabela1.csv` (`variante` = AB, `nivel` = 1; colunas `tp_diag`, `n_detectado`, `n_gabarito`, `f1`) para `reconstruido`; `pontos.csv` filtrado como acima, `condicao` = bruto, somado, para `bruto` |
+| **`reconstruido` B5**: bola parada 1155 / 2405 / 1475 (F1 0,5954); passe 10935 / 11310 / 13250 (F1 0,8905) | [nosso] responde | `tabelas/tabela1.csv`, `variante` = B, `nivel` = 5 |
+| **`reconstruido` B8**: bola parada 749 / 2405 / 1475 (F1 0,3861); passe 9008 / 9288 / 13250 (F1 0,7994) | [nosso] responde | `tabelas/tabela1.csv`, `variante` = B, `nivel` = 8 |
+| `bruto` B5: bola parada 1160 / 2405 / 1475 (F1 0,5979); passe 10935 / 11310 / 13250 (F1 0,8905) | [nosso] secundário | `pontos.csv`, `condicao` = bruto, `variante` = B, `nivel` = 5, filtro acima, soma sobre `jogo` e `rep` (15 linhas por alvo) |
+| `bruto` B8: bola parada 635 / 2405 / 1475 (F1 0,3273); passe 8915 / 9186 / 13250 (F1 0,7947) | [nosso] secundário | idem, `nivel` = 8 |
+| A8 `reconstruido` bola parada 219 / 481 / 295 (F1 0,5644); A8 `bruto` bola parada 232 / 481 / 295 (= teto); A8 passe 2187 / 2262 / 2650 (= teto) nas duas condições | [nosso] secundário | `tabelas/tabela1.csv` (`reconstruido`, `variante` = A, `nivel` = 8); `pontos.csv` para `bruto` |
+| LOGO `reconstruido` B5 bola parada: `Δ_agregado` 0,0000, ajuda não, compensa não | [nosso] responde | `selecao_logo.csv` (= `tabelas/tabela2.csv` sem `papel`), `condicao` = reconstruido, `variante` = B, `nivel` = 5, `alvo` = bola_parada_micro; colunas `delta_agregado`, `ajuda`, `compensa` |
+| LOGO `reconstruido` B5 passe: `Δ_agregado` 0,0096 (< `λ` = 0,01, embora `Δ_g > 0` nos 3 jogos), ajuda não, compensa não | [nosso] responde | idem, `alvo` = passe_principal |
+| **LOGO `reconstruido` B8 bola parada: `R*_g` 2,0 / 3,0 / 2,5 m (jogos de teste 1 / 2 / 3), `Δ_agregado` 0,0196, `Δ_agregado` do nível 1 0,0000, ajuda sim, compensa sim, fração recuperada 0,0925** | [nosso] responde | idem, `nivel` = 8, `alvo` = bola_parada_micro; colunas `r_estrela`, `delta_agregado`, `delta_agregado_nivel_1`, `ajuda`, `compensa`, `fracao_recuperada` |
+| **LOGO `reconstruido` B8 passe: `Δ_agregado` 0,0141, `Δ_agregado` do nível 1 0,0096, ajuda sim, compensa não, fração recuperada 0,1400** | [nosso] responde | idem, `alvo` = passe_principal |
+| LOGO `bruto` B8 passe: `Δ_agregado` 0,0092, ajuda não, compensa não, fração recuperada 0,0869 | [nosso] secundário | idem, `condicao` = bruto |
+| LOGO `bruto` B8 bola parada: `Δ_agregado` −0,0005, ajuda não, compensa não | [nosso] secundário | idem, `condicao` = bruto, `alvo` = bola_parada_micro |
+| tiro livre (`free_kick`), nível 1: `Δ_agregado` +0,134 (`R*_g` = 3,0 m nos 3 jogos) | [nosso] secundário, tipo isolado | `selecao_logo.csv`, `variante` = AB, `nivel` = 1, `alvo` = free_kick |
+| `ε_c` = 3 m reproduz o teto: bola parada micro 153 + 79 = 232 / 322 + 159 = 481 / 194 + 101 = 295 (jogos 1+2 / jogo 3) | [nosso] | `tabelas/tabela4.csv`, `criterio` = estrito, `lacuna5` = com, `eps_c_m` = 3, `alvo` = bola_parada_micro, linhas `jogos` = 1+2 e 3 |
+| escanteio estrito, 3 jogos: `tp_diag` 4 / 13 / 16 / 20 / 23 / 24 / 25 para `ε_c` = 1 / 2 / 3 / 4 / 5 / 6 / 8 m (`n_gab` 26) | [nosso] secundário | `eps_c.csv`, `criterio` = estrito, `lacuna5` = com, `alvo` = corner_kick, soma de `tp_diag` por `eps_c_m` |
+| EP5 do piloto (B8, 10 sementes, desenvolvimento): passe 0,0047, bola parada 0,0073 | [nosso] desenvolvimento | `piloto.csv`, coluna `ep5`, `alvo` = passe_principal / bola_parada_micro |
+| manifesto: commit `48224e0`, `working_tree_sujo` False, 279 unidades | [nosso] | `manifesto.json`, chaves `commit`, `working_tree_sujo`, `len(unidades)` |
+| parede da rodada final: 60 min (60m23s) | [nosso] medição desta máquina | `rodada_final.log`, linha `real` |
+| `taxa_sem_gk` média: B5 0,5323; B8 0,3676; A8 0,3704 | [nosso] | `tabelas/tabela1.csv`, coluna `taxa_sem_gk` (média das taxas amostradas, R4) |
+| B2, B3, B4: bola parada F1 0,5979 e passe F1 0,8905 (iguais ao teto); B6: bola parada 0,4789, passe 0,8407; B7: bola parada 0,4196, passe 0,8145 | [nosso] secundário | `tabelas/tabela1.csv`, `variante` = B, `nivel` = 2…7, coluna `f1` |
+| mín.–máx. do F1 por jogo: nível 1 passe 0,8644–0,9119, bola parada 0,5929–0,6077; B8 passe 0,7760–0,8218, bola parada 0,3668–0,4046 | [nosso] | `tabelas/tabela1.csv`, colunas `f1_jogo_min`, `f1_jogo_max` |
+| B8 passe precisão 0,9699, revocação 0,6798 (nível 1: 0,9668 / 0,8253); B8 bola parada precisão 0,3114, revocação 0,5078 (nível 1: 0,4823 / 0,7864) | [nosso] | `tabelas/tabela1.csv`, colunas `precisao`, `revocacao` |
+| F1 por tipo, nível 1 / B5 / B8 / A8: lateral 0,9115 / 0,9156 / 0,6517 / 0,9156; escanteio 0,7619 / 0,7619 / 0,6326 / 0,7619; pontapé inicial 0,9714 / 0,9412 / 0,5600 / 0,3636 (A8: 4 / 4 / 18); tiro de meta 0,3956 / 0,3495 / 0,2414 / 0,3462; tiro livre 0,5000 / 0,5000 / 0,2748 / 0,4762 | [nosso] baixa confiança (tipos isolados) | `tabelas/tabela1.csv`, `alvo` = throw_in, corner_kick, kickoff, goal_kick, free_kick; coluna `f1` |
+| tiro de meta: `n_detectado` 133 (nível 1) e 1064 (B8, 5 sementes); `n_gabarito` 49 e 245 | [nosso] | `tabelas/tabela1.csv`, `alvo` = goal_kick |
+| `bruto` B8 passe F1 0,7947; `bruto` A8 bola parada `tp_diag` 232 | [nosso] secundário | `tabelas/tabela5.csv`, `condicao` = bruto, `criterio` = estrito, `ancora` = frame, `acompanha_r_pz`, `lacuna5` = com, `r_pz` = 0,5 |
+| `f1_logo` `reconstruido` B8: bola parada 0,4057, passe 0,8135; nível 1: passe 0,9000, bola parada 0,5979 | [nosso] | `selecao_logo.csv`, coluna `f1_logo` |
+| escanteio estrito, jogo 3 (único não visto para `ε_c`): `n_gab` 8; `tp_diag` 0 / 4 / 4 / 5 / 7 / 8 / 8 e `n_det` 0 / 4 / 4 / 5 / 8 / 10 / 11 para `ε_c` = 1 / 2 / 3 / 4 / 5 / 6 / 8 m. **Baixa confiança: 8 escanteios de 3 cobradores** (`Player 7` em 4, `Player 5` em 2, `Player 22` em 2) | [nosso] baixa confiança | `tabelas/tabela4.csv`, `jogos` = 3, `alvo` = corner_kick, `criterio` = estrito, `lacuna5` = com; a frase vem de `docs/decisoes.md`, 2026-10-29 |
+| `reconstruido` B8 bola parada micro: `motivo_sem_passe_do_executor` 243 / 392 / 538 e `motivo_sem_padrao_de_tiro_livre` 975 / 705 / 565 em `r_pz` = 0,5 / 2,0 / 3,0 m | [nosso] decomposição R9 | `tabelas/tabela3.csv`, `condicao` = reconstruido, `variante` = B, `nivel` = 8, `alvo` = bola_parada_micro |
+| passe principal, critério `vidal_codina`, `reconstruido`: B8 F1 0,8054 em 0,5 m (9076 / 9288 / 13250) e 0,8203 em 1,0 m (9411 / 9694 / 13250); nível 1 F1 0,8978 (2205 / 2262 / 2650) e 0,9077 (2261 / 2332 / 2650). Excesso do ganho em B8 sobre o do nível 1: 0,005. **Descritivo, controle da deriva do rótulo de tempo** | [nosso] descritivo | `pontos.csv`, `condicao` = reconstruido, `criterio` = vidal_codina, `ancora` = frame, `acompanha_r_pz`, `lacuna5` = com, `alvo` = passe_principal, soma sobre `jogo` e `rep`; F1 = 2·`tp_diag`/(`n_det` + `n_gab`) |
+| `n_dist_igual_grade` soma 0 nas 147.600 linhas (diagnóstico (h)) | [nosso] | `pontos.csv`, soma da coluna `n_dist_igual_grade` |
+| variante A, passe principal: máximo de \|F1 − F1 do teto\| de A2 a A8 = 0,000226 (A7, F1 0,8902; com os F1 arredondados a 4 casas, 0,8905 − 0,8902 = 0,0003) | [nosso] secundário | `tabelas/tabela1.csv`, `variante` = A, `alvo` = passe_principal, coluna `f1` |
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |

@@ -833,22 +833,39 @@ def tabelas_figuras(cfg: dict, saida: Path) -> None:
             eixo.plot(b["taxa_todos"], b["f1"], "o", ms=3, label=v)
         eixo.set(title=alvo, xlabel="taxa amostrada", ylabel="F1", ylim=(0, 1))
         eixo.legend(fontsize=7)
+    virg = lambda x, f="{:g}": f.format(x).replace(".", ",")   # decimal com virgula so na figura
+    criterio = cfg["avaliacao"]["criterio_principal"]
+    fig.suptitle("F1 x taxa amostrada: condicao {}, criterio {}, ancora frame, R0 = {} m; "
+                 "cada ponto e uma semente (3 jogos somados)".format(CONDICOES[0], criterio, virg(r0)), fontsize=10)
     fig.tight_layout()
     fig.savefig(fig_dir / "figura1.png", dpi=120)
     plt.close(fig)
     sup = agregar(principal[(principal["condicao"] == CONDICOES[0]) & principal["alvo"].isin(ALVOS_PRIMARIOS)],
                   ["variante", "nivel", "alvo", "r_pz"])
-    grupos = sorted(sup.groupby(["alvo", "variante"]).groups)
-    fig, eixos = plt.subplots(1, len(grupos), figsize=(4 * len(grupos), 4), squeeze=False)
+    # o nivel 1 (teto, variante AB) entra como primeira linha dos paineis A e B
+    grupos = sorted(sup.loc[sup["variante"] != VARIANTE_TETO, ["alvo", "variante"]].drop_duplicates()
+                    .itertuples(index=False, name=None))
+    fig, eixos = plt.subplots(1, len(grupos), figsize=(5 * len(grupos), 5), squeeze=False)
     for eixo, (alvo, v) in zip(eixos.flat, grupos):
-        b = sup[(sup["alvo"] == alvo) & (sup["variante"] == v)]
+        b = sup[(sup["alvo"] == alvo) & sup["variante"].isin([v, VARIANTE_TETO])]
         m = b.pivot(index="nivel", columns="r_pz", values="f1")
         taxa = b.groupby("nivel")["taxa_todos"].mean().reindex(m.index)
-        im = eixo.imshow(m.to_numpy(), aspect="auto", vmin=0, vmax=1, cmap="viridis")
-        eixo.set(title="{} {}".format(alvo, v), xlabel="R_pz (m)", ylabel="taxa amostrada media",
-                 xticks=range(m.shape[1]), xticklabels=["{:g}".format(r) for r in m.columns],
-                 yticks=range(m.shape[0]), yticklabels=["{:.2f}".format(t) for t in taxa])
+        rotulo = {n: (VARIANTE_TETO if n == 1 else v) + str(n) for n in m.index}
+        z = m.to_numpy(dtype=float)
+        # escala por painel: diferencas de 0,01-0,02 ficam visiveis
+        im = eixo.imshow(z, aspect="auto", vmin=np.nanmin(z), vmax=np.nanmax(z), cmap="viridis")
+        meio = (np.nanmin(z) + np.nanmax(z)) / 2
+        for (i, j), f in np.ndenumerate(z):
+            eixo.text(j, i, "nan" if np.isnan(f) else virg(f, "{:.3f}"), ha="center", va="center",
+                      fontsize=7, color="white" if f < meio else "black")
+        eixo.set(title="{} {}".format(alvo, v), xlabel="R_pz (m)", ylabel="nivel (taxa amostrada media)",
+                 xticks=range(m.shape[1]), xticklabels=[virg(r) for r in m.columns],
+                 yticks=range(m.shape[0]),
+                 yticklabels=["{} ({})".format(rotulo[n], virg(t, "{:.2f}")) for n, t in taxa.items()])
         fig.colorbar(im, ax=eixo)
+    fig.suptitle("F1(taxa, R_pz): condicao {}, criterio {}, lacuna 5 com, politica {}; "
+                 "escala de cor por painel".format(CONDICOES[0], criterio, cfg["posse"]["r_dz_politica"]),
+                 fontsize=10)
     fig.tight_layout()
     fig.savefig(fig_dir / "figura2.png", dpi=120)
     plt.close(fig)
