@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-05 (Fatia 8a aceita, tag `baseline`; aguardando G4/G5)
+Atualizado: 2026-11-05 (rodada final única concluída; revisão da 8b em curso)
 
 ## Onde estamos
 
@@ -227,9 +227,10 @@ pós-Fatia 6]`. Detalhe em `decisoes.md`, seção "Auditoria pós-Fatia 6".
 
 ## Próximo passo
 
-**G4 + G5 com o Victor:** orçamento, `bruto` na grade inteira ou não, config
-congelada, tag `pre-rodada-final`. Depois, uma única rodada `--all` (8b), as
-conferências pós-rodada (`eps_c.csv`) e o relatório.
+G4 e G5 decididos; rodada final única feita (exit 0, 60 min, commit `48224e0`).
+Conferências pós-rodada OK (nível 1 e `ε_c` = 3 iguais ao teto; curva de `ε_c`
+varia; ver decisoes.md). Agora: revisão da 8b, depois tag `final`, tabelas com
+`git add -f`, `origem-dos-numeros.md` (codificador) e `docs/relatorio.md`.
 
 ## Portões
 
