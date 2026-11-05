@@ -38,6 +38,11 @@ os falsos negativos do principal por causa (docs/fatias/05-plano.md §6). Grava
 sete blocos do docs/fatias/06-plano.md §6. NAO avalia nada sobre tracking
 degradado: nenhum P/R/F1 e nenhuma contagem de deteccao (plano §6).
 
+`python -m src.run --piloto` roda o piloto de sementes do docs/fatias/08-plano.md
+(R8) e mede o tempo por unidade para o orcamento do G4; `--experimento` roda a
+grade inteira (so na rodada final); `--tabelas-figuras` so le os CSV de
+`outputs/experimento/`; `--all` roda tudo em ordem, sem cache.
+
 `python -m src.run --reconstrucao` reconstroi (interpolacao linear) o tracking
 de cada (variante, nivel) do simulador e imprime os seis blocos do
 docs/fatias/07-plano.md §4. Grava `outputs/reconstrucao.csv`. Nao roda o
@@ -1051,15 +1056,22 @@ def _tabela_passe(resultado: pd.DataFrame, cfg: dict, jogos) -> None:
                 + "".join("{:8.3f}".format(linha[c]) for c in ("precisao", "revocacao", "f1")))
 
 
-def _bloco_9(base: dict, deteccoes: pd.DataFrame, passes: pd.DataFrame,
-             eventos: pd.DataFrame, cfg: dict, jogos) -> None:
-    """Supressao alternativa "so se a perda for do executor detectado".
+def passes_sem_lacuna_5(passes: pd.DataFrame) -> pd.DataFrame:
+    """N5: a tabela `PASSES` sem as perdas `de_lacuna_5` (bloco 7 de `--passes`
+    e o `lacuna5 = sem` da Fatia 8). Filtrar a tabela pronta da as mesmas
+    deteccoes que refazer a supressao sem essas perdas (ha teste)."""
+    return passes[~passes["de_lacuna_5"]]
+
+
+def passes_so_executor(base: dict, deteccoes: pd.DataFrame, passes: pd.DataFrame, jogos) -> pd.DataFrame:
+    """N4: supressao alternativa "so se a perda for do executor detectado".
 
     Leitura implementada: a MESMA perda que o principal suprime (a primeira da
     corrida viva) so sai se o seu jogador for o executor da deteccao; senao ela
     volta a ser passe. `free_kick?` nao tem executor, logo nada suprime. E a
     alternativa descartada no plano 05 §3.1, pedida como sensibilidade na
-    revisao de 2026-11-04. Nao altera `passes` (trabalha numa copia).
+    revisao de 2026-11-04. Devolve uma copia de `passes` com `e_bola_parada`
+    trocado; `base` so fornece `frames` por jogo.
     """
     executor = np.full(len(passes), "", dtype=object)
     for game in jogos:
@@ -1067,8 +1079,15 @@ def _bloco_9(base: dict, deteccoes: pd.DataFrame, passes: pd.DataFrame,
         det_g = deteccoes[deteccoes["game"] == game].reset_index(drop=True)
         origem = passes_mod.suprimir(passes.iloc[sel], det_g, base[game]["frames"])
         executor[sel[origem >= 0]] = det_g["player_id"].to_numpy()[origem[origem >= 0]]
-    alt = passes.assign(
+    return passes.assign(
         e_bola_parada=passes["e_bola_parada"] & (passes["player_id"].to_numpy() == executor))
+
+
+def _bloco_9(base: dict, deteccoes: pd.DataFrame, passes: pd.DataFrame,
+             eventos: pd.DataFrame, cfg: dict, jogos) -> None:
+    """Imprime o bloco 9 (EXPLORATORIO) com `passes_so_executor`. Nao altera
+    `passes`."""
+    alt = passes_so_executor(base, deteccoes, passes, jogos)
     gab_sec = evaluate.gabarito_secundario(eventos, cfg)
     principal = cfg["avaliacao"]["criterio_principal"]
     print("")
@@ -1206,7 +1225,7 @@ def rodar_passes(cfg: dict, mapeamento: dict, jogos, gravar_em=None, exploratori
 
     print("")
     print("  (7) TABELAS 3 E 4 SEM AS PERDAS `de_lacuna_5` (requisito das Fatias 3-4)")
-    sem = passes[~passes["de_lacuna_5"]]
+    sem = passes_sem_lacuna_5(passes)
     print("    passes sem lacuna 5: {} (com: {}; perdas de lacuna 5 nao suprimidas: {})".format(
         int((~sem["e_bola_parada"]).sum()), len(nao_supr), int(nao_supr["de_lacuna_5"].sum())))
     print("  -- principal")
@@ -1922,15 +1941,32 @@ def main(argv=None) -> int:
                         help="calibra o simulador de broadcast (relatorio do plano 06)")
     parser.add_argument("--reconstrucao", action="store_true",
                         help="reconstroi o tracking degradado (relatorio do plano 07)")
+    parser.add_argument("--piloto", action="store_true",
+                        help="piloto de sementes (R8) e tempo por unidade (plano 08)")
+    parser.add_argument("--experimento", action="store_true",
+                        help="a grade inteira do plano 08 (so na rodada final)")
+    parser.add_argument("--tabelas-figuras", action="store_true",
+                        help="tabelas e figuras do plano 08 §5, so lendo os CSV")
+    parser.add_argument("--all", action="store_true",
+                        help="todos os modos em ordem, mais --experimento e --tabelas-figuras, sem cache")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
     args = parser.parse_args(argv)
 
     cfg = carregar_config(args.config)
-    if not (args.inspect or args.tau or args.posse or args.tau_posse
-            or args.bola_parada or args.passes or args.simulador or args.reconstrucao):
+    if args.all:
+        for modo in ("inspect", "tau", "posse", "tau_posse", "bola_parada", "passes", "simulador",
+                     "reconstrucao", "experimento", "tabelas_figuras"):
+            setattr(args, modo, True)
+    if not (args.inspect or args.tau or args.posse or args.tau_posse or args.bola_parada or args.passes
+            or args.simulador or args.reconstrucao or args.piloto or args.experimento
+            or args.tabelas_figuras):
         parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
-                     "--simulador ou --reconstrucao")
+                     "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras ou --all")
     mapeamento = carregar_mapeamento(cfg)
+    caminho_config = args.config or RAIZ_REPO / "config.yaml"
+    saida = RAIZ_REPO / "outputs" / "experimento"
+    # `--all` e a rodada do zero (docs/03, "Saida"): sem cache.
+    cache = None if args.all else RAIZ_REPO / "outputs" / "cache"
     if args.inspect:
         inspecionar(cfg, mapeamento, cfg["dados"]["jogos"])
     if args.tau:
@@ -1947,6 +1983,13 @@ def main(argv=None) -> int:
         rodar_simulador(cfg, mapeamento, cfg["dados"]["jogos"])
     if args.reconstrucao:
         rodar_reconstrucao(cfg, mapeamento, cfg["dados"]["jogos"])
+    from src import experiment     # importa `run`; aqui evita o ciclo
+    if args.piloto:
+        experiment.rodar_piloto(cfg, mapeamento, caminho_config, saida, cache)
+    if args.experimento:
+        experiment.rodar_experimento(cfg, mapeamento, caminho_config, saida, cache)
+    if args.tabelas_figuras:
+        experiment.tabelas_figuras(cfg, saida)
     return 0
 
 

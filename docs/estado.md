@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-04 (Fatia 7 aceita)
+Atualizado: 2026-11-05 (Fatia 8a aceita, tag `baseline`; aguardando G4/G5)
 
 ## Onde estamos
 
@@ -181,6 +181,19 @@ Três achados:
    dos cortes, e em B8 o executor do tiro de meta é **mais** visível (0,45) que o
    do escanteio (0,34) e o da lateral (0,43). O F1 da Fatia 8 decide.
 
+## Fatia 8a — ACEITA (2026-11-05), tag `baseline`
+
+Plano em `docs/fatias/08-plano.md`. As regras de decisão (§2) e a emenda §8
+foram escritas **antes** de qualquer F1 degradado fora de `R0`. **560 testes.**
+Houve uma revisão e duas re-revisões, com reprodução Δ = 0, determinismo entre
+workers e cache vazio confirmados, e mais de 40 mutantes mortos.
+
+- **Piloto** (desenvolvimento, não resultado): em B8, `R0`, `reconstruido`, 10
+  sementes, o EP5 é 0,0047 no passe e 0,0073 na bola parada, ambos ≤ 0,01, logo
+  **5 sementes**.
+- **Orçamento do `--all`, com 3 workers:** 0,83–0,91 h de parede e 2,27–2,52 h de
+  CPU com `bruto`; 0,52–0,56 h e 1,34–1,47 h sem `bruto`.
+
 ## Fatia 7 — ACEITA (2026-11-04)
 
 Plano em `docs/fatias/07-plano.md`. **515 testes.** A revisão independente
@@ -214,15 +227,9 @@ pós-Fatia 6]`. Detalhe em `decisoes.md`, seção "Auditoria pós-Fatia 6".
 
 ## Próximo passo
 
-**Fatia 8 — experimento e relatório.** Primeiro o plano, com o G4 ao Victor antes de rodar. Dívidas obrigatórias em `decisoes.md` (Fatias 6 e 7, itens (a)–(h), mais cache, manifesto e agregação por semente testada). ~~Fatia 7 — reconstrução~~ (aceita; interpolação linear; `visible=False` nas linhas
-imputadas; erro comparado ao do Crang). Depois, a Fatia 8, cujas dívidas
-obrigatórias estão em `decisoes.md`:
-
-- N4 e N5;
-- a correlação entre degradação e eventos;
-- o eixo x pela taxa amostrada;
-- o número de sementes;
-- a declaração do vazamento da calibração.
+**G4 + G5 com o Victor:** orçamento, `bruto` na grade inteira ou não, config
+congelada, tag `pre-rodada-final`. Depois, uma única rodada `--all` (8b), as
+conferências pós-rodada (`eps_c.csv`) e o relatório.
 
 ## Portões
 

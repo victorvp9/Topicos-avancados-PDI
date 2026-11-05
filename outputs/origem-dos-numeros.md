@@ -447,6 +447,39 @@ comparação justa é a do "não detectado". Todas as linhas: `outputs/reconstru
 | n do bloco 6 (3 jogos): passe 2.650, pontapé inicial 18, escanteio 26, lateral 110, tiro de meta 49, falta 92, pênalti 1 | [nosso] | `--reconstrucao` bloco 6 |
 | ~~513~~ **515** testes (32 da Fatia 7: `test_reconstruct.py` 24, `test_reconstrucao_real.py` 8) [corrigido 2026-11-04, revisão da Fatia 7] | [nosso] | `uv run pytest` |
 
+## Fatia 8a — a máquina do experimento e o piloto (2026-11-05)
+
+Produzidos por `src/experiment.py` e `python -m src.run --piloto`, depois da
+revisão independente da 8a (ACEITAR COM RESSALVAS) e da emenda pré-registrada do
+`docs/fatias/08-plano.md` §8 (commit `ee42fdd`). Working tree sujo (a 8a não está
+commitada). O piloto é DESENVOLVIMENTO (plano 08 R8), não resultado: a rodada
+final recalcula as mesmas sementes. Critério `estrito`, âncora `frame`,
+`acompanha_r_pz`, com lacuna 5, `R_pz` = 0,50 m, condição `reconstruido`, os 3
+jogos somados por semente. F1 = `2·tp/(n_det + n_gab)` (emenda §8, item 2). Saídas:
+`outputs/experimento/piloto.csv`, `piloto_pontos.csv`, `manifesto_piloto.json`,
+`manifesto_tempo.json`, `orcamento.csv`. Tempos medidos nesta máquina, cada
+comando rodando sozinho.
+
+| número | origem | comando |
+|---|---|---|
+| nível 1 nas duas condições reproduz o teto exatamente: bola parada micro tp 232 / n_det 481 / n_gab 295; passe principal tp 2187 / n_det 2262 / n_gab 2650 | [nosso] | `uv run pytest tests/test_experimento.py -k t1` |
+| `lacuna5` varrido: no teto, passe principal n_det 2262 com e 2261 sem; bola parada com contagens por tipo diferentes | [nosso] | `uv run pytest tests/test_experimento.py -k lacuna5` |
+| N5 (sem lacuna 5): 2884 passes; principal `tp_diag` 2186, `n_det` 2261, F1 0,890; secundário 2719 / 2884 / 0,859. N4 (EXPLORATÓRIO): 3132 / 2282 / 2886 — travados em teste | [nosso] | `uv run pytest tests/test_experimento.py -k t9` |
+| **B8, 10 sementes: F1 passe principal média 0,7983 (0,7784–0,8149), s 0,0106, EP5 0,0047; bola parada micro média 0,3933 (0,3634–0,4227), s 0,0164, EP5 0,0073** (EP5 = s/√`n_ref_ep`, `n_ref_ep` = 5) | [nosso] desenvolvimento | `--piloto`; `outputs/experimento/piloto.csv` |
+| B8 escanteio (reportado, não decide, n = 26): média 0,6348 (0,5405–0,7234), s 0,0670, EP5 0,0300 | [nosso] baixa confiança | `--piloto` |
+| **Decisão de R8: 5 sementes** (EP5 ≤ 0,01 nos dois alvos primários em B; A não tem semente) | [nosso] regra do plano 08 R8 e §8 | `--piloto`; coluna `n_sementes_decidido` |
+| `piloto.csv` depois da emenda: mesmos valores a 4 casas; diferença máxima de 1,1e-16 contra a versão anterior (só a fórmula do F1 mudou). Rodado de novo com cache: `piloto.csv` e `orcamento.csv` idênticos byte a byte | [nosso] | `--piloto` duas vezes; `cmp` |
+| A8 (sem semente, `rep` 0, fora da regra): passe principal 2187 / 2262 / 2650, F1 0,8905 — **igual ao teto** (a janela centrada na bola nunca tira o passador); bola parada micro 219 / 481 / 295, F1 0,5644; escanteio 16 / 16 / 26, F1 0,7619 | [nosso] desenvolvimento | `--piloto` |
+| piloto: 33 unidades (B8 × 10 sementes × 3 jogos + A8 × 3 jogos), soma do tempo por unidade 136,4 s, parede 50,5 s com 3 workers; `--piloto` inteiro 3 min 54 s sem cache e 3,0 s com cache (`time`) | [nosso] medição desta máquina | `--piloto` |
+| tempo da unidade B8 COMPLETA (8 `R_pz` + 5 `fixo_1m`, com e sem lacuna 5), `n_workers` = 1: `reconstruido` 32,4 / 31,2 / 37,2 s (jogos 1/2/3; média 33,60, máx. 37,19); `bruto` 24,8 / 23,8 / 29,4 s (média 26,01, máx. 29,42) | [nosso] medição desta máquina | `--piloto`; `manifesto_tempo.json` |
+| grade R3: 129 unidades por condição com 5 sementes, 234 com 10 (teto 3 + B 7 níveis × sementes × 3 jogos + A 7 níveis × 3 jogos) | [nosso] | `--piloto`; `test_grade_r3` |
+| orçamento só da grade, 3 workers, tempo médio–máximo: 5 sementes sem `bruto` 0,40–0,44 h de parede (1,20–1,33 h CPU), com `bruto` 0,71–0,80 h (2,14–2,39 h CPU); 10 sementes sem `bruto` 0,73–0,81 h (2,18–2,42 h CPU), com `bruto` 1,29–1,44 h (3,87–4,33 h CPU). Limite superior: B8 tem os pontos de `fixo_1m` que os níveis fora de {1, 5, 8} não têm | [nosso] estimativa | `--piloto`; `outputs/experimento/orcamento.csv` |
+| parede de cada modo, sozinho: `--inspect` 3,7 s; `--tau` 4,6 s; `--posse` 63,3 s; `--tau-posse` 13,5 s; `--bola-parada` 38,1 s; `--passes` 9,4 s; `--simulador` 67,6 s; `--reconstrucao` 205,1 s; soma 405,3 s | [nosso] medição desta máquina | `uv run python -m src.run --<modo>`, um por vez, cronometrado por fora |
+| unidade de `ε_c` (teto, R0, 1 ponto): 3,40 / 3,24 / 3,80 s (média 3,48 s); 21 unidades (7 valores de `bola_parada.grade_eps_c_m` × 3 jogos) = 73 s de CPU, 24 s de parede com 3 workers | [nosso] medição desta máquina | `rodar_unidades` sem cache, `n_workers` = 1 |
+| **orçamento do `--all` inteiro** (modos + grade + `ε_c`; médio–máximo): 5 sementes sem `bruto` 0,52–0,56 h de parede (1,34–1,47 h CPU), com `bruto` 0,83–0,91 h (2,27–2,52 h CPU); 10 sementes sem `bruto` 0,85–0,93 h (2,32–2,55 h CPU), com `bruto` 1,41–1,56 h (4,01–4,46 h CPU). Fora: carga dos jogos em cada worker, `selecionar_logo` e `--tabelas-figuras` (não medidos) | [nosso] estimativa, soma das linhas acima | as três linhas acima |
+| 22 mutantes das duas revisões (R6, F1, lacuna 5, cobertura do cache, `papel`, bordas de igualdade, NaN no R8, grade de `ε_c`), todos mortos, cada um por um teste nomeado | [nosso] | relatório do codificador da 8a |
+| 560 testes (45 da Fatia 8a em `tests/test_experimento.py`) | [nosso] | `uv run pytest` (5 min 44 s, sozinho) |
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |
@@ -454,4 +487,4 @@ comparação justa é a do "não detectado". Todas as linhas: `outputs/reconstru
 | ~~distribuição de `τ` pelo argmin de distância~~ | ~~Fatia 2~~ | **FEITO: disparou com 45,36 %, mas a grandeza é inválida; decisão adiada** |
 | ~~`\|τ_posse\|` = \|quadro anotado − quadro de perda de posse\|~~ | ~~Fatia 3~~ | **FEITO: 3,17 % > 1,0 s, janela 1,0 s; seção Fatia 3** |
 | curva F1(`eps_c`) no jogo 3 | Fatia 8 | sem gatilho, mas **baixa confiança obrigatória**: n = 8 escanteios, 3 cobradores |
-| tempo de parede de uma execução real | antes da Fatia 8 | **G4 se o orçamento passar de 2 h de CPU** |
+| ~~tempo de parede de uma execução real~~ | ~~antes da Fatia 8~~ | **FEITO: medido no `--piloto` e por modo, seção Fatia 8a; com `bruto` o `--all` passa de 2 h de CPU (G4)** |

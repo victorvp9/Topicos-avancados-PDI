@@ -4,6 +4,9 @@ version = "0.1.0"
 description = "Deteccao deterministica de eventos de futebol sob degradacao de visibilidade (Vidal-Codina et al., 2022)"
 requires-python = ">=3.11"
 dependencies = [
+    # matplotlib so pelas figuras do `--tabelas-figuras` (plano 08 §3 e §5); na
+    # pilha aprovada do CLAUDE.md; decisoes.md, "Fatia 8 — plano", 2026-11-05.
+    "matplotlib>=3.11.2",
     "numpy>=1.26",
     # pandas 3.0 e piso real, nao conveniencia: src/io/schema.py exige dtype
     # "str"; em pandas 2.x `astype("str")` devolve `object` e `validar()`

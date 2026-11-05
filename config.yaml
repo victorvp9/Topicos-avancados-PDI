@@ -298,3 +298,44 @@ reconstrucao:
     detectado_cam1_m: [0.66, 5.03]
     melhor_nao_detectado_m: 4.6          # Provedor 1, PGM; Discussao, p. 11
     outros_nao_detectado_m: [10.0, 11.6] # demais provedores; Discussao, p. 11
+
+# Experimento (Fatia 8). Plano docs/fatias/08-plano.md §2 (R1-R10) e §3.
+experimento:
+  # R0 = valor do teto: D3, primeiro da grade do artigo (supl. S4.1, p. 6). Plano 08 R6.
+  r0_m: 0.50
+  # R7: a curva de eps_c usa `bola_parada.grade_eps_c_m` (D9b), sem chave
+  # duplicada aqui. Plano 08 §8 (emenda de 2026-11-05).
+  # R8: 5 sementes se EP5 <= isto nos dois alvos primarios em B8; senao 10.
+  # [LACUNA] escolha do orquestrador, sem fonte: ruido de semente menor que um
+  # ponto de F1 no alvo agregado. Plano 08 R8. E TAMBEM o limiar de relevancia
+  # `lambda` das conclusoes e da fracao recuperada da R6: plano 08 §8, item 3.
+  ep_max_f1: 0.01
+  # R8: EP5 = s / sqrt(isto), por definicao; nao depende de simulador.n_sementes,
+  # que e a saida da regra. Plano 08 §8 (emenda de 2026-11-05).
+  n_ref_ep: 5
+  # R8: sementes do piloto, e o teto de sementes por custo. Plano 08 R8.
+  n_sementes_piloto: 10
+  # R8: o piloto. Condicao `reconstruido`, A8 e B8, em R0, 3 jogos. Plano 08 R8.
+  piloto: {condicao: reconstruido, variantes: [A, B], nivel: 8}
+  # Variantes cuja mascara nao depende da semente (a janela fixa de A nao tem
+  # cortes: broadcast.mascara -> na_janela). Rodam so com rep = 0 na grade e no
+  # piloto, e a regra de sementes (R8) nao se aplica a elas. Teste trava o fato.
+  # decisoes.md, 2026-11-05.
+  variantes_sem_semente: [A]
+  # Medida de memoria do orquestrador: 0,67 GB de base e 1,13 GB de pico por
+  # worker (3 jogos, unidade B8); 16 GB e 6 nucleos. decisoes.md, 2026-11-05.
+  # O resultado e identico com qualquer numero (teste T6). Plano 08 §3.
+  n_workers: 3
+  # R1: `reconstruido` (principal) e `bruto` (secundaria). [LACUNA] do plano 08;
+  # rodar `bruto` na grade inteira ou reduzida e decisao do G4.
+  condicoes: [reconstruido, bruto]
+  # R3: niveis em que roda a politica `fixo_1m` (so em R_pz > posse.r_dz_m).
+  # decisoes.md, 2026-10-31 (decomposicao de mecanismo). Plano 08 R3.
+  niveis_fixo_1m: [1, 5, 8]
+  # R6: "ajuda" exige Delta_g > 0 em pelo menos isto dos 3 jogos de teste (e
+  # Delta_agregado > lambda); "compensa" exige "ajuda". Plano 08 R6 e §8, item 4.
+  min_jogos_compensa: 2
+  # Os pontos que RESPONDEM a pergunta do projeto: alvos primarios, condicao
+  # `reconstruido`, B5 ("Camera 1") e B8 ("PGM"), os dois niveis ancorados em
+  # alvo publicado (Fatia 6). O resto e secundario. Plano 08 §8, item 6.
+  resposta: {condicao: reconstruido, variante: B, niveis: [5, 8]}

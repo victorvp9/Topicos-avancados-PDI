@@ -203,6 +203,19 @@ def _recusar_penalty(resultado: pd.DataFrame, funcao: str) -> None:
         )
 
 
+def _recusar_mistura(resultado: pd.DataFrame, funcao: str) -> None:
+    """Somar linhas de dois criterios, duas ancoras ou dois jogos produz um
+    agregado sem sentido em silencio (decisoes.md, 2026-10-30). Quem agrega
+    jogos chama a funcao por jogo e soma contagens, ou usa
+    `src.experiment.agregar` (plano 08 §3)."""
+    for coluna in ("criterio", "ancora", "game"):
+        if coluna in resultado.columns and resultado[coluna].nunique() > 1:
+            raise ValueError(
+                "{}: mais de um valor de `{}` ({}); agregue um por vez".format(
+                    funcao, coluna, sorted(resultado[coluna].unique().tolist()))
+            )
+
+
 def micro(resultado: pd.DataFrame) -> dict:
     """Agregacao MICRO de um conjunto de linhas de `resultado`: soma `tp_diag`,
     `n_gabarito` e `n_detectado` e so DEPOIS calcula P/R/F1.
@@ -217,9 +230,11 @@ def micro(resultado: pd.DataFrame) -> dict:
     pelo nome e a correcao (revisao da Fatia 2).
 
     **Nunca inclua `penalty`** (n = 1 nos tres jogos) num agregado: a guarda
-    abaixo estoura, em vez de deixar a proibicao so no docstring.
+    abaixo estoura, em vez de deixar a proibicao so no docstring. Linhas de
+    mais de um `criterio`, `ancora` ou `game` tambem estouram.
     """
     _recusar_penalty(resultado, "micro")
+    _recusar_mistura(resultado, "micro")
     n_gabarito = int(resultado["n_gabarito"].sum())
     n_detectado = int(resultado["n_detectado"].sum())
     tp_diag = int(resultado["tp_diag"].sum())
@@ -239,9 +254,11 @@ def media_ponderada_f1(resultado: pd.DataFrame) -> float:
     """Media dos F1 por tipo, ponderada por `n_gabarito`, ignorando os `NaN`.
 
     A outra leitura de "agregado"; ver `micro`, que e a que os documentos do
-    projeto usam. `penalty` tambem e recusado aqui.
+    projeto usam. `penalty` tambem e recusado aqui, e a mistura de `criterio`,
+    `ancora` ou `game` tambem.
     """
     _recusar_penalty(resultado, "media_ponderada_f1")
+    _recusar_mistura(resultado, "media_ponderada_f1")
     peso = resultado["n_gabarito"].to_numpy()
     if peso.sum() == 0:
         return np.nan

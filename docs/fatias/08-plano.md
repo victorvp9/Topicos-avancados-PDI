@@ -375,3 +375,11 @@ saída da regra.
 
 **Leitura obrigatória no relatório:** em A8, o passe é igual ao teto
 (2187 / 2262 / 2650, piloto). A janela centrada na bola nunca tira o passador.
+
+**Esclarecimento de 2026-11-05 (re-revisão da 8a), sem mudança de regra.** O
+item 3 ("ganho menor que `λ` não conta") vale para os ganhos **agregados**:
+`Δ_agregado > λ` e `Δ_agregado(nível) − Δ_agregado(nível 1) > λ`. A contagem
+por jogo de teste segue a letra do item 4, `Δ_g > 0`. O ruído de semente é medido
+nos 3 jogos somados (R8), não por jogo, logo aplicar `λ` a cada `Δ_g` usaria o
+limiar fora da escala em que ele foi definido. É o que o código e o teste já
+fazem.
