@@ -322,10 +322,10 @@ experimento:
   # piloto, e a regra de sementes (R8) nao se aplica a elas. Teste trava o fato.
   # decisoes.md, 2026-11-05.
   variantes_sem_semente: [A]
-  # Medida de memoria do orquestrador: 0,67 GB de base e 1,13 GB de pico por
-  # worker (3 jogos, unidade B8); 16 GB e 6 nucleos. decisoes.md, 2026-11-05.
-  # O resultado e identico com qualquer numero (teste T6). Plano 08 §3.
-  n_workers: 3
+  # orquestrador, 2026-11-05: 4,45 GB livres antes da rodada final; 3 workers
+  # x 1,13 GB de pico + o processo principal arriscavam falta de memoria. Os
+  # resultados nao dependem de `n_workers` (T6).
+  n_workers: 2
   # R1: `reconstruido` (principal) e `bruto` (secundaria). [LACUNA] do plano 08;
   # rodar `bruto` na grade inteira ou reduzida e decisao do G4.
   condicoes: [reconstruido, bruto]
