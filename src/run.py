@@ -1,5 +1,5 @@
 """Ponto de entrada unico: `--inspect`, `--tau`, `--posse`, `--tau-posse`,
-`--bola-parada` e `--passes`.
+`--bola-parada`, `--passes`, `--simulador` e `--reconstrucao`.
 
 `python -m src.run --inspect` imprime, por jogo: numero de quadros, periodos,
 fracao de bola morta, jogadores por quadro, `attack_dir`, e as contagens de
@@ -37,6 +37,11 @@ os falsos negativos do principal por causa (docs/fatias/05-plano.md §6). Grava
 `python -m src.run --simulador` calibra o simulador de broadcast e imprime os
 sete blocos do docs/fatias/06-plano.md §6. NAO avalia nada sobre tracking
 degradado: nenhum P/R/F1 e nenhuma contagem de deteccao (plano §6).
+
+`python -m src.run --reconstrucao` reconstroi (interpolacao linear) o tracking
+de cada (variante, nivel) do simulador e imprime os seis blocos do
+docs/fatias/07-plano.md §4. Grava `outputs/reconstrucao.csv`. Nao roda o
+detector nem calcula F1 (Fatia 8).
 """
 
 import argparse
@@ -46,7 +51,7 @@ import time
 import numpy as np
 import pandas as pd
 
-from src import broadcast, evaluate, gabarito, possession, tau as tau_mod, tau_posse as tau_posse_mod
+from src import broadcast, evaluate, gabarito, possession, reconstruct, tau as tau_mod, tau_posse as tau_posse_mod
 from src.config import RAIZ_REPO, carregar_config, carregar_mapeamento
 from src.events import bola_parada, gatilhos, hierarquia, passes as passes_mod
 from src.io import carregar_jogo
@@ -1471,6 +1476,437 @@ def rodar_simulador(cfg: dict, mapeamento: dict, jogos) -> dict:
     return cal
 
 
+# --- Fatia 7: reconstrucao ------------------------------------------------------
+
+GRUPOS_GK = ("sem_gk", "so_gk", "todos")
+
+
+def _mascara_gk(gk: np.ndarray, grupo: str) -> np.ndarray:
+    return {"sem_gk": ~gk, "so_gk": gk, "todos": np.ones(gk.size, bool)}[grupo]
+
+
+def _rotulos_buraco(cfg: dict) -> list:
+    """Rotulos das faixas de `reconstrucao.faixas_buraco_s` (fechadas a direita)
+    e a categoria `borda`."""
+    b = cfg["reconstrucao"]["faixas_buraco_s"]
+    meio = ["({:g},{:g}]s".format(lo, hi) for lo, hi in zip(b[:-1], b[1:])]
+    return ["<={:g}s".format(b[0])] + meio + [">{:g}s".format(b[-1]), "borda"]
+
+
+def faixa_buraco(info: pd.DataFrame, cfg: dict) -> np.ndarray:
+    """(n,) object: faixa de duracao do buraco de cada linha de `info` (saida de
+    `reconstruct.buracos`). Duracao = `buraco_quadros / fps` em s, faixas de
+    `reconstrucao.faixas_buraco_s` fechadas a direita; `borda` para a linha
+    imputada antes da primeira ou depois da ultima ancora do periodo; "" para a
+    linha nao imputada (ancora ou sem ancora)."""
+    rot = np.asarray(_rotulos_buraco(cfg), dtype=object)
+    dur = info["buraco_quadros"].to_numpy() / cfg["tracking"]["fps"]
+    k = np.digitize(dur, cfg["reconstrucao"]["faixas_buraco_s"], right=True)
+    imp = ~info["ancora"].to_numpy() & ~info["sem_ancora"].to_numpy()
+    return np.where(~imp, "", np.where(info["borda"].to_numpy(), "borda", rot[k]))
+
+
+def tabela_buraco(faixa: np.ndarray, d2: np.ndarray, cfg: dict) -> pd.DataFrame:
+    """Bloco 3: `faixa, n, rmse_m` nas linhas com faixa != "", na ordem dos
+    rotulos (faixa vazia sai com n = 0 e rmse NaN). `d2` = erro de posicao ao
+    quadrado (m^2), alinhado a `faixa`."""
+    m = faixa != ""
+    s = pd.DataFrame({"faixa": faixa[m], "d2": d2[m]}).groupby("faixa")["d2"].agg(["size", "sum"])
+    s = s.reindex(_rotulos_buraco(cfg))
+    n = s["size"].fillna(0).astype("int64")
+    return pd.DataFrame({"faixa": s.index, "n": n.to_numpy(),
+                         "rmse_m": np.sqrt(s["sum"] / n.where(n > 0)).to_numpy()})
+
+
+def _media(v: np.ndarray) -> float:
+    return float(v.mean()) if v.size else np.nan
+
+
+def vies_velocidade(v_true, v_rec, p_true, p_rec, cfg: dict):
+    """Bloco 5(b), sobre as linhas imputadas (os quatro arrays alinhados).
+
+    `v_*` velocidade (m/s, `reconstruct.velocidade`), `p_*` passo (m,
+    `broadcast.passos`), verdadeiro (teto) e reconstruido. Saida: (tabela por
+    faixa da velocidade VERDADEIRA <= / > `limiar_alta_velocidade_ms`; dict
+    `razao_dist`, `razao_dist_alta`; tabela por `n_quantis_velocidade` quantis
+    da velocidade verdadeira). Tabelas: `faixa, n, v_verdadeira, v_reconstruida,
+    razao`."""
+    rc = cfg["reconstrucao"]
+    lim = rc["limiar_alta_velocidade_ms"]
+    alta = v_true > lim
+
+    def linha(nome, m):
+        vt, vr = _media(v_true[m]), _media(v_rec[m])
+        return {"faixa": nome, "n": int(m.sum()), "v_verdadeira": vt, "v_reconstruida": vr,
+                "razao": vr / vt if m.any() else np.nan}
+
+    faixas = pd.DataFrame([linha("<={:g}".format(lim), ~alta), linha(">{:g}".format(lim), alta)])
+    razoes = {"razao_dist": p_rec.sum() / p_true.sum() if p_true.sum() > 0 else np.nan,
+              "razao_dist_alta": p_rec[alta].sum() / p_true[alta].sum() if alta.any() else np.nan}
+    q = pd.qcut(v_true, rc["n_quantis_velocidade"], labels=False)
+    quantis = pd.DataFrame([linha("q{}".format(k + 1), q == k)
+                            for k in range(rc["n_quantis_velocidade"])])
+    return faixas, razoes, quantis
+
+
+def dist_visivel(passo, v_true, visivel, cfg: dict) -> dict:
+    """Bloco 5(a): `dist` = fracao da distancia do teto percorrida em linhas
+    visiveis; `dist_alta` = idem so com velocidade verdadeira >
+    `limiar_alta_velocidade_ms`. `passo` (`broadcast.passos`) e `v_true`
+    (`reconstruct.velocidade`) do teto; `visivel` (n,) bool: a linha veio no
+    degradado. Os quatro somatorios saem tambem, para somar entre jogos."""
+    alta = v_true > cfg["reconstrucao"]["limiar_alta_velocidade_ms"]
+    somas = np.array([passo.sum(), passo[visivel].sum(), passo[alta].sum(), passo[visivel & alta].sum()])
+    return {"dist": somas[1] / somas[0], "dist_alta": somas[3] / somas[2] if somas[2] > 0 else np.nan,
+            "somas": somas}
+
+
+def executor_bola(eventos: pd.DataFrame, tracking: pd.DataFrame, frames: pd.DataFrame) -> pd.DataFrame:
+    """Bloco 6, por evento: a linha do executor (`player_id`) no `annotated_frame`.
+
+    Entrada: `eventos` (EVENTS), `tracking` (TRACKING, teto ou reconstruido) e
+    `frames` (FRAMES) dos mesmos jogos. Saida (mesmo indice de `eventos`):
+    `sem_linha` (executor sem linha naquele quadro), `imputada` (linha com
+    `visible = False`), `d_m` (distancia executor-bola, NaN sem linha ou sem
+    bola)."""
+    alvo = pd.MultiIndex.from_arrays([eventos["game"], eventos["player_id"], eventos["annotated_frame"]])
+    perto = tracking[tracking["frame"].isin(eventos["annotated_frame"].unique())]
+    j = pd.MultiIndex.from_arrays([perto["game"], perto["player_id"], perto["frame"]]).get_indexer(alvo)
+    tem = j >= 0
+    jj = np.maximum(j, 0)
+    bola = frames.set_index(["game", "frame"])[["ball_x", "ball_y"]].reindex(
+        pd.MultiIndex.from_arrays([eventos["game"], eventos["annotated_frame"]]))
+    if len(perto):
+        d = np.hypot(perto["x"].to_numpy()[jj] - bola["ball_x"].to_numpy(),
+                     perto["y"].to_numpy()[jj] - bola["ball_y"].to_numpy())
+        imputada = tem & ~perto["visible"].to_numpy()[jj]
+    else:
+        d, imputada = np.full(len(eventos), np.nan), np.zeros(len(eventos), bool)
+    return pd.DataFrame({"sem_linha": ~tem, "imputada": imputada, "d_m": np.where(tem, d, np.nan)},
+                        index=eventos.index)
+
+
+def resumo_executor(res: pd.DataFrame, cfg: dict) -> dict:
+    """Resumo do bloco 6 de um conjunto de eventos (`executor_bola`): `n`,
+    `frac_imputada`, `frac_sem_linha`, `n_d` e `mediana_d_m` (so onde ha
+    distancia), e `le_R` = fracao com `d <= R` para cada R de
+    `posse.grade_r_pz_m`. O DENOMINADOR e sempre `n`: sem linha (ou sem bola,
+    NaN) conta como "nao esta a <= R" e nunca sai."""
+    d = res["d_m"].to_numpy()
+    n = len(res)
+    ok = ~np.isnan(d)
+    return {"n": n, "frac_imputada": res["imputada"].sum() / n, "frac_sem_linha": res["sem_linha"].sum() / n,
+            "n_d": int(ok.sum()), "mediana_d_m": float(np.median(d[ok])) if ok.any() else np.nan,
+            "le_R": [float((d[ok] <= r).sum() / n) for r in cfg["posse"]["grade_r_pz_m"]]}
+
+
+def reconstruir_nivel(tracking, frames, cfg: dict, variante: str, nivel: int, rep: int):
+    """`degradar` + `reconstruir` + `buracos` de UM jogo. Saida: (reconstruido,
+    contagens, info) com `info` alinhado a `tracking` (indice do teto)."""
+    deg = broadcast.degradar(tracking, frames, cfg, variante, nivel, rep)
+    presenca = tracking[reconstruct.CHAVES]
+    rec, cont = reconstruct.reconstruir(deg, presenca)
+    info = reconstruct.buracos(presenca, deg)
+    if cont["n_sem_ancora"] != int(info["sem_ancora"].sum()) or cont["n_imputadas"] != int(
+            (~info["ancora"] & ~info["sem_ancora"]).sum()):
+        raise ValueError("contagens de reconstruir e buracos divergem")
+    return rec, cont, info
+
+
+def erro2(tracking: pd.DataFrame, rec: pd.DataFrame, info: pd.DataFrame) -> np.ndarray:
+    """(n,) erro de posicao ao quadrado (m^2) por linha do teto: `(x_rec -
+    x_teto)^2 + (y_rec - y_teto)^2`; NaN na linha sem ancora (ausente)."""
+    tem = ~info["sem_ancora"].to_numpy()
+    d2 = np.full(len(tracking), np.nan)
+    d2[tem] = ((rec["x"].to_numpy() - tracking["x"].to_numpy()[tem]) ** 2
+               + (rec["y"].to_numpy() - tracking["y"].to_numpy()[tem]) ** 2)
+    return d2
+
+
+def _rmse(soma: float, n: int) -> float:
+    return float(np.sqrt(soma / n)) if n else np.nan
+
+
+_SOMAS_B2 = ("n_presenca", "n_ancora", "n_imputadas", "n_borda", "n_sem_ancora", "n_com_linha",
+             "soma_d2_imputadas", "soma_d2_com_linha")
+
+
+def somas_bloco2(gk: np.ndarray, info: pd.DataFrame, d2: np.ndarray) -> dict:
+    """Bloco 2, UM jogo: `grupo -> array` com as contagens e somas de `_SOMAS_B2`
+    para `sem_gk`, `so_gk` e `todos`. `gk` (n,) bool do teto; `info` de
+    `reconstruct.buracos`; `d2` de `erro2` (NaN so na linha sem ancora).
+    Imputada = com linha e sem ancora; `soma_d2_imputadas` so nelas."""
+    tem = ~info["sem_ancora"].to_numpy()
+    anc = info["ancora"].to_numpy()
+    imp = tem & ~anc
+    borda = info["borda"].to_numpy()
+    saida = {}
+    for grupo in GRUPOS_GK:
+        m = _mascara_gk(gk, grupo)
+        saida[grupo] = np.array([m.sum(), (m & anc).sum(), (m & imp).sum(), (m & borda).sum(),
+                                 (m & ~tem).sum(), (m & tem).sum(),
+                                 d2[m & imp].sum(), d2[m & tem].sum()], dtype=float)
+    return saida
+
+
+def linhas_bloco2(somas: dict, variante: str, nivel: int, rep: int, sementes: dict) -> list:
+    """Linhas do `outputs/reconstrucao.csv` de um nivel. `somas`: `jogo ->
+    somas_bloco2(...)`; `sementes`: `jogo -> semente efetiva`. Uma linha por
+    jogo e grupo, mais `jogo = 0` (os jogos somados ANTES de dividir).
+    `taxa_visivel` = ancoras / presenca; `frac_imputada` = imputadas / presenca;
+    `rmse_imputado` so nas imputadas ("nao detectado"); `rmse_geral` em toda
+    linha com posicao (ancora vale 0)."""
+    jogos = list(somas)
+    linhas = []
+    for jogo in jogos + [0]:
+        quais = jogos if jogo == 0 else [jogo]
+        for grupo in GRUPOS_GK:
+            a = dict(zip(_SOMAS_B2, sum(somas[g][grupo] for g in quais)))
+            linhas.append({
+                "variante": variante, "nivel": nivel, "grupo": grupo, "jogo": jogo,
+                "taxa_visivel": a["n_ancora"] / a["n_presenca"],
+                "frac_imputada": a["n_imputadas"] / a["n_presenca"],
+                "rmse_imputado": _rmse(a["soma_d2_imputadas"], a["n_imputadas"]),
+                "rmse_geral": _rmse(a["soma_d2_com_linha"], a["n_com_linha"]),
+                "n_presenca": int(a["n_presenca"]), "n_imputadas": int(a["n_imputadas"]),
+                "n_borda": int(a["n_borda"]), "n_sem_ancora": int(a["n_sem_ancora"]), "rep": rep,
+                "semente_efetiva": ";".join(str(sementes[g]) for g in quais),
+            })
+    return linhas
+
+
+def _recuo(texto: str, n: int = 4) -> str:
+    return "\n".join(" " * n + linha for linha in texto.splitlines())
+
+
+def rodar_reconstrucao(cfg: dict, mapeamento: dict, jogos, gravar_em=None, niveis=None) -> pd.DataFrame:
+    """Reconstroi cada (variante, nivel) nos `jogos` e imprime os blocos 1-6 do
+    plano 07 §4. Grava `outputs/reconstrucao.csv` (bloco 2) e o devolve.
+
+    `niveis` (padrao: todos do `simulador.calibrado`) restringe o laco principal
+    (blocos 2, 3, 5 e 6); existe para o teste T12 rodar barato. Nada aqui roda
+    o detector nem calcula F1 (Fatia 8).
+    """
+    rc = cfg["reconstrucao"]
+    if rc["metodo"] != "linear":
+        raise ValueError("reconstrucao.metodo {!r}: so 'linear' esta implementado".format(rc["metodo"]))
+    s = cfg["simulador"]
+    jogos = list(jogos)
+    if niveis is None:
+        niveis = [(v, k) for v in ("B", "A") for k in range(1, len(s["calibrado"]["niveis"][v]) + 1)]
+    rep0 = rc["rep"]
+    crang_niveis = [(c["variante"], c["nivel"]) for c in rc["comparacao_crang"]]
+    nivel_b8 = (rc["nivel_sementes_e_bassek"]["variante"], rc["nivel_sementes_e_bassek"]["nivel"])
+    sem = {g: broadcast.semente_efetiva(cfg, g, rep0) for g in jogos}
+    base = _base_leve(cfg, mapeamento, jogos)
+    pap = broadcast.papeis(pd.concat([base[g]["tracking"] for g in jogos], ignore_index=True),
+                           pd.concat([base[g]["periods"] for g in jogos], ignore_index=True),
+                           cfg).set_index("player_id")["papel"]
+    tipos_bp = cfg["avaliacao"]["grupos"]["bola_parada"]
+    fixo = {}
+    for g in jogos:
+        tr = base[g]["tracking"]
+        ev = base[g]["eventos"]
+        fixo[g] = {"gk": tr["is_gk"].to_numpy(), "papel": tr["player_id"].map(pap).to_numpy(),
+                   "passo": broadcast.passos(tr, cfg)[0], "v": reconstruct.velocidade(tr, cfg),
+                   "ev": ev[ev["type"].isin(["pass", *tipos_bp])]}
+    grade = cfg["posse"]["grade_r_pz_m"]
+    lim = rc["limiar_alta_velocidade_ms"]
+
+    print("=" * 78)
+    t_bloco = time.perf_counter()
+    print("BLOCO 1 - SANIDADE: reconstruir(teto) e reconstruir(B1/A1) == teto bit a bit")
+    for g in jogos:
+        t0 = time.perf_counter()
+        tr, fr = base[g]["tracking"], base[g]["frames"]
+        pres = tr[reconstruct.CHAVES]
+        rec, _ = reconstruct.reconstruir(tr, pres)
+        pd.testing.assert_frame_equal(rec, tr, check_exact=True, check_index_type=True)
+        for v in ("B", "A"):
+            rec, _ = reconstruct.reconstruir(broadcast.degradar(tr, fr, cfg, v, 1, rep0), pres)
+            pd.testing.assert_frame_equal(rec, tr, check_exact=True, check_index_type=True)
+        print("  jogo {}: teto, B1 e A1 identicos ({} linhas; indice, colunas, dtypes, valores) "
+              "| semente {} | {:.1f} s".format(g, len(tr), sem[g], time.perf_counter() - t0))
+    print("  tempo de parede do bloco 1: {:.1f} s".format(time.perf_counter() - t_bloco))
+
+    # Laco principal: blocos 2, 3, 5 e 6, uma reconstrucao por (variante, nivel, jogo).
+    t_laco = time.perf_counter()
+    linhas_csv, tempos = [], []
+    b3, b5a, b5b, b6 = {}, {}, {}, {}
+    for v, k in niveis:
+        soma = {}            # jogo -> grupo -> contagens e somas
+        papel_acc = {p: np.zeros(4) for p in broadcast.PAPEIS}
+        vb, b3_acc, ex = [], [], []
+        for g in jogos:
+            t0 = time.perf_counter()
+            tr, fr, fx = base[g]["tracking"], base[g]["frames"], fixo[g]
+            rec, cont, info = reconstruir_nivel(tr, fr, cfg, v, k, rep0)
+            d2 = erro2(tr, rec, info)
+            tem = ~info["sem_ancora"].to_numpy()
+            anc = info["ancora"].to_numpy()
+            imp = tem & ~anc
+            gk = fx["gk"]
+            soma[g] = somas_bloco2(gk, info, d2)
+            # 5(a): distancia do teto por papel, total e em alta velocidade
+            for p in broadcast.PAPEIS:
+                m = fx["papel"] == p
+                papel_acc[p] += dist_visivel(fx["passo"][m], fx["v"][m], anc[m], cfg)["somas"]
+            # 5(b): imputadas sem GK
+            sel = imp & ~gk
+            v_rec, p_rec = np.full(len(tr), np.nan), np.full(len(tr), np.nan)
+            v_rec[tem] = reconstruct.velocidade(rec, cfg)
+            p_rec[tem] = broadcast.passos(rec, cfg)[0]
+            vb.append((fx["v"][sel], v_rec[sel], fx["passo"][sel], p_rec[sel]))
+            # 3: erro pelo comprimento do buraco, sem GK
+            if (v, k) in crang_niveis:      # os niveis do bloco 3 (plano 07 §4)
+                b3_acc.append((faixa_buraco(info, cfg)[~gk], d2[~gk]))
+            # 6: executor-bola no quadro anotado
+            ex.append(executor_bola(fx["ev"], rec, fr).assign(type=fx["ev"]["type"].to_numpy()))
+            tempos.append((v, k, g, time.perf_counter() - t0, cont))
+        linhas_csv += linhas_bloco2(soma, v, k, rep0, sem)
+        b5a[(v, k)] = {p: (a[1] / a[0], a[3] / a[2] if a[2] > 0 else np.nan, a[0], a[2])
+                       for p, a in papel_acc.items()}
+        vt, vr, pt, pr = (np.concatenate(c) for c in zip(*vb))
+        b5b[(v, k)] = vies_velocidade(vt, vr, pt, pr, cfg) if vt.size else None
+        if b3_acc:
+            fa, dd = (np.concatenate(c) for c in zip(*b3_acc))
+            b3[(v, k)] = tabela_buraco(fa, dd, cfg)
+        todos = pd.concat(ex)
+        b6[(v, k)] = {t: resumo_executor(todos[todos["type"] == t], cfg)
+                      for t in ["pass", *[t for t in tipos_bp if (todos["type"] == t).any()]]}
+    t_laco = time.perf_counter() - t_laco
+    csv = pd.DataFrame(linhas_csv)
+
+    print("=" * 78)
+    print("BLOCO 2 - RMSE DE POSICAO POR NIVEL (semente rep = {}; d = hypot(dx, dy), RMSE = "
+          "sqrt(mean(d^2)))".format(rep0))
+    print("  tempo de parede por (jogo, nivel), degradar + reconstruir + medidas dos blocos 2/3/5/6:")
+    for v, k, g, t, cont in tempos:
+        print("    {}{} jogo {}: {:6.2f} s | semente {} | imputadas {} sem ancora {} "
+              "(jogador-periodo {})".format(v, k, g, t, sem[g], cont["n_imputadas"],
+                                            cont["n_sem_ancora"], cont["n_jogadores_periodo_sem_ancora"]))
+    print("  tempo de parede do laco principal (blocos 2, 3, 5 e 6): {:.1f} s".format(t_laco))
+    print("  os tres jogos juntos (jogo = 0 no CSV):")
+    cols = ["variante", "nivel", "grupo", "taxa_visivel", "frac_imputada", "rmse_imputado", "rmse_geral",
+            "n_imputadas", "n_borda", "n_sem_ancora"]
+    print(_recuo(csv[csv["jogo"] == 0][cols].to_string(index=False, float_format="{:.4f}".format)))
+    print("  por jogo, sem GK:")
+    print(_recuo(csv[(csv["jogo"] != 0) & (csv["grupo"] == "sem_gk")][["jogo"] + cols].to_string(
+        index=False, float_format="{:.4f}".format)))
+    cr = rc["crang"]
+    print("  CONTRA O CRANG (Tabela 2, p. 6), sem GK, os tres jogos. O nosso RMSE 'detectado' e 0")
+    print("  por construcao, logo o 'geral' e LIMITE INFERIOR; a comparacao justa e a do 'nao detectado'.")
+    for par in rc["comparacao_crang"]:
+        var, nivel, feed, ch = par["variante"], par["nivel"], par["feed"], par["chave"]
+        r = csv[(csv["variante"] == var) & (csv["nivel"] == nivel) & (csv["grupo"] == "sem_gk")
+                & (csv["jogo"] == 0)]
+        if r.empty:
+            continue
+        r = r.iloc[0]
+        nd, ge = cr["nao_detectado_{}_m".format(ch)], cr["geral_{}_m".format(ch)]
+        print("    {}{} (taxa {:.4f}) vs {}: nao detectado {:.3f} m vs {}-{}: {} | geral {:.3f} m vs {}-{}: {}"
+              " (limite inferior) | detectado 0 vs {}-{}".format(
+                  var, nivel, r["taxa_visivel"], feed, r["rmse_imputado"], *nd, _faixa(r["rmse_imputado"], *nd),
+                  r["rmse_geral"], *ge, _faixa(r["rmse_geral"], *ge), *cr["detectado_{}_m".format(ch)]))
+        if par["melhor_imputador"]:
+            print("    {}{} nao detectado {:.3f} m vs melhor imputador {} m: {}; vs outros {}-{} m: {}".format(
+                var, nivel, r["rmse_imputado"], cr["melhor_nao_detectado_m"],
+                "acima" if r["rmse_imputado"] > cr["melhor_nao_detectado_m"] else "abaixo ou igual",
+                *cr["outros_nao_detectado_m"], _faixa(r["rmse_imputado"], *cr["outros_nao_detectado_m"])))
+    print("    niveis intermediarios: sem alvo publicado.")
+
+    print("=" * 78)
+    print("BLOCO 3 - ERRO PELO COMPRIMENTO DO BURACO (sem GK, os tres jogos; bordas {} s, faixas".format(
+        rc["faixas_buraco_s"]))
+    print("          fechadas a direita; DESCRITIVO, sem fonte; borda de periodo a parte)")
+    for (v, k), tab in b3.items():
+        print("  {}{}:".format(v, k))
+        print(_recuo(tab.to_string(index=False, float_format="{:.3f}".format)))
+        interno = tab[tab["faixa"] != "borda"]
+        r = interno.loc[interno["n"] > 0, "rmse_m"].to_numpy()
+        print("    RMSE estritamente crescente nas faixas internas com n > 0: {}".format(
+            "SIM" if (np.diff(r) > 0).all() else "NAO (achado; nada e ajustado)"))
+    print("  (tempo: dentro do laco principal)")
+
+    print("=" * 78)
+    t_bloco = time.perf_counter()
+    n_sem = s["n_sementes"]
+    print("BLOCO 4 - SEMENTES: {}{}, sem GK, os tres jogos, rep 0..{}".format(*nivel_b8, n_sem - 1))
+    res4 = []
+    for rep in range(n_sem):
+        acc = np.zeros(4)
+        for g in jogos:
+            tr, fr = base[g]["tracking"], base[g]["frames"]
+            rec, _, info = reconstruir_nivel(tr, fr, cfg, *nivel_b8, rep)
+            d2 = erro2(tr, rec, info)
+            m = ~fixo[g]["gk"]
+            anc = info["ancora"].to_numpy()
+            imp = m & ~anc & ~info["sem_ancora"].to_numpy()
+            acc += [m.sum(), (m & anc).sum(), imp.sum(), d2[imp].sum()]
+        res4.append((acc[1] / acc[0], _rmse(acc[3], acc[2])))
+        print("  rep {} sementes {}: taxa visivel {:.4f} | RMSE imputado {:.4f} m".format(
+            rep, ";".join(str(broadcast.semente_efetiva(cfg, g, rep)) for g in jogos), *res4[-1]))
+    t4 = np.array(res4)
+    print("  taxa min {:.4f} max {:.4f} | RMSE imputado min {:.4f} max {:.4f} m".format(
+        t4[:, 0].min(), t4[:, 0].max(), t4[:, 1].min(), t4[:, 1].max()))
+    print("  tempo de parede do bloco 4: {:.1f} s".format(time.perf_counter() - t_bloco))
+
+    print("=" * 78)
+    print("BLOCO 5 - VELOCIDADE (Butterworth simulador.butter_*, filtfilt por segmento, diferencas")
+    print("          centrais; alta velocidade > {:g} m/s, Bassek p. 4)".format(lim))
+    print("  5(a) a ausencia depende da velocidade? fracao da distancia do TETO percorrida em linhas")
+    print("  visiveis, os tres jogos, por papel: total  alta  (alta - total)")
+    alvo_d, alvo_a = s["alvos"]["dist_visivel"], rc["bassek_dist_alta_visivel"]
+    for (v, k), por_papel in b5a.items():
+        print("    {}{}: ".format(v, k) + " | ".join("{} {:.4f} {:.4f} {:+.4f}".format(
+            p, d, a, a - d) for p, (d, a, _, _) in por_papel.items()))
+    if nivel_b8 in b5a:
+        print("  {}{} contra o Bassek (TV, Resultados p. 6):".format(*nivel_b8))
+        print("    papel  nosso total / alta    Bassek total / alta   (alta - total) nosso / Bassek"
+              "   distancia do teto total / alta (km)")
+        for p, (d, a, km, km_a) in b5a[nivel_b8].items():
+            print("    {:4s}   {:.4f} / {:.4f}      {:.2f} / {:.2f}          {:+.4f} / {:+.2f}"
+                  "            {:.3f} / {:.3f}".format(p, d, a, alvo_d[p], alvo_a[p], a - d,
+                                                      alvo_a[p] - alvo_d[p], km / 1e3, km_a / 1e3))
+    print("  5(b) vies da interpolacao, linhas IMPUTADAS sem GK, os tres jogos (faixa pela velocidade")
+    print("  VERDADEIRA; quantis DESCRITIVOS, sem fonte):")
+    for (v, k), r in b5b.items():
+        if r is None:
+            print("    {}{}: nenhuma linha imputada".format(v, k))
+            continue
+        faixas, razoes, quantis = r
+        print("    {}{}: razao distancia rec/verdadeira {:.4f} | em alta velocidade {:.4f}".format(
+            v, k, razoes["razao_dist"], razoes["razao_dist_alta"]))
+        for tab in (faixas, quantis):
+            print(_recuo(tab.to_string(index=False, float_format="{:.4f}".format), 6))
+    print("  (tempo: dentro do laco principal)")
+
+    print("=" * 78)
+    print("BLOCO 6 - EXECUTOR-BOLA NO QUADRO ANOTADO (diagnostico para a Fatia 8; NAO muda a grade D3)")
+    print("  populacao: gabarito `pass` e bolas paradas por tipo; executor = player_id, quadro =")
+    print("  annotated_frame. Sem linha conta no denominador como 'nao esta a <= R'.")
+    teto_ex = pd.concat([executor_bola(fixo[g]["ev"], base[g]["tracking"], base[g]["frames"]).assign(
+        type=fixo[g]["ev"]["type"].to_numpy()) for g in jogos])
+    cab = "    {:5s} {:>6s} {:>7s} {:>7s} {:>8s}  ".format("nivel", "n", "imput", "s/linha", "mediana") + \
+        " ".join("<={:<5g}".format(r) for r in grade)
+    for t in next(iter(b6.values())):
+        rt = resumo_executor(teto_ex[teto_ex["type"] == t], cfg)
+        print("  tipo {} (n = {})".format(t, rt["n"]))
+        print(cab)
+        for nome, r in [("teto", rt)] + [(v + str(k), por_tipo[t]) for (v, k), por_tipo in b6.items()]:
+            print("    {:5s} {:6d} {:7.4f} {:7.4f} {:8.3f}  ".format(
+                nome, r["n"], r["frac_imputada"], r["frac_sem_linha"], r["mediana_d_m"])
+                + " ".join("{:7.4f}".format(x) for x in r["le_R"]))
+    print("  (tempo: dentro do laco principal)")
+    print("=" * 78)
+
+    destino = RAIZ_REPO / "outputs" / "reconstrucao.csv" if gravar_em is None else gravar_em
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    csv.to_csv(destino, index=False)
+    print("gravado: {} ({} linhas)".format(destino, len(csv)))
+    return csv
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python -m src.run", description=__doc__)
     parser.add_argument("--inspect", action="store_true", help="imprime o resumo dos jogos")
@@ -1484,14 +1920,16 @@ def main(argv=None) -> int:
                         help="rotula e avalia os passes (relatorio do plano 05)")
     parser.add_argument("--simulador", action="store_true",
                         help="calibra o simulador de broadcast (relatorio do plano 06)")
+    parser.add_argument("--reconstrucao", action="store_true",
+                        help="reconstroi o tracking degradado (relatorio do plano 07)")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
     args = parser.parse_args(argv)
 
     cfg = carregar_config(args.config)
     if not (args.inspect or args.tau or args.posse or args.tau_posse
-            or args.bola_parada or args.passes or args.simulador):
-        parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes "
-                     "ou --simulador")
+            or args.bola_parada or args.passes or args.simulador or args.reconstrucao):
+        parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
+                     "--simulador ou --reconstrucao")
     mapeamento = carregar_mapeamento(cfg)
     if args.inspect:
         inspecionar(cfg, mapeamento, cfg["dados"]["jogos"])
@@ -1507,6 +1945,8 @@ def main(argv=None) -> int:
         rodar_passes(cfg, mapeamento, cfg["dados"]["jogos"])
     if args.simulador:
         rodar_simulador(cfg, mapeamento, cfg["dados"]["jogos"])
+    if args.reconstrucao:
+        rodar_reconstrucao(cfg, mapeamento, cfg["dados"]["jogos"])
     return 0
 
 

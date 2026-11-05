@@ -414,6 +414,39 @@ os da rodada anterior (`b` = 0,3245, 332,5 trocas/min) estão superados.
 | tiro de meta em B5: executor visível 0,980 na âncora; área do time 0,844, GK 0,803 (B1: 0,847 / 0,807); em B8: 0,448 / 0,374 / 0,353 | [nosso] | `--simulador` bloco 7 |
 | 483 testes (65 da Fatia 6: `test_broadcast.py` 21, `test_simulador_real.py` 44) | [nosso] | `uv run pytest` |
 
+## Fatia 7 — reconstrução (2026-11-04)
+
+Produzidos por `src/reconstruct.py` e `python -m src.run --reconstrucao` (3 min 34 s
+de parede, `time`; blocos 1 a 6 do plano 07 §4). Interpolação linear no tempo;
+semente `rep` = 0 (`[20261104, jogo, 0]`) salvo no bloco 4. **Ainda sem revisão
+independente.** Nenhum detector nem F1 sobre tracking reconstruído (Fatia 8). O
+RMSE "detectado" é 0 por construção (o simulador remove linhas, não as perturba),
+logo o nosso RMSE geral é **limite inferior** do RMSE geral do Crang; a
+comparação justa é a do "não detectado". Todas as linhas: `outputs/reconstrucao.csv`
+(192 linhas, gravado por `--reconstrucao`).
+
+| número | origem | comando |
+|---|---|---|
+| `reconstruir(teto)` e `reconstruir(B1/A1)` = teto bit a bit nos 3 jogos (3.190.138 / 3.105.436 / 3.162.742 linhas; índice, colunas, dtypes e valores) | [nosso] | `--reconstrucao` bloco 1; T3 em `tests/test_reconstrucao_real.py` |
+| jogador-período sem âncora: 0 em todos os 16 níveis e nos 3 jogos (rep 0) | [nosso] | `--reconstrucao` bloco 2 |
+| tempo de parede por (jogo, nível): 2,87 a 3,83 s; laço principal 165,7 s; bloco 1 14,8 s; bloco 4 24,5 s | [nosso] medição desta máquina | `--reconstrucao` blocos 1, 2 e 4 |
+| RMSE imputado ("não detectado"), sem GK, 3 jogos, B2..B8: 6,311 / 7,320 / 8,198 / 9,141 / 10,967 / 11,454 / 11,762 m; A2..A8: 4,743 / 6,375 / 7,840 / 9,376 / 10,569 / 11,259 / 11,732 m | [nosso] | `--reconstrucao` bloco 2; coluna `rmse_imputado`, `grupo` = `sem_gk`, `jogo` = 0 |
+| RMSE geral, sem GK, 3 jogos, B5 6,253 m e B8 9,287 m (limite inferior) | [nosso] | `--reconstrucao` bloco 2; coluna `rmse_geral` |
+| taxa visível sem GK B5 0,5321 e B8 0,3766 (amostrada, rep 0) | [nosso] | `--reconstrucao` bloco 2; coluna `taxa_visivel` |
+| **B5 contra Crang Cam 1:** não detectado 9,141 m vs 9,08–10,27: **dentro**; geral 6,253 vs 5,89–7,37: dentro (limite inferior) | [nosso] contra [lit] Crang Tabela 2, p. 6 | `--reconstrucao` bloco 2 |
+| **B8 contra Crang PGM:** não detectado 11,762 m vs 4,58–11,56: **acima**; geral 9,287 vs 3,10–9,24: acima (limite inferior) | [nosso] contra [lit] Crang Tabela 2, p. 6 | `--reconstrucao` bloco 2 |
+| B8 não detectado 11,762 m **acima** do melhor imputador (4,6 m) e acima dos outros (10,0–11,6 m): previsão registrada do plano 07 §2 ("acima de 4,6 m") confirmada | [nosso] contra [lit] Crang Discussão, p. 11 | `--reconstrucao` bloco 2 |
+| RMSE por duração do buraco, sem GK, 3 jogos, B8: ≤1 s 0,142 / (1,5] 1,017 / (5,15] 3,683 / (15,60] 10,968 / >60 s 18,059 m; borda 24,684 m (n = 24.573 / 373.597 / 1.063.826 / 2.829.078 / 935.987 / 133.340). **Estritamente crescente** (T10 passa) | [nosso] descritivo, faixas sem fonte | `--reconstrucao` bloco 3; `test_t10_*` |
+| idem B5: 0,089 / 1,049 / 3,958 / 9,439 / 14,115 m; borda 23,786 m; crescente | [nosso] | `--reconstrucao` bloco 3 |
+| sementes B8 sem GK, rep 0..4: taxa 0,3596–0,3766; RMSE imputado 11,459–12,154 m | [nosso] | `--reconstrucao` bloco 4 |
+| **5(a), B8, fração da distância do teto visível total / em alta velocidade (> 6,9 m/s):** GK 0,1896 / 0,7480; DEF 0,4066 / 0,7255; MID 0,4932 / 0,6696; OFF 0,4647 / 0,7657. Bassek TV: 0,14 / 0,31; 0,40 / 0,49; 0,52 / 0,48; 0,46 / 0,52. **No nosso simulador a ausência depende da velocidade** (alta − total = +0,18 a +0,32 nos jogadores de linha, contra −0,04 a +0,09 no Bassek). GK em alta velocidade: só 0,059 km de distância no teto, razão sem base | [nosso] contra [lit] Bassek, Resultados, p. 6 | `--reconstrucao` bloco 5(a) |
+| **5(b), B8, imputadas sem GK:** razão distância reconstruída/verdadeira 0,5353; em alta velocidade 0,2460; velocidade média ≤ 6,9 m/s 1,663 → 0,894 (0,538), > 6,9 m/s 8,428 → 2,079 (0,247; n = 9.527). Por decil: q1 superestima (2,378), q2 ~1 (1,024), q10 0,397 | [nosso] quantis descritivos, sem fonte | `--reconstrucao` bloco 5(b) |
+| 5(b) em todos os níveis: razão de distância cai de 0,762 (B2) a 0,535 (B8) e de 0,787 (A2) a 0,576 (A8) | [nosso] | `--reconstrucao` bloco 5(b) |
+| **bloco 6, executor-bola no `annotated_frame`, fração a ≤ 0,50 m (denominador inteiro):** passe 0,9400 no teto e B1–B5, 0,8034 em B8; escanteio 1,0000 → 0,3462 (B8); lateral 0,9909 → 0,4545; tiro de meta 0,9592 → 0,4286; falta 0,9674 → 0,5435; pontapé inicial 1,0000 → 0,4444. Na variante A as frações a ≤ R ficam iguais às do teto em todos os níveis e tipos, **salvo** passe A8 a ≤ 3 m (0,9675 contra 0,9668 no teto); a fração com linha **imputada** em A não é zero: passe 0,0011 (A2) a 0,0132 (A8), lateral 0,0091 (A3–A8), tiro de meta 0,0204 (A2–A4) e 0,0408 (A5–A8), falta 0,0109 (A4–A5) e 0,0217 (A6–A8); pontapé inicial, escanteio e pênalti 0 [corrigido 2026-11-04, revisão da Fatia 7]. Sem linha: 0 em todos | [nosso] diagnóstico para a Fatia 8; não muda D3 | `--reconstrucao` bloco 6 |
+| bloco 6, executor com linha imputada no quadro anotado em B8: passe 0,1589; escanteio 0,7692; lateral 0,6182; tiro de meta 0,6735; falta 0,5000; pontapé inicial 0,5556; pênalti 1/1 | [nosso] | `--reconstrucao` bloco 6 |
+| n do bloco 6 (3 jogos): passe 2.650, pontapé inicial 18, escanteio 26, lateral 110, tiro de meta 49, falta 92, pênalti 1 | [nosso] | `--reconstrucao` bloco 6 |
+| ~~513~~ **515** testes (32 da Fatia 7: `test_reconstruct.py` 24, `test_reconstrucao_real.py` 8) [corrigido 2026-11-04, revisão da Fatia 7] | [nosso] | `uv run pytest` |
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |

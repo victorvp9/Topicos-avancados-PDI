@@ -257,3 +257,44 @@ simulador:
         - {L_m: 37.26496884254662, taxa: 0.41841475797594413}
         - {L_m: 34.0267894158394, taxa: 0.37441802536519186}
         - {L_m: 32.01911817128094, taxa: 0.3469633495011163}
+
+# Reconstrucao (Fatia 7). Plano docs/fatias/07-plano.md §3, §4 e §5.
+reconstrucao:
+  # Semente `rep` de todos os blocos, salvo o bloco 4 (plano 07 §4, escopo comum:
+  # "semente rep = 0", via broadcast.semente_efetiva).
+  rep: 0
+  # Pareamento nivel <-> feed do Crang: "B5 contra Cam 1 e B8 contra PGM" (plano 07
+  # §4 bloco 2; faixas do §2). `chave` escolhe as faixas em `crang`; o melhor
+  # imputador (4,6 m) e do PGM (Crang, Discussao, p. 11). Os mesmos dois niveis
+  # sao os do bloco 3 ("em B5 e B8", plano 07 §4 bloco 3).
+  comparacao_crang:
+    - {variante: B, nivel: 5, feed: "Cam 1", chave: cam1, melhor_imputador: false}
+    - {variante: B, nivel: 8, feed: PGM, chave: pgm, melhor_imputador: true}
+  # Nivel do bloco 4 (sementes) e da comparacao com o Bassek no 5(a): B8
+  # (plano 07 §4 blocos 4 e 5a).
+  nivel_sementes_e_bassek: {variante: B, nivel: 8}
+  # Interpolacao linear no tempo, a base pedida no docs/03-plano.md, Fatia 7.
+  # Unico metodo implementado: outro valor estoura no `--reconstrucao`.
+  metodo: linear
+  # Limiar de alta velocidade: Bassek, Metodos, p. 4 (Gimenez et al. 2019).
+  limiar_alta_velocidade_ms: 6.9
+  # Bordas das faixas de duracao do buraco, em s (4 bordas, 5 faixas; faixa
+  # fechada a direita). DESCRITIVO, SEM FONTE, nao decide nada (plano 07 §4 bloco 3).
+  faixas_buraco_s: [1.0, 5.0, 15.0, 60.0]
+  # Quantis da velocidade verdadeira no bloco 5(b). DESCRITIVO, SEM FONTE.
+  n_quantis_velocidade: 10
+  # Fracao da distancia em ALTA velocidade percorrida visivel (TV), Bassek,
+  # Resultados, p. 6. So impressao (bloco 5a); nao entra em nenhum ajuste.
+  # A distancia total visivel (14/40/52/46 %) ja esta em simulador.alvos.dist_visivel.
+  bassek_dist_alta_visivel: {"GK": 0.31, "DEF": 0.49, "MID": 0.48, "OFF": 0.52}
+  # Crang, Tabela 2, p. 6 (RMSE de posicao, m, 3 provedores, 720p e 1080p) e
+  # Discussao, p. 11. So impressao (bloco 2); conferido no plano 07 §2.
+  crang:
+    nao_detectado_pgm_m: [4.58, 11.56]
+    nao_detectado_cam1_m: [9.08, 10.27]
+    geral_pgm_m: [3.10, 9.24]
+    geral_cam1_m: [5.89, 7.37]
+    detectado_pgm_m: [1.02, 3.62]
+    detectado_cam1_m: [0.66, 5.03]
+    melhor_nao_detectado_m: 4.6          # Provedor 1, PGM; Discussao, p. 11
+    outros_nao_detectado_m: [10.0, 11.6] # demais provedores; Discussao, p. 11
