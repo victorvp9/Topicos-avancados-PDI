@@ -317,3 +317,61 @@ Ao fim: `outputs/origem-dos-numeros.md` atualizado e tag `final`. Depois, o meu
 3. Tempo por unidade nas duas condições e o orçamento estimado.
 4. Toda **[LACUNA]** nova, com a razão. Metodologia nova, só me consultando.
 5. Desvios do plano.
+
+---
+
+## 8. Emenda de 2026-11-05: R6 e R7, ANTES de qualquer F1 degradado fora de `R0`
+
+A emenda vem da revisão independente da 8a. Ela vale como **pré-registro**: até
+aqui os níveis degradados só foram medidos em `R0` (piloto e T2), e nenhuma
+comparação entre valores de `R_pz` degradados foi vista. Fica declarada como
+emenda, não escondida.
+
+**R6, nova redação** (substitui a conclusão e a fração recuperada da §2 R6).
+O procedimento de escolha do `R*_g` continua o mesmo, com duas correções.
+
+1. **Candidato:** `R` com `F1_t(R) − F1_t(R0) > 0` em **cada** jogo de treino
+   **e** `F1_T(R) > F1_T(R0)` no treino somado. A segunda condição é a guarda
+   contra Simpson: ganhar nos dois jogos não garante ganhar na soma das
+   contagens.
+2. **F1 sempre como `2·tp / (n_det + n_gab)`**, uma única divisão de inteiros.
+   Assim, F1 iguais em fração saem iguais em ponto flutuante e não há "ganho"
+   falso nem empate quebrado por arredondamento. Com denominador 0, o F1 é NaN.
+   Um F1 NaN no treino nunca é candidato.
+3. **Limiar de relevância:** `λ` = `experimento.ep_max_f1` = 0,01, o mesmo da
+   R8: é o ruído de semente aceito. Um ganho menor que `λ` não conta como ganho
+   em nenhuma conclusão.
+4. **Duas conclusões distintas** por `(condição, variante, nível ≥ 2, alvo)`:
+   - **"`R_pz` maior ajuda no nível":** `Δ_g > 0` em ≥ 2 dos 3 jogos de teste
+     **e** `Δ_agregado > λ`.
+   - **"`R_pz` maior compensa a degradação":** "ajuda" **e**
+     `Δ_agregado(nível) − Δ_agregado(nível 1) > λ`. É preciso ganhar mais sob
+     degradação do que com tracking perfeito: senão é afinação de `R_pz`, não
+     compensação.
+5. **Fração recuperada** = `Δ_agregado(nível) / (F1_LOGO(nível 1) − F1_nível(R0))`.
+   `F1_LOGO(nível 1)` é o F1 do teto somado nos 3 jogos de teste, cada jogo no
+   seu `R*_g`. Isso evita que afinar `R_pz` apareça como recuperação de mais de
+   100 %. Só é reportada com denominador > `λ`.
+6. **Consolidação: o que responde à pergunta do projeto.**
+   - Respondem: os **dois alvos primários**, na condição **`reconstruido`**,
+     variante **B**, nos níveis **B5 ("Camera 1") e B8 ("PGM")**. São os únicos
+     dois níveis ancorados em alvos publicados (Fatia 6).
+   - A resposta é dada **por alvo e por nível**, sem combiná-los: por exemplo,
+     "em B8, compensa para bola parada e não para passe".
+   - Tudo o mais é **descritivo, secundário**: os níveis intermediários, a
+     variante A, `bruto`, os tipos isolados (baixa confiança) e `fixo_1m`.
+     Continua limpo, porque está pré-especificado, mas não sustenta a resposta
+     principal.
+   - Se a conclusão diferir entre B5 e B8, reporta-se as duas, sem escolher.
+
+**R7:** a grade de `ε_c` é a que **já existe** em
+`bola_parada.grade_eps_c_m` = [1, 2, 3, 4, 5, 6, 8] (D9b, Fatia 4). A chave
+duplicada `experimento.grade_eps_c_m` sai, para não haver duas constantes para
+a mesma coisa.
+
+**R8:** o `EP5` é `s/√5` **por definição**, com o 5 numa chave própria
+(`experimento.n_ref_ep` = 5). Não depende de `simulador.n_sementes`, que é a
+saída da regra.
+
+**Leitura obrigatória no relatório:** em A8, o passe é igual ao teto
+(2187 / 2262 / 2650, piloto). A janela centrada na bola nunca tira o passador.
