@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-04 (auditoria pós-Fatia 6 fechada; Fatia 7 em implementação)
+Atualizado: 2026-11-04 (Fatia 7 aceita)
 
 ## Onde estamos
 
@@ -181,6 +181,29 @@ Três achados:
    dos cortes, e em B8 o executor do tiro de meta é **mais** visível (0,45) que o
    do escanteio (0,34) e o da lateral (0,43). O F1 da Fatia 8 decide.
 
+## Fatia 7 — ACEITA (2026-11-04)
+
+Plano em `docs/fatias/07-plano.md`. **515 testes.** A revisão independente
+reproduziu tudo com Δ = 0. Dos 19 mutantes, 3 sobreviveram e foram corrigidos; a
+re-revisão focada aceitou. `python -m src.run --reconstrucao` leva cerca de
+3,5 min e grava `outputs/reconstrucao.csv`.
+
+Interpolação linear por jogador e período. `visible=False` nas linhas imputadas.
+Usa a presença do teto, nunca a posição.
+
+- **Erro no não detectado, sem GK, rep 0** (Crang, Tabela 2, p. 6):
+  - B5 = **9,14 m**, dentro da faixa Cam 1 (9,08–10,27), numa taxa abaixo da do Crang;
+  - B8 = **11,76 m**, acima da faixa PGM (4,58–11,56); de 11,46 a 12,15 m nas 5 sementes;
+  - previsão registrada (acima de 4,6 m) confirmada.
+- **O erro cresce com o buraco:** 0,14 m até 1 s, 18 m acima de 60 s (B8).
+- **Viés de velocidade (B8):** a interpolação recupera 54 % da distância e 25 % da
+  distância em alta velocidade.
+- **Validação livre reprovada (5(a)):** no simulador, quem corre está mais
+  visível (+0,18 a +0,32 contra −0,04 a +0,09 no Bassek). A queda de F1 da Fatia
+  8 tende a ser **otimista**, e a pergunta Bassek × Mortensen e Bornn fica sem
+  resposta sobre o mundo.
+- **Executor imputado no quadro anotado (B8):** passe 16 %, bolas paradas de 50 % a 77 %.
+
 ## Auditoria pós-Fatia 6 (2026-11-04, pedida pelo Victor)
 
 Dois revisores refizeram os resultados das Fatias 1 a 6 pelo CLI e por código
@@ -191,7 +214,7 @@ pós-Fatia 6]`. Detalhe em `decisoes.md`, seção "Auditoria pós-Fatia 6".
 
 ## Próximo passo
 
-**Fatia 7 — reconstrução**, plano em `docs/fatias/07-plano.md` (interpolação linear; `visible=False` nas linhas
+**Fatia 8 — experimento e relatório.** Primeiro o plano, com o G4 ao Victor antes de rodar. Dívidas obrigatórias em `decisoes.md` (Fatias 6 e 7, itens (a)–(h), mais cache, manifesto e agregação por semente testada). ~~Fatia 7 — reconstrução~~ (aceita; interpolação linear; `visible=False` nas linhas
 imputadas; erro comparado ao do Crang). Depois, a Fatia 8, cujas dívidas
 obrigatórias estão em `decisoes.md`:
 
