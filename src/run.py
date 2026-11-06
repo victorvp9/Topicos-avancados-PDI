@@ -42,6 +42,8 @@ degradado: nenhum P/R/F1 e nenhuma contagem de deteccao (plano §6).
 (R8) e mede o tempo por unidade para o orcamento do G4; `--experimento` roda a
 grade inteira (so na rodada final); `--tabelas-figuras` so le os CSV de
 `outputs/experimento/`; `--all` roda tudo em ordem, sem cache.
+`--exploratorio` roda o apendice EXPLORATORIO da Fatia 9 (fora do `--all`) e
+grava em `outputs/exploratorio/`.
 
 `python -m src.run --reconstrucao` reconstroi (interpolacao linear) o tracking
 de cada (variante, nivel) do simulador e imprime os seis blocos do
@@ -945,16 +947,18 @@ def rodar_bola_parada(cfg: dict, mapeamento: dict, jogos, gravar_em=None):
     return deteccoes, resultado, confusao
 
 
-def rotular_jogos(base: dict, deteccoes: pd.DataFrame, jogos) -> pd.DataFrame:
+def rotular_jogos(base: dict, deteccoes: pd.DataFrame, jogos, exige_executor: bool = False) -> pd.DataFrame:
     """Tabela `src.events.passes.PASSES` dos jogos, concatenada.
 
     `deteccoes` sao as de bola parada de `detectar_jogos`, no mesmo `cfg`.
+    `exige_executor`: frente D da Fatia 9 (`passes.suprimir`); so o
+    experimento o liga, por `exploratorio.supressao_exige_executor`.
     """
     return pd.concat(
         [
             passes_mod.rotular(
                 base[g]["perdas"], base[g]["ganhos"], base[g]["control"],
-                base[g]["frames"], deteccoes[deteccoes["game"] == g],
+                base[g]["frames"], deteccoes[deteccoes["game"] == g], exige_executor,
             )
             for g in jogos
         ],
@@ -1947,6 +1951,8 @@ def main(argv=None) -> int:
                         help="a grade inteira do plano 08 (so na rodada final)")
     parser.add_argument("--tabelas-figuras", action="store_true",
                         help="tabelas e figuras do plano 08 §5, so lendo os CSV")
+    parser.add_argument("--exploratorio", action="store_true",
+                        help="apendice EXPLORATORIO da Fatia 9 (docs/fatias/09-plano.md)")
     parser.add_argument("--all", action="store_true",
                         help="todos os modos em ordem, mais --experimento e --tabelas-figuras, sem cache")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
@@ -1959,9 +1965,9 @@ def main(argv=None) -> int:
             setattr(args, modo, True)
     if not (args.inspect or args.tau or args.posse or args.tau_posse or args.bola_parada or args.passes
             or args.simulador or args.reconstrucao or args.piloto or args.experimento
-            or args.tabelas_figuras):
+            or args.tabelas_figuras or args.exploratorio):
         parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
-                     "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras ou --all")
+                     "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras, --exploratorio ou --all")
     mapeamento = carregar_mapeamento(cfg)
     caminho_config = args.config or RAIZ_REPO / "config.yaml"
     saida = RAIZ_REPO / "outputs" / "experimento"
@@ -1990,6 +1996,10 @@ def main(argv=None) -> int:
         experiment.rodar_experimento(cfg, mapeamento, caminho_config, saida, cache)
     if args.tabelas_figuras:
         experiment.tabelas_figuras(cfg, saida)
+    if args.exploratorio:
+        # le `outputs/experimento/pontos.csv` (linha base), nunca escreve la
+        experiment.rodar_exploratorio(cfg, mapeamento, caminho_config, RAIZ_REPO / "outputs" / "exploratorio",
+                                      cache, saida / "pontos.csv")
     return 0
 
 

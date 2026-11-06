@@ -339,3 +339,36 @@ experimento:
   # `reconstruido`, B5 ("Camera 1") e B8 ("PGM"), os dois niveis ancorados em
   # alvo publicado (Fatia 6). O resto e secundario. Plano 08 §8, item 6.
   resposta: {condicao: reconstruido, variante: B, niveis: [5, 8]}
+
+# Apendice EXPLORATORIO (Fatia 9). Plano docs/fatias/09-plano.md. Tudo DESLIGADO
+# por padrao: com as chaves abaixo em false, todo numero aceito (inclusive a
+# rodada final) fica identico (plano 09 §3, teste 1). So o modo
+# `--exploratorio` liga uma por vez, numa copia do config.
+exploratorio:
+  # Frente B: ball_x/ball_y viram NaN nos quadros de apagao total (nenhum
+  # jogador com visible = True), depois do simulador e da reconstrucao.
+  # `ball_live` fica oraculo (D1b). Plano 09 §2.B.
+  bola_some_no_apagao: false
+  # Frente C: o problema 2 do S1 ("executor deixou de ser detectado") conta so
+  # linhas visiveis, nao "linha nao-NaN". Plano 09 §2.C.
+  presentes_por_visible: false
+  # Frente D: com executor na deteccao, a perda suprimida como bola parada tem
+  # de ser DELE (primeira perda dele na corrida viva, frame >= o da deteccao).
+  # Muda a [LACUNA] de 2026-11-01 (passes.suprimir). Plano 09 §2.D.
+  supressao_exige_executor: false
+  # Frente A (descritiva): colunas de estrato dentro/fora do apagao total nas
+  # linhas do criterio principal com ancora `frame`. Nao muda contagem nenhuma.
+  # Plano 09 §2.A.
+  estratos_apagao: false
+  # Grade da §1 do plano 09: nivel 1 (teto, sempre), estes niveis de B com
+  # `simulador.n_sementes` sementes e estes de A com rep 0
+  # (`experimento.variantes_sem_semente`). R0, os 3 jogos.
+  niveis: {B: [5, 6, 7, 8], A: [8]}
+  # Plano 09 §2: as frentes, uma chave ligada por vez (nunca combinadas), e as
+  # condicoes de cada uma. A frente C roda tambem em `bruto`, onde ela e a regra
+  # atual; a `base` roda nas duas para ser a linha base de todas.
+  frentes:
+    base: {chave: null, condicoes: [reconstruido, bruto]}
+    B: {chave: bola_some_no_apagao, condicoes: [reconstruido]}
+    C: {chave: presentes_por_visible, condicoes: [reconstruido, bruto]}
+    D: {chave: supressao_exige_executor, condicoes: [reconstruido]}

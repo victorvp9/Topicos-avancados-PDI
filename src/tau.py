@@ -35,13 +35,15 @@ TAU = {
 
 
 
-def grade_de_posicoes(frames: pd.DataFrame, tracking: pd.DataFrame):
+def grade_de_posicoes(frames: pd.DataFrame, tracking: pd.DataFrame, com_visible: bool = False):
     """Densifica o tracking em matrizes indexadas por (jogador, quadro - 1).
 
     Entrada: `frames` e `tracking` de `src.io.carregar_jogo`.
     Saida: (jogadores, px, py, ball_x, ball_y), com `jogadores` um Index de
     `player_id` e `px`/`py` de forma (n_jogadores, n_quadros), NaN onde o
-    jogador nao tem linha.
+    jogador nao tem linha. Com `com_visible` (Fatia 9, frente C), mais um
+    sexto item `vis` (n_jogadores, n_quadros) booleano: a linha existe E tem
+    `visible = True`.
 
     Exige a grade de quadros contigua e 1-based (criterio de aceite da Fatia 1,
     plano §8.2); a indexacao por `frame - 1` depende disso.
@@ -59,7 +61,12 @@ def grade_de_posicoes(frames: pd.DataFrame, tracking: pd.DataFrame):
     coluna = tracking["frame"].to_numpy() - 1
     px[linha, coluna] = tracking["x"].to_numpy()
     py[linha, coluna] = tracking["y"].to_numpy()
-    return jogadores, px, py, frames["ball_x"].to_numpy(), frames["ball_y"].to_numpy()
+    saida = (jogadores, px, py, frames["ball_x"].to_numpy(), frames["ball_y"].to_numpy())
+    if not com_visible:
+        return saida
+    vis = np.zeros((jogadores.size, n_quadros), dtype=bool)
+    vis[linha, coluna] = tracking["visible"].to_numpy()
+    return saida + (vis,)
 
 
 def medir(game: int, eventos: pd.DataFrame, frames: pd.DataFrame,

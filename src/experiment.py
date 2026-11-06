@@ -68,6 +68,11 @@ SOMAVEIS = CONTAGENS + DECOMP + ["n_dist", "n_dist_igual_grade"]
 # `agregar` soma sobre estas chaves; toda outra chave ausente de `por` tem de
 # ter um valor so.
 SOMA_SOBRE = ("jogo", "rep")
+# Fatia 9, frente A (EXPLORATORIO): por estrato do quadro de referencia,
+# eventos do gabarito e seus acertos (revocacao) e deteccoes e seus acertos
+# (precisao). So com `exploratorio.estratos_apagao`; nunca entra em `SOMAVEIS`.
+ESTRATOS = ("apagao", "fora")
+COLUNAS_ESTRATO = [f"{e}_{c}" for e in ESTRATOS for c in ("n_gabarito", "tp_gab", "n_detectado", "tp_det")]
 
 
 # --- uma unidade ---------------------------------------------------------------
@@ -123,6 +128,59 @@ def _linhas_resultado(res: pd.DataFrame, game: int, tipos, ancoras, alvo=None) -
         ["criterio", "ancora", "alvo"] + CONTAGENS]
 
 
+def apagao_total(tracking: pd.DataFrame, frames: pd.DataFrame) -> np.ndarray:
+    """(n_quadros,) bool, indexado por `frame - 1` (grade 1..N contigua): o
+    quadro e de APAGAO TOTAL, nenhum jogador com `visible = True` em
+    `tracking` (plano 09 §2.A). No teto nunca; no `bruto`, quadro sem linha."""
+    n = len(frames)
+    vis = tracking.loc[tracking["visible"].to_numpy(), "frame"].to_numpy()
+    return np.bincount(vis - 1, minlength=n)[:n] == 0
+
+
+def bola_some(frames: pd.DataFrame, apagao: np.ndarray) -> pd.DataFrame:
+    """Frente B (plano 09 §2.B): copia de `frames` com `ball_x`/`ball_y` NaN nos
+    quadros de `apagao`. `ball_live` e o resto ficam intactos (D1b)."""
+    m = apagao[frames["frame"].to_numpy() - 1]
+    out = frames.copy()
+    out.loc[m, ["ball_x", "ball_y"]] = np.nan
+    return out
+
+
+def _estratos(gab: pd.DataFrame, det: pd.DataFrame, quadro_gab: str, apagao: np.ndarray,
+              tipos: dict, cfg: dict) -> dict:
+    """Frente A (plano 09 §2.A): `alvo -> {coluna de COLUNAS_ESTRATO: n}`.
+
+    Mesmo casamento de `_estado_executor` (criterio principal, ancora `frame`,
+    acerto = diagonal). O evento cai no estrato do seu `quadro_gab`
+    (`annotated_frame` no passe, `frame` na bola parada); a deteccao, no do
+    seu `frame`. `tipos`: `alvo -> lista de tipos`. Nada e excluido: evento
+    sem deteccao e FN no seu estrato."""
+    principal = cfg["avaliacao"]["criterio_principal"]
+    eixos = cfg["avaliacao"]["criterios"][principal]
+    grupo_de = evaluate.grupo_por_tipo(cfg)
+    g = gab[gab["type"].isin(grupo_de)].reset_index(drop=True)
+    g = g.assign(grupo=g["type"].map(grupo_de), t=g["frame"] / cfg["tracking"]["fps"])
+    d = det.reset_index(drop=True)
+    d = d.assign(grupo=d["type"].map(grupo_de))
+    i_gab, i_det = evaluate.casar(g, d, eixos["janela_s"], eixos["casa_tipo"], eixos["casa_jogador"])
+    diag = g["type"].to_numpy()[i_gab] == d["type"].to_numpy()[i_det]
+    acerto_g, acerto_d = np.zeros(len(g), bool), np.zeros(len(d), bool)
+    acerto_g[i_gab[diag]] = True
+    acerto_d[i_det[diag]] = True
+    em_g = apagao[g[quadro_gab].to_numpy() - 1]
+    em_d = apagao[d["frame"].to_numpy() - 1]
+    out = {}
+    for alvo, ts in tipos.items():
+        mg, md = g["type"].isin(ts).to_numpy(), d["type"].isin(ts).to_numpy()
+        out[alvo] = {}
+        for e, eg, ed in (("apagao", em_g, em_d), ("fora", ~em_g, ~em_d)):
+            out[alvo].update({f"{e}_n_gabarito": int((mg & eg).sum()),
+                              f"{e}_tp_gab": int((mg & eg & acerto_g).sum()),
+                              f"{e}_n_detectado": int((md & ed).sum()),
+                              f"{e}_tp_det": int((md & ed & acerto_d).sum())})
+    return out
+
+
 def pontos_de_r(dados: dict, tracking: pd.DataFrame, cfg_r: dict, ancoras) -> pd.DataFrame:
     """Um ponto `(R_pz, politica)` de UM jogo, com e sem lacuna 5.
 
@@ -144,7 +202,9 @@ def pontos_de_r(dados: dict, tracking: pd.DataFrame, cfg_r: dict, ancoras) -> pd
     b = {game: {"frames": fr, "tracking": tracking, "periods": dados["periods"],
                 "perdas": p1["perdas"], "ganhos": p1["ganhos"], "control": p1["control"]}}
     det_com = run.detectar_jogos(b, cfg_r, [game])
-    passes_com = run.rotular_jogos(b, det_com, [game])
+    expl = cfg_r["exploratorio"]
+    passes_com = run.rotular_jogos(b, det_com, [game], expl["supressao_exige_executor"])
+    apagao = apagao_total(tracking, fr) if expl["estratos_apagao"] else None
     variantes = {"com": (det_com, passes_com),
                  "sem": (run.detectar_jogos(b, cfg_r, [game], sem_lacuna_5=True),
                          run.passes_sem_lacuna_5(passes_com))}
@@ -186,11 +246,27 @@ def pontos_de_r(dados: dict, tracking: pd.DataFrame, cfg_r: dict, ancoras) -> pd
         valores = decomp.reindex(tab["alvo"]).to_numpy(dtype="float64")
         valores[~e_principal] = np.nan
         tab[DECOMP] = valores
+        if apagao is not None:
+            micro = [t for t in tipos_bp if t != "penalty"]
+            est = {**_estratos(ev[ev["type"].isin(tipos_bp)], det_c, "frame", apagao,
+                               {**{t: [t] for t in tipos_bp}, ALVO_MICRO: micro}, cfg_r),
+                   **_estratos(gab_passe, pp_c, "annotated_frame", apagao, {ALVO_PASSE: ["pass"]}, cfg_r)}
+            v = pd.DataFrame.from_dict(est, orient="index").reindex(
+                index=tab["alvo"], columns=COLUNAS_ESTRATO).to_numpy(dtype="float64", copy=True)
+            v[~e_principal] = np.nan
+            tab[COLUNAS_ESTRATO] = v
+            # os dois estratos somam o total da linha (plano 09 §2.A)
+            ok = ~np.isnan(v[:, 0])
+            for c, (a, f) in (("n_gabarito", (0, 4)), ("tp_diag", (1, 5)), ("n_detectado", (2, 6)),
+                              ("tp_diag", (3, 7))):
+                if not np.array_equal(v[ok, a] + v[ok, f], tab[c].to_numpy(dtype="float64")[ok]):
+                    raise RuntimeError("estratos nao somam `{}`".format(c))
         blocos.append(tab.assign(lacuna5=lacuna5))
     out = pd.concat(blocos, ignore_index=True)
     out.insert(0, "r_pz", float(cfg_r["posse"]["r_pz_m"]))
     out.insert(1, "politica", cfg_r["posse"]["r_dz_politica"])
-    return out[["r_pz", "politica", "lacuna5", "criterio", "ancora", "alvo"] + CONTAGENS + DECOMP]
+    extra = COLUNAS_ESTRATO if apagao is not None else []
+    return out[["r_pz", "politica", "lacuna5", "criterio", "ancora", "alvo"] + CONTAGENS + DECOMP + extra]
 
 
 def normalizar(unidade: tuple) -> tuple:
@@ -240,6 +316,10 @@ def rodar_unidade(jogo, variante, nivel, rep, condicao, cfg: dict, base: dict) -
         deg = broadcast.degradar(teto, fr, cfg, variante, nivel, rep)
         semente = ";".join(str(s) for s in broadcast.semente_efetiva(cfg, jogo, rep))
     trk = tracking_da_condicao(teto, deg, condicao)
+    if cfg["exploratorio"]["bola_some_no_apagao"]:
+        # frente B (plano 09 §2.B): depois do simulador e da reconstrucao
+        fr = bola_some(fr, apagao_total(trk, fr))
+        dados = {**dados, "frames": fr}
     gk_teto, gk_deg = teto["is_gk"].to_numpy(), deg["is_gk"].to_numpy()
     grade = cfg["posse"]["grade_r_pz_m"]
     n_dist, n_igual = _dist_na_grade(trk, fr, grade)
@@ -478,12 +558,16 @@ def hashes_src() -> dict:
 # (so monta a lista de unidades), e de `experimento` so estas duas chaves.
 SECOES_LIDAS = ("dados", "tracking", "campo", "gabarito", "avaliacao", "posse", "bola_parada", "simulador")
 EXPERIMENTO_LIDO = ("r0_m", "niveis_fixo_1m")
+# Fatia 9: as quatro chaves que a unidade le (a grade e as frentes nao).
+EXPLORATORIO_LIDO = ("bola_some_no_apagao", "presentes_por_visible", "supressao_exige_executor",
+                     "estratos_apagao")
 
 
 def config_lido(cfg: dict) -> dict:
     sub = {s: copy.deepcopy(cfg[s]) for s in SECOES_LIDAS}
     sub["simulador"].pop("n_sementes")
     sub["experimento"] = {k: cfg["experimento"][k] for k in EXPERIMENTO_LIDO}
+    sub["exploratorio"] = {k: cfg["exploratorio"][k] for k in EXPLORATORIO_LIDO}
     return sub
 
 
@@ -764,6 +848,115 @@ def rodar_experimento(cfg: dict, mapeamento: dict, caminho_config: Path, saida: 
         lista += [{**u, "eps_c_m": eps} for u in l]
     _gravar(pd.concat(curva, ignore_index=True), saida / "eps_c.csv")
     _gravar_manifesto(cfg, caminho_config, lista, saida / "manifesto.json")
+
+
+# --- Fatia 9: apendice EXPLORATORIO (docs/fatias/09-plano.md) -------------------
+
+def grade_exploratoria(cfg: dict, condicao: str) -> list:
+    """Unidades da §1 do plano 09 numa condicao: o nivel 1 por jogo e os
+    `exploratorio.niveis` de cada variante, com `simulador.n_sementes` sementes
+    (rep 0 so nas `experimento.variantes_sem_semente`)."""
+    jogos = cfg["dados"]["jogos"]
+    out = [(condicao, g, VARIANTE_TETO, 1, 0) for g in jogos]
+    for v, niveis in cfg["exploratorio"]["niveis"].items():
+        out += [(condicao, g, v, int(k), rep) for k in niveis
+                for rep in range(_n_reps(cfg, v, int(cfg["simulador"]["n_sementes"]))) for g in jogos]
+    return out
+
+
+def cfg_frente(cfg: dict, chave) -> dict:
+    """Copia do `cfg` com a grade de `R_pz` = [R0], os estratos (frente A)
+    ligados e, se `chave` nao for None, a chave da frente ligada. Uma chave
+    por vez: as frentes nunca sao combinadas (plano 09 §2)."""
+    c = _trocar(cfg, posse__grade_r_pz_m=[cfg["experimento"]["r0_m"]], exploratorio__estratos_apagao=True)
+    if chave is not None:
+        if chave not in EXPLORATORIO_LIDO or chave == "estratos_apagao":
+            raise ValueError("frente com chave {!r} fora de {}".format(chave, EXPLORATORIO_LIDO[:3]))
+        c["exploratorio"][chave] = True
+    return c
+
+
+def conferir_linha_base(base: pd.DataFrame, pontos_experimento: Path, cfg: dict) -> int:
+    """A linha base (tudo desligado) tem de bater linha a linha, nas colunas do
+    experimento, com `pontos_experimento` nas mesmas unidades, `R0` e politica
+    principal (plano 09 §1). Estoura se nao bater; devolve o numero de linhas."""
+    ref = pd.read_csv(pontos_experimento)
+    colunas = list(ref.columns)
+    b = base[colunas]
+    ref = ref.merge(b[CHAVES_UNIDADE].drop_duplicates(), on=CHAVES_UNIDADE)
+    ref = ref[(ref["r_pz"] == cfg["experimento"]["r0_m"]) & (ref["politica"] == cfg["posse"]["r_dz_politica"])]
+    texto = [t.sort_values(CHAVES_PONTO, kind="stable").to_csv(index=False) for t in (b, ref)]
+    if len(b) != len(ref) or texto[0] != texto[1]:
+        raise RuntimeError("linha base nao reproduz {} ({} contra {} linhas)".format(
+            pontos_experimento, len(b), len(ref)))
+    return len(b)
+
+
+def estratos_apagao(pontos: pd.DataFrame, cfg: dict) -> pd.DataFrame:
+    """`apagao.csv` (frente A): linhas do criterio principal, ancora `frame`,
+    politica principal, lacuna 5 com; contagens de estrato somadas sobre jogos
+    e sementes por `(frente, condicao, variante, nivel, alvo)`, em formato
+    longo por `estrato`. Revocacao = `tp_gab / n_gabarito` (eventos pelo
+    estrato do evento); precisao = `tp_det / n_detectado` (deteccoes pelo
+    estrato da deteccao); `frac_eventos` = `n_gabarito` do estrato / total."""
+    p = _principal(pontos, cfg)
+    p = p[p["alvo"].isin(list(cfg["avaliacao"]["grupos"]["bola_parada"]) + [ALVO_MICRO, ALVO_PASSE])]
+    chaves = ["frente", "condicao", "variante", "nivel", "alvo"]
+    soma = p.groupby(chaves, sort=True)[COLUNAS_ESTRATO].sum(min_count=1).reset_index()
+    total = soma[[f"{e}_n_gabarito" for e in ESTRATOS]].sum(axis=1)
+    blocos = []
+    for e in ESTRATOS:
+        b = soma[chaves].copy()
+        b["estrato"] = e
+        for c in ("n_gabarito", "tp_gab", "n_detectado", "tp_det"):
+            b[c] = soma[f"{e}_{c}"]
+        with np.errstate(invalid="ignore", divide="ignore"):
+            b["revocacao"] = np.where(b["n_gabarito"] > 0, b["tp_gab"] / b["n_gabarito"], np.nan)
+            b["precisao"] = np.where(b["n_detectado"] > 0, b["tp_det"] / b["n_detectado"], np.nan)
+            # TODO(divida): o plano 09 §2.A pede "P/R/F1 por estrato" sem dizer
+            # qual F1. Os acertos de P e de R podem cair em estratos diferentes
+            # (par evento/deteccao que cruza a fronteira), logo nao ha um `tp`
+            # unico para `2 tp / (n_det + n_gab)`; uso a media harmonica de P e
+            # R, NaN se um dos dois for NaN. Decisao do codificador.
+            pr = b["precisao"] + b["revocacao"]
+            b["f1"] = np.where(pr > 0, 2 * b["precisao"] * b["revocacao"] / pr.where(pr > 0, 1), 0.0)
+            b.loc[b["precisao"].isna() | b["revocacao"].isna(), "f1"] = np.nan
+            b["frac_eventos"] = np.where(total > 0, b["n_gabarito"] / total.where(total > 0, 1), np.nan)
+        blocos.append(b)
+    out = pd.concat(blocos, ignore_index=True).sort_values(chaves + ["estrato"], kind="stable")
+    out.loc[out["alvo"] == "penalty", ["revocacao", "precisao", "f1"]] = np.nan
+    return out.reset_index(drop=True)
+
+
+def rodar_exploratorio(cfg: dict, mapeamento: dict, caminho_config: Path, saida: Path, pasta_cache,
+                       pontos_experimento: Path) -> None:
+    """Plano 09: a `base` primeiro, conferida contra `pontos_experimento`
+    (para se nao bater); depois cada frente com a sua chave, uma por vez.
+    Grava em `saida`: `pontos.csv` (colunas do experimento + `frente`),
+    `apagao.csv` (frente A) e `manifesto.json`. Nunca escreve fora de `saida`."""
+    ex = cfg["experimento"]
+    frentes = cfg["exploratorio"]["frentes"]
+    if list(frentes)[0] != "base" or frentes["base"]["chave"] is not None:
+        raise ValueError("exploratorio.frentes: a primeira tem de ser `base`, sem chave")
+    pontos, lista = [], []
+    for frente, f in frentes.items():
+        unid = [u for c in f["condicoes"] for u in grade_exploratoria(cfg, c)]
+        p, l = rodar_unidades(unid, cfg_frente(cfg, f["chave"]), mapeamento, ex["n_workers"], pasta_cache)
+        conferir_n_gabarito(p)
+        if frente == "base":
+            n = conferir_linha_base(p, pontos_experimento, cfg)
+            print("linha base: {} linhas identicas a {}".format(n, pontos_experimento))
+        pontos.append(p.assign(frente=frente))
+        lista += [{**u, "frente": frente} for u in l]
+    todos = pd.concat(pontos, ignore_index=True)
+    _gravar(todos.drop(columns=COLUNAS_ESTRATO), saida / "pontos.csv")
+    _gravar(estratos_apagao(todos, cfg), saida / "apagao.csv")
+    _gravar_manifesto(cfg, caminho_config, lista, saida / "manifesto.json")
+    t = agregar(_principal(todos, cfg)[lambda d: d["alvo"].isin(ALVOS_PRIMARIOS)],
+                ["frente", "condicao", "variante", "nivel", "alvo"])
+    print(t[["frente", "condicao", "variante", "nivel", "alvo", "tp_diag", "n_detectado", "n_gabarito",
+             "precisao", "revocacao", "f1"]].to_string(index=False, float_format="{:.4f}".format))
+    print("CPU somada: {:.1f} s em {} unidades".format(sum(u["tempo_s"] for u in lista), len(lista)))
 
 
 # --- tabelas e figuras (plano 08 §5): so le os CSV, nunca recalcula -------------

@@ -44,7 +44,8 @@ PASSES = {
 }
 
 
-def suprimir(perdas: pd.DataFrame, deteccoes: pd.DataFrame, frames: pd.DataFrame) -> np.ndarray:
+def suprimir(perdas: pd.DataFrame, deteccoes: pd.DataFrame, frames: pd.DataFrame,
+             exige_executor: bool = False) -> np.ndarray:
     """Posicao (em `deteccoes`) da bola parada que cada perda E, ou -1.
 
     Entrada, todas do MESMO jogo: `perdas` no esquema `src.possession.PERDAS`,
@@ -59,6 +60,12 @@ def suprimir(perdas: pd.DataFrame, deteccoes: pd.DataFrame, frames: pd.DataFrame
     that resume the game"* (S2, p. 3). **Independe do jogador**: uma por
     intervalo morto (correspondencia um-para-um, §2.4.1, p. 7). Corrida sem
     perda: nada a suprimir.
+
+    `exige_executor` (Fatia 9, frente D, EXPLORATORIO; chave
+    `exploratorio.supressao_exige_executor`): deteccao COM executor
+    (`player_id` nao vazio) suprime a primeira perda DELE na mesma corrida
+    viva com `frame >=` o da deteccao, e nada se ele nao perde a bola na
+    corrida; deteccao sem executor (`free_kick?`) segue a regra acima.
     """
     quadro = frames["frame"].to_numpy()
     run_id = possession.corridas_vivas(frames["ball_live"].to_numpy())[0]
@@ -76,7 +83,20 @@ def suprimir(perdas: pd.DataFrame, deteccoes: pd.DataFrame, frames: pd.DataFrame
     # `run_det` e 0 se a deteccao caisse em quadro morto, e `run_id` de perda e
     # sempre >= 1: nunca casa.
     ok = (k < f_perda.size) & (perdas["run_id"].to_numpy()[seguro] == run_det)
+    com_exec = (deteccoes["player_id"].to_numpy() != "") if exige_executor else np.zeros(f_det.size, bool)
+    ok &= ~com_exec
     origem[k[ok]] = np.flatnonzero(ok)
+    if com_exec.any():
+        d = pd.DataFrame({"i_det": np.flatnonzero(com_exec), "f_det": f_det[com_exec], "run_id": run_det[com_exec],
+                          "player_id": deteccoes["player_id"].to_numpy()[com_exec]})
+        p = pd.DataFrame({"i_perda": np.arange(f_perda.size), "frame": f_perda,
+                          "run_id": perdas["run_id"].to_numpy(), "player_id": perdas["player_id"].to_numpy()})
+        m = d.merge(p, on=["run_id", "player_id"])
+        m = m[m["frame"] >= m["f_det"]].sort_values(["i_det", "frame"], kind="stable").drop_duplicates("i_det")
+        # uma deteccao por corrida viva (uma por intervalo morto): nunca duas na mesma perda
+        if (origem[m["i_perda"].to_numpy()] >= 0).any() or m["i_perda"].duplicated().any():
+            raise RuntimeError("suprimir: duas deteccoes na mesma perda")
+        origem[m["i_perda"].to_numpy()] = m["i_det"].to_numpy()
     return origem
 
 
@@ -89,7 +109,7 @@ def validar(passes: pd.DataFrame) -> pd.DataFrame:
     return passes
 
 
-def rotular(perdas, ganhos, control, frames, deteccoes) -> pd.DataFrame:
+def rotular(perdas, ganhos, control, frames, deteccoes, exige_executor: bool = False) -> pd.DataFrame:
     """Monta a tabela `PASSES` de um jogo.
 
     Entrada, do MESMO jogo: `perdas`, `ganhos` e `control` de
@@ -118,7 +138,7 @@ def rotular(perdas, ganhos, control, frames, deteccoes) -> pd.DataFrame:
     vivo = frames["ball_live"].to_numpy()
     n = quadro.size
 
-    origem = suprimir(perdas, deteccoes, frames)
+    origem = suprimir(perdas, deteccoes, frames, exige_executor)
 
     # --- proximo ganho na mesma corrida e no mesmo periodo -----------------
     f_perda = perdas["frame"].to_numpy()

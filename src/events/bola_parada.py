@@ -204,7 +204,10 @@ def detectar(frames, tracking, periods, passes, cfg: dict):
     p = cfg["bola_parada"]
     game = int(frames["game"].iloc[0])
     fps = cfg["tracking"]["fps"]
-    jogadores, px, py, ball_x, ball_y = grade_de_posicoes(frames, tracking)
+    # Frente C (Fatia 9, exploratorio): "deixou de ser detectado" pela
+    # visibilidade, nao por "linha nao-NaN". Desligada, `vis` nao e lido.
+    por_visible = cfg["exploratorio"]["presentes_por_visible"]
+    jogadores, px, py, ball_x, ball_y, *vis = grade_de_posicoes(frames, tracking, com_visible=por_visible)
     nomes = np.asarray(jogadores, dtype=object)
     times = (
         tracking.drop_duplicates("player_id")
@@ -225,7 +228,7 @@ def detectar(frames, tracking, periods, passes, cfg: dict):
 
     # --- gatilhos, no intervalo morto ------------------------------------
     ativo = gatilhos.ativacoes(px, py, times, lado, cfg)
-    presentes = np.cumsum(~np.isnan(px), axis=1, dtype="int32")
+    presentes = np.cumsum(vis[0] if por_visible else ~np.isnan(px), axis=1, dtype="int32")
     completo, incompleto, ausente_apos, d_geom_dc, d_geom_ultimo = {}, {}, {}, {}, {}
     ref_dc = gatilhos.distancias_de_referencia(
         px[:, dc], py[:, dc], lado[:, dc], cfg
