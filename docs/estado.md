@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-06 (projeto ENCERRADO: Fatia 8 limpa na tag `final`; Fatia 9 = apêndice exploratório)
+Atualizado: 2026-11-06 (REABERTO pelo Victor: Fatia 10 auditoria em curso; depois 11 IDSSE e 12 StatsBomb 360. O resultado limpo continua na tag `final`)
 
 ## Onde estamos
 
