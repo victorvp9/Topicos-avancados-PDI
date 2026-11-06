@@ -184,3 +184,58 @@ Figuras: `outputs/experimento/figuras/figura1.png` (F1 × taxa amostrada, um
 ponto por semente) e `figura2.png` (F1 por taxa × `R_pz`, mapa de calor). **O
 eixo de taxa das figuras usa a taxa com todos os jogadores, GK incluído**
 (B8 0,34), enquanto o texto usa a taxa sem GK (B8 0,368); o nível é o mesmo.
+
+---
+
+## Apêndice — EXPLORATÓRIO: onde a detecção se perde, e duas correções
+
+Tudo aqui foi decidido **depois** de ver a rodada final, nos mesmos 3 jogos
+(`docs/analise-alternativas.md`, plano `docs/fatias/09-plano.md`). Nada substitui
+os números das §1 a §4. Pontos medidos: `R0` = 0,5 m, estrito, `frame`, lacuna 5
+com, condição `reconstruido`, 5 sementes em B. Fonte: `outputs/exploratorio/`
+(`pontos.csv`, coluna `frente`; `apagao.csv`). A linha base reproduz
+`outputs/experimento/pontos.csv` linha a linha.
+
+**A. Dentro e fora do apagão total** (nenhum jogador visível no quadro de
+referência). Revocação pelo estrato do evento; precisão pelo estrato do quadro da
+detecção. Nenhum evento é excluído.
+
+| B8 | estrato | fração dos eventos | revocação | precisão |
+|---|---|---|---|---|
+| passe principal | apagão | 0,158 | 0,004 (8/2094) | 0,889 (8/9) |
+| passe principal | fora | 0,842 | 0,807 (9000/11156) | 0,970 |
+| bola parada micro | apagão | 0,598 | 0,367 (324/882) | 0,295 |
+| bola parada micro | fora | 0,402 | 0,717 (425/593) | 0,325 |
+
+Fração de eventos em apagão: passe 0,088 / 0,131 / 0,158 e bola parada 0,335 /
+0,498 / 0,598, em B6 / B7 / B8. Em B5, A8 e no teto, zero.
+
+**Leitura:** na variante B, a perda de passe é quase exatamente a fração de passes
+que cai num apagão: ali o detector fica cego. A bola parada sofre mais porque os
+apagões se concentram depois dos reinícios (R10, item 2). Fora do apagão, a
+revocação do passe (0,807) fica perto da do teto (0,825). Mas as populações
+diferem: os eventos fora do apagão não são uma amostra aleatória, e não medi o
+teto restrito aos mesmos eventos.
+
+**B. Controle "a bola some no corte"** (bola NaN no apagão, `ball_live` oráculo).
+Em B8, o passe vai de 0,799 a 0,795 e a bola parada de 0,386 a 0,378. A perda é
+pequena **porque o detector já quase não acerta nada no apagão**. Isto não valida
+o D2: a bola fora do apagão continua perfeita, e o `ball_live`, oráculo.
+
+**C. Problema 2 do S1 por visibilidade.** Bola parada em B8 de 0,386 a 0,390 (+8
+acertos); idêntico no teto e no `bruto`. Imaterial (abaixo de λ = 0,01).
+
+**D. A supressão de bola parada exige a perda do executor.** Passe no teto de
+0,891 a 0,901 (2187 → 2236 acertos; **muda o teto**), em B5 de 0,891 a 0,905, em
+B8 de 0,799 a 0,825. O excesso sobre o ganho do teto, em B8, é 0,015. Por estrato,
+em B8, os acertos sobem de 9000 para 9470 fora do apagão e de 8 para 43 dentro.
+**Leitura:** D corrige um erro da regra de supressão decidida em 2026-11-01
+([LACUNA] do plano 05), que já custava cerca de 1 ponto no teto e custa mais sob
+degradação, porque o passe real do reinício some e a regra "come" o passe
+seguinte. **D não recupera o apagão.** A regra foi escolhida depois de ver os FN;
+por isso fica no apêndice, não no resultado limpo.
+
+**Conclusão do apêndice:** com os dados deste projeto, nenhuma alternativa
+legítima recupera o que se perde nos apagões. O limite da detecção, sob broadcast
+com cortes, é a fração de eventos que cai num corte. A regra D vale como correção
+do detector em qualquer condição, a confirmar em dado novo.

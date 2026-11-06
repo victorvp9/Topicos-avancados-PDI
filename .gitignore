@@ -9,3 +9,4 @@ outputs/*.csv
 outputs/cache/
 # Fatia 8: saidas do experimento (regeneraveis por --all; as finais podem entrar com git add -f)
 outputs/experimento/
+outputs/exploratorio/
