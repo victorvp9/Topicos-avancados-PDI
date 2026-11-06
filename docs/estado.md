@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-05 (Fatia 8 concluída, tag `final`; relatório em `docs/relatorio.md`)
+Atualizado: 2026-11-06 (projeto ENCERRADO: Fatia 8 limpa na tag `final`; Fatia 9 = apêndice exploratório)
 
 ## Onde estamos
 
@@ -230,9 +230,13 @@ pós-Fatia 6]`. Detalhe em `decisoes.md`, seção "Auditoria pós-Fatia 6".
 Projeto concluído pelo plano: rodada final única (commit `48224e0`, 60 min),
 revisada duas vezes, tag `final`. Resposta em `docs/relatorio.md` §1: aumentar
 `R_pz` não compensa em B5; em B8 compensa só para bola parada, por margem pequena
-(recupera ~9 % do F1 perdido), e não para passe. Pendências opcionais, se o
-Victor quiser: títulos das figuras mais completos; verificação secundária com o
-SkillCorner (fora do plano).
+(recupera ~9 % do F1 perdido), e não para passe. Depois, a pedido do Victor, análise de alternativas
+(`docs/analise-alternativas.md`) e Fatia 9 exploratória (`docs/fatias/09-plano.md`,
+revisada; apêndice no relatório). Achado: sob cortes, a perda é a fração de
+eventos que cai num apagão total; nenhuma alternativa legítima a recupera com
+estes dados. A regra D (supressão exige executor) corrige o detector também no
+teto, a confirmar em dado novo (Bassek 2025, licença não conferida). Encerrado
+por decisão do Victor.
 
 ## Portões
 

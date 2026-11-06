@@ -525,6 +525,37 @@ e no teto); F1 = `2·tp/(n_det + n_gab)`. Formato das contagens: `tp_diag` /
 | `n_dist_igual_grade` soma 0 nas 147.600 linhas (diagnóstico (h)) | [nosso] | `pontos.csv`, soma da coluna `n_dist_igual_grade` |
 | variante A, passe principal: máximo de \|F1 − F1 do teto\| de A2 a A8 = 0,000226 (A7, F1 0,8902; com os F1 arredondados a 4 casas, 0,8905 − 0,8902 = 0,0003) | [nosso] secundário | `tabelas/tabela1.csv`, `variante` = A, `alvo` = passe_principal, coluna `f1` |
 
+## Fatia 9 — apêndice EXPLORATÓRIO (2026-11-06)
+
+**Tudo nesta seção é EXPLORATÓRIO**: as frentes foram escolhidas depois de ver a
+rodada final, nos mesmos 3 jogos (plano `docs/fatias/09-plano.md`). Produzido por
+`python -m src.run --exploratorio` (código em `500f131`); saídas regeneradas de
+commit limpo, com manifesto em `4d0e632` e `working_tree_sujo` False. Pontos:
+`R0` = 0,5 m, estrito, âncora `frame`, `acompanha_r_pz`, lacuna 5 com; contagens
+somadas sobre os 3 jogos e as sementes (5 em B, `rep` 0 em A e no teto); F1 =
+`2·tp/(n_det + n_gab)`. "Frente": `base` (tudo desligado), B (bola some no
+apagão), C (presentes por `visible`), D (supressão exige o executor). Pasta:
+`outputs/exploratorio/`. Contagens no formato `tp_diag` / `n_detectado` /
+`n_gabarito`.
+
+| número | origem | arquivo / filtro / coluna |
+|---|---|---|
+| linha base: 8280 linhas idênticas a `outputs/experimento/pontos.csv` | [nosso] | `conferir_linha_base`, impresso pelo `--exploratorio`; teste `test_1_*` de `tests/test_exploratorio.py` |
+| 396 unidades (66 por frente × condição: base e C em `reconstruido` e `bruto`; B e D só em `reconstruido`), 1321,6 s de CPU somada; parede 11 min 21 s com `n_workers` = 2 (rodada original do codificador) | [nosso] medição desta máquina | `manifesto.json`, `len(unidades)` e soma de `tempo_s`; a parede é do `time` da rodada original |
+| **A**, B8 passe principal: apagão com fração dos eventos 0,158, revocação 0,004 (8/2094), precisão 0,889 (8/9); fora do apagão com fração 0,842, revocação 0,807 (9000/11156), precisão 0,970 (9000/9279) | [nosso] exploratório | `apagao.csv`, `frente` = base, `condicao` = reconstruido, `variante` = B, `nivel` = 8, `alvo` = passe_principal, por `estrato`; colunas `frac_eventos`, `revocacao` (= `tp_gab`/`n_gabarito`), `precisao` (= `tp_det`/`n_detectado`) |
+| **A**, B8 bola parada micro: apagão com fração 0,598, revocação 0,367 (324/882), precisão 0,295 (324/1099); fora com fração 0,402, revocação 0,717 (425/593), precisão 0,325 (425/1306) | [nosso] exploratório | idem, `alvo` = bola_parada_micro |
+| fração de eventos em apagão, B6 / B7 / B8: passe 0,088 / 0,131 / 0,158 (1160, 1742 e 2094 de 13250); bola parada 0,335 / 0,498 / 0,598 (494, 735 e 882 de 1475). B5, A8 e teto: 0 | [nosso] exploratório | `apagao.csv`, `frente` = base, `estrato` = apagao, coluna `frac_eventos` (e `n_gabarito`) |
+| revocação do passe no teto 0,825 (2187/2650), para comparar com 0,807 fora do apagão (populações diferentes, teto restrito não medido) | [nosso] | `pontos.csv`, `frente` = base, `nivel` = 1, passe_principal, `tp_diag`/`n_gabarito` |
+| **B**, B8: passe de 0,7994 (9008/9288/13250) a 0,7945 (8911/9182/13250); bola parada de 0,3861 (749) a 0,3784 (734/2405/1475) | [nosso] exploratório | `pontos.csv`, `frente` = B contra `base`, `reconstruido`, B8, filtro acima, soma sobre `jogo` e `rep` |
+| **B**: teto, B5 e A8 iguais à base | [nosso] | idem, `nivel` = 1, B5 e A8 |
+| **C**, B8 bola parada: de 0,3861 (749) a 0,3902 (757/2405/1475), +8 acertos, ΔF1 0,0041 (< λ = 0,01); passe igual à base | [nosso] exploratório | `pontos.csv`, `frente` = C contra `base`, `reconstruido`, B8 |
+| **C**: idêntico à base no teto e em todo nível do `bruto` (B8 `bruto`: 635/2405/1475 e 8915/9186/13250) | [nosso] | `pontos.csv`, `frente` = C contra `base`, `condicao` = bruto; teste `test_3_*` |
+| **D**, passe principal no teto: de 0,8905 (2187/2262/2650) a 0,9009 (2236/2314/2650); **muda o teto**. Bola parada igual à base em todo nível | [nosso] exploratório | `pontos.csv`, `frente` = D contra `base`, `reconstruido`, `nivel` = 1 |
+| **D**, passe: B5 de 0,8905 a 0,9049 (11270/11660/13250); B8 de 0,7994 a 0,8250 (9513/9813/13250); A8 0,9042 (2252/2331/2650) | [nosso] exploratório | idem, B5, B8 e A8 |
+| **D**, excesso do ganho em B8 sobre o ganho no teto: (0,8250 − 0,7994) − (0,9009 − 0,8905) = 0,015 (0,01518) | [nosso] exploratório | as duas linhas acima |
+| **D**, B8 passe por estrato: acertos (`tp_gab`) de 9000 para 9470 fora do apagão e de 8 para 43 dentro (`tp_det` 40 de 48 detecções no apagão) | [nosso] exploratório | `apagao.csv`, `frente` = D contra `base`, B8, passe_principal |
+| "custava cerca de 1 ponto no teto": ΔF1 do passe no teto em D = 0,0104 | [nosso] | linha do teto em D, acima |
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |
