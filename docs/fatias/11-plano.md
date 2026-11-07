@@ -145,3 +145,25 @@ uma unidade B8 da rodada final.
   dependência e uma decisão nova. Se o portão τ mostrar que é preciso, vai ao
   G3.
 - Vídeo, que não existe no dataset.
+
+## 7. Emenda de 2026-11-07 (depois do teto da 11b; decisão do Victor)
+
+A 11c roda **duas configurações**, com a máquina, a grade, as regras R1–R10 e a
+emenda §8 do `08-plano.md`, mais as adaptações a 7 jogos da §4b:
+
+| config | `R0` | `eps_s` / `eps_v` | rótulo |
+|---|---|---|---|
+| **A** (pré-registrada) | 0,50 m | 0,05 m / 1,0 m/s | **limpa** |
+| **B** (provedor B, supl. S4.1 p. 6 e S4.2 p. 8) | 1,00 m | 0,10 m / 5,0 m/s | **EXPLORATÓRIA**: escolhida depois de ver o teto da 11b |
+
+- **Fixos para A e B:**
+  - condição `reconstruido` apenas;
+  - 5 sementes `[20261107, jogo, rep]`;
+  - simulador congelado com a calibração da Metrica;
+  - critério principal `vidal_codina`;
+  - níveis 1, B2–B8 e A2–A8;
+  - grade de `R_pz` igual à da Fatia 8. Em B, o `R0` é 1,00 m e a grade continua a mesma; o LOGO compara cada `R` com esse `R0`.
+- **Fora:** a curva de `ε_c`, que já está na 11b.
+- **Resposta:** como na Fatia 8 (B5 e B8, alvos primários), dada separadamente para A e para B.
+- **G4:** o tempo de uma unidade completa é medido antes de rodar. Se a estimativa passar de 1,5× ~6 h de CPU, volta ao Victor.
+- **G5:** config congelada e tag `pre-rodada-final-idsse`; uma rodada por config.
