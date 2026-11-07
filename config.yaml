@@ -489,3 +489,36 @@ idsse_experimento:
   rotulo: LIMPO
   saida: outputs/idsse/experimento_A
   saida_perfil: {provedor_b: outputs/idsse/experimento_B}
+
+# Fatia 12: StatsBomb 360 da Copa de 2022 contra o simulador, no instante dos
+# eventos (`--statsbomb360` e `--visibilidade-eventos`). Plano
+# docs/fatias/12-plano.md §2 e §5. DESCRITIVO: nada aqui muda o caminho da
+# Metrica nem do IDSSE.
+statsbomb360:
+  raiz: data/statsbomb/wc2022            # plano 12 §3 (download do orquestrador, com SHA256SUMS.txt)
+  competition_id: 43                     # plano 12 §1 (FIFA World Cup 2022)
+  season_id: 106                         # plano 12 §1
+  n_jogos: 64                            # plano 12 §2.1 ("nos 64 jogos"); outro numero estoura
+  # Campo de 120 x 80 jardas: README da StatsBomb open-data (doc. dos eventos e
+  # do 360) e plano 12 §1/§5. A area visivel e recortada a [0, 120] x [0, 80].
+  campo_jardas: [120.0, 80.0]
+  type_name_escopo: Pass                 # plano 12 §5: so `type.name` = Pass
+  # `pass.type.name` -> nosso tipo (os nomes do gabarito da Metrica). Plano 12 §5.
+  pass_type_bola_parada:
+    Throw-in: throw_in
+    Free Kick: free_kick
+    Goal Kick: goal_kick
+    Corner: corner_kick
+    Kick Off: kickoff
+  # `pass.type` ausente ou um destes = passe em jogo corrido. Plano 12 §5.
+  # Qualquer outro `pass.type.name` estoura.
+  pass_type_corrido: [Recovery, Interception]
+  tipo_corrido: pass
+  percentis: [5, 25, 50, 75, 95]         # plano 12 §2.1 (percentis 5/25/50/75/95)
+  # Rotulo `conjunto` da secao copa2022 do manifesto (revisao da Fatia 12).
+  conjunto: statsbomb_wc2022
+  # Simulador: sementes da rodada final da Metrica, [simulador.semente_base, jogo,
+  # rep] (plano 12 §5; a chave vive so em `simulador:`). B com rep 0..n_sementes-1
+  # e A so com rep 0 (experimento.variantes_sem_semente; decisoes.md 2026-11-07).
+  niveis: {B: [5, 6, 7, 8], A: [5, 6, 7, 8]}   # plano 12 §2.2 e §5 (B5-B8 e A5-A8)
+  saida: outputs/statsbomb360            # plano 12 §5

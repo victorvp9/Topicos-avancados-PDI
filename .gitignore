@@ -16,3 +16,4 @@ outputs/idsse/teto/
 outputs/idsse/teto_provedor_b/
 # Fatia 11c: saidas do experimento no IDSSE, configuracoes A e B (regeneraveis)
 outputs/idsse/experimento_*/
+outputs/statsbomb360/

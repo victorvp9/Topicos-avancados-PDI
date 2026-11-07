@@ -556,6 +556,106 @@ apagão), C (presentes por `visible`), D (supressão exige o executor). Pasta:
 | **D**, B8 passe por estrato: acertos (`tp_gab`) de 9000 para 9470 fora do apagão e de 8 para 43 dentro (`tp_det` 40 de 48 detecções no apagão) | [nosso] exploratório | `apagao.csv`, `frente` = D contra `base`, B8, passe_principal |
 | "custava cerca de 1 ponto no teto": ΔF1 do passe no teto em D = 0,0104 | [nosso] | linha do teto em D, acima |
 
+## Fatia 10 — auditoria (EXPLORATÓRIO) (2026-11-06 a 2026-11-07)
+
+**EXPLORATÓRIO**: auditoria dos erros no teto da Metrica (`R0` = 0,5 m, estrito,
+3 jogos), plano `docs/fatias/10-plano.md`. Produzido por `python -m src.run
+--auditoria`; pasta `outputs/auditoria/`. O `manifesto.json` diz commit
+`cc28715` e `working_tree_sujo` True. "Sem reinício" = `categoria` começando por
+`4` (4a saída, 4b falta, 4c buraco, 4d outro). Conferido em 2026-11-07 abrindo
+os CSV.
+
+| número | origem | arquivo / filtro / coluna |
+|---|---|---|
+| 481 detecções de bola parada no teto: 232 TP, 49 tipo errado, 2 jogador errado, 198 sem reinício (13 4a, 3 4b, 162 4c, 20 4d) | [nosso] exploratório | `deteccoes_bp.csv` (481 linhas), contagem de `categoria`; igual a `resumo.csv`, `tabela` = 3.1_deteccoes_bp, `game` = 0 |
+| teto da auditoria igual ao da rodada: micro 232/481/295, passe principal 2187/2262/2650 | [nosso] | `conferencia_ab1.csv`, `tp_diag`/`n_detectado`/`n_gabarito` |
+| 296 reinícios no gabarito = 295 da micro + 1 pênalti; 13 com `no_dead_ball_before`, todos em `5_sem_transicao`; 282 = 295 − 13 | [nosso] | `gabarito_bp.csv` (296 linhas); `type` ≠ penalty → 295; soma de `no_dead_ball_before` = 13 |
+| 308 (população errada do plano 10 §3.2, "ERRO MEU") | não é medida | texto do plano 10; o arquivo tem 296 |
+| "162 buracos" | [nosso] | `resumo.csv`, `categoria` = 4c_buraco, `game` = 0 |
+| 168 das 198 detecções sem reinício têm corrida morta < 1 s (162 de 4c, 4 de 4a, 2 de 4b, 0 de 4d) | [nosso] exploratório | `deteccoes_bp.csv`, `categoria` começa por 4, `dur_morta_s` < 1 |
+| 52 de 137 TP de lateral, escanteio e tiro de meta com `BALL OUT` antes de −2 s | **sem arquivo**: recontagem do revisor nos arquivos crus | não conferi. No `deteccoes_bp.csv` há 155 TP desses três tipos (`categoria` = tp), 70 deles com `ball_out_antes` = False; nenhum filtro dá 137 nem 52 |
+| `g3_home_6` e `g3_home_13`: ~50 FN e ~53 FP de passe no 2º tempo do jogo 3 | **sem arquivo por tempo**: achado do revisor | `passes_fp.csv`, `game` = 3, jogo inteiro: 41 + 12 = 53; `passes_fn.csv`, jogo inteiro: 21 + 45 = 66. Não conferi o corte do 2º tempo |
+
+## Fatia 11a — inspeção IDSSE (2026-11-06 a 2026-11-07)
+
+Produzido por `python -m src.run --inspect-idsse`; arquivo
+`outputs/idsse/inspecao.csv`, uma linha por jogo (`game` 1–7) e o agregado
+(`game` = 0). Os dados estão em `data/idsse/`, com `SHA256SUMS.txt`.
+
+| número | origem | arquivo / filtro / coluna |
+|---|---|---|
+| 7 jogos (J03WMX … J03WR9) | [dado] | `inspecao.csv`, `match_id`, `game` 1–7 |
+| 21 arquivos + README, 2,5 GB | [dado] | `data/idsse/SHA256SUMS.txt`, 22 linhas (21 XML + `README.md`); `du -sh data/idsse` = 2.5G |
+| 2,63 GB, ~370 MB por jogo, 25 Hz, metros com origem no centro, campo 105 × 68 | [dado] **sem arquivo**: inspeção inicial no scratchpad (decisões 2026-11-06) | não conferi nesta passada |
+| J03WMX: `ThrowIn` 52, `FreeKick` 20, `GoalKick` 14, `CornerKick` 10, `KickOff` 5, `Penalty` 1; 108 `Delete` | [dado] | `inspecao.csv`, `game` = 1, `n_throw_in`, `n_free_kick`, `n_goal_kick`, `n_corner_kick`, `n_kickoff`, `n_penalty`, `n_delete` |
+| fração com \|τ\| > 1,0 / 1,5 / 2,0 / 3,0 s = 63,7 / 49,4 / 37,1 / 24,2 % (5381 passes) | [nosso] | `game` = 0, `frac_abs_tau_gt_1s`, `_1.5s`, `_2s`, `_3s`; `tau_n` = 5381 |
+| mediana do τ **com sinal** de −0,72 a +2,12 s por jogo | **sem arquivo** | não conferi: `inspecao.csv` só tem \|τ\| (`abs_tau_p50_s` de 1,12 a 2,32 s por jogo) |
+| desvio-padrão residual ~3 s depois de corrigir um deslocamento por jogo | **sem arquivo** | não conferi |
+| defasagem dos eventos −0,37 ± 1,82 s | [lit] artigo do IDSSE (Scientific Data 2025), lido na web | não está em `refs/` |
+| STS: média 1,5 s e 16 % > 5 s | [lit] Vidal-Codina supl. S3, p. 5 | não reconferi no PDF nesta passada |
+| `limiar_sem_perda_g3` = 0,20 | config | `config.yaml`, `tau_posse.limiar_sem_perda_g3` |
+| D1: 433 de 691 bolas paradas anotadas em quadro morto | [nosso] | soma de `bp_anotada_em_morto` nos 7 jogos; 691 = soma de `n_kickoff` + `n_throw_in` + `n_corner_kick` + `n_goal_kick` + `n_free_kick` + `n_penalty` (32 + 308 + 57 + 119 + 172 + 3) |
+| D3: 1 a 4 eventos fora da grade por jogo | [nosso] | `eventos_fora_da_grade` = 1, 1, 1, 4, 2, 2, 4 |
+| nenhum NaN | [dado] | `nan_jogador_linhas` = `nan_bola_quadros` = 0 nos 7 jogos |
+| 2 expulsões, jogos 2 e 6 | [dado] | `quadros_sem_22` > 0 só nos jogos 2 (130945) e 6 (52989); `jogadores_por_quadro` 21/22 |
+| transições morto → vivo ≈ bolas paradas em cada tempo (699 contra 691 no total) | [dado] | `transicoes_p1`/`p2` contra `bolas_paradas_p1`/`p2` |
+| I1: 1131 de 5381 (21,0 %) passes não completos; 4250 completos | [dado] | `game` = 0, `tau_n` − `completos_tau_n` |
+| 4 bolas paradas em quadro morto com `no_dead_ball_before` | [nosso] | `no_dead_ball_before_lista`, entradas "(morto)": jogo 1 pênalti, jogo 2 dois laterais, jogo 4 um lateral; também as 4 linhas de `outputs/idsse/teto/mortos.csv` |
+| recuo de 9,4 s do tiro livre no jogo 1 | **sem arquivo** (revisão da 11a) | não conferi |
+
+## Fatia 11b — teto IDSSE (2026-11-07)
+
+Configuração A (LIMPA): `python -m src.run --teto-idsse`, pasta
+`outputs/idsse/teto/`. Sensibilidade do provedor B (EXPLORATÓRIA): `--teto-idsse
+--perfil provedor_b`, pasta `outputs/idsse/teto_provedor_b/`. Critério
+`vidal_codina`; contagens `tp_diag` / `n_detectado` / `n_gabarito`.
+
+| número | origem | arquivo / filtro / coluna |
+|---|---|---|
+| A: bola parada micro F1 0,691, P 0,685, R 0,698 (480/701/688) | [nosso] | `teto/tabela.csv`, `criterio` = vidal_codina, `alvo` = bola_parada_micro, `f1`, `precisao`, `revocacao` |
+| A: passe principal F1 0,621, P 0,883, R 0,479 (2036/2306/4250) | [nosso] | idem, `alvo` = passe_principal |
+| H1 não: P micro 0,6847 < 0,75 | [nosso] | `teto/hipoteses.csv`, H1, `valor`, `limiar`; limiar em `config.yaml`, `idsse.hipoteses.h1_precisao_micro_min` |
+| H2 sim: ΔF1 do passe +0,0249, Δ > 0 em 7 de 7 jogos | [nosso] | `hipoteses.csv`, H2, `delta_f1_passe_agregado` e `jogos_com_delta_pos` |
+| H3 sim: precisão por via `padrao` 0,965, reserva 1 0,756, reserva 3 0,630 | [nosso] | `hipoteses.csv`, H3, `precisao_via_*` |
+| tiro livre: R 0,192, 139 FN | [nosso] | `teto/tabela.csv`, vidal_codina, free_kick, `revocacao`; FN = 172 − 33 (= `fn_exec_visivel`) |
+| 138 dos 139 FN de tiro livre são confusão de tipo (52 `free_kick?`, 60 lateral, 25 tiro de meta, 1 escanteio) | **sem arquivo na pasta** (revisão da 11b) | não conferi |
+| passes completos: 77,4 % com distância mínima passador–bola < 0,5 m, 99,4 % < 1 m; 937 (22,6 %) na faixa 0,5–1 m, com revocação 0, que são 42,3 % dos FN; teto de revocação 0,774 | **sem arquivo na pasta** (diagnóstico da revisão da 11b) | conferi só 937 / 2214 = 0,423, com 2214 = 4250 − 2036 (FN do passe principal). Ver a divergência de 22,6 % na lista do codificador |
+| provedor B do artigo: 80 % < 0,5 m e 99 % < 1 m | [lit] Vidal-Codina supl. S3 | não reconferi no PDF nesta passada |
+| B (EXPLORATÓRIO): passe principal F1 0,896, P 0,894, R 0,897 (3814/4267/4250) | [nosso] exploratório | `teto_provedor_b/tabela.csv`, vidal_codina, passe_principal |
+| B (EXPLORATÓRIO): bola parada micro F1 0,887 (616/701/688) | [nosso] exploratório | idem, bola_parada_micro |
+| hiperparâmetros A: `R_pz` 0,50 m, `eps_s` 0,05 m, `eps_v` 1,0 m/s; B: 1,00 m, 0,10 m, 5 m/s | [lit] supl. S4.1, p. 6, e S4.2, p. 8 | `config.yaml`, `posse.eps_s_m`/`eps_v_ms` e `idsse.perfil_provedor_b` |
+
+## Fatia 11c — experimento IDSSE (A LIMPO, B EXPLORATÓRIO) (2026-11-07)
+
+`python -m src.run --experimento --dados idsse [--perfil provedor_b]`. Pastas
+`outputs/idsse/experimento_A/` (LIMPO) e `experimento_B/` (EXPLORATÓRIO).
+Critério `vidal_codina`, `condicao` = reconstruido. Teto = `variante` AB,
+`nivel` 1. F1 em `R0` vem de `tabelas/tabela1.csv`; `R*`, Δ, "ajuda",
+"compensa" e fração recuperada vêm de `tabelas/tabela2.csv` (as mesmas colunas
+de `selecao_logo.csv`, sem `papel`/`rotulo`).
+
+| número | origem | arquivo / filtro / coluna |
+|---|---|---|
+| rodada no commit `4812ee4`, árvore limpa; 301 unidades por config; sementes `20261107;jogo;rep`; A só com `rep` 0; sha256 dos 21 XML batem com `SHA256SUMS.txt` | [nosso] | `manifesto.json`: `commit`, `working_tree_sujo` = False, `len(unidades)`, `semente_efetiva`; `dados` contra `data/idsse/SHA256SUMS.txt` (21/21) |
+| G4: unidade B8 completa 36,7 s (A) e 36,1 s (B); ~6,1 h de CPU e ~3,0 h de parede estimadas; pico ~1,5 GB por worker | [nosso] medição de terminal antes da rodada | **sem arquivo**. Na rodada, o manifesto dá média de `tempo_s` em B8 de 37,2 s (A) e 36,9 s (B), e soma de `tempo_s` de 2,31 h (A) e 2,29 h (B) |
+| ~70 min de parede por config | [nosso] terminal | **sem arquivo** |
+| nível 1 igual ao teto da 11b nas duas configs | [nosso] | `tabela1.csv`, AB, 1: 480/701/688 e 2036/2306/4250 (A); 616/701/688 e 3814/4267/4250 (B), iguais aos `tabela.csv` da 11b |
+| A, teto: bola parada F1 0,691, `R*` 2,5/2/2,5/2/2/2/2, Δ 0,222, ajuda sim | [nosso] | `tabela1.csv` (`f1`) e `tabela2.csv` (`r_estrela` por `jogo_teste`, `delta_agregado`, `ajuda`), AB, 1, bola_parada_micro |
+| A, teto: passe F1 0,621, `R*` 1,0 em todos, Δ 0,247, ajuda sim | [nosso] | idem, passe_principal |
+| A, B5: taxa sem GK 0,502; bola parada F1 0,693, `R*` 2,0 em todos, Δ 0,222, Δ nível 1 0,222, ajuda sim, compensa não, fração 1,007 | [nosso] | `tabela1.csv` (`taxa_sem_gk`, `f1`) e `tabela2.csv` (`delta_agregado`, `delta_agregado_nivel_1`, `ajuda`, `compensa`, `fracao_recuperada`), B, 5 |
+| A, B5: passe F1 0,621, `R*` 1,0, Δ 0,247, Δ nível 1 0,247, compensa não, fração 0,999 | [nosso] | idem, passe_principal |
+| A, B8: taxa sem GK 0,320; bola parada F1 0,521, `R*` 3/3/3/3/2/3/3, Δ 0,099, Δ nível 1 0,222, ajuda sim, compensa não, fração 0,253 | [nosso] | idem, B, 8 |
+| A, B8: passe F1 0,558, `R*` 1,0, Δ 0,238, Δ nível 1 0,247, compensa não, fração 0,765 | [nosso] | idem |
+| B, teto: bola parada F1 0,887, Δ 0,026, ajuda sim (Δ > 0 em 5 de 7); passe F1 0,896, `R*` = `R0` = 1,0 em todos, Δ 0, ajuda não | [nosso] exploratório | `experimento_B`, mesmos filtros; `n_delta_pos` |
+| B, B5: bola parada F1 0,886, `R*` 2,0, Δ 0,029, Δ nível 1 0,026, compensa não, fração 1,053; passe F1 0,895, Δ 0, ajuda não, fração vazia (NaN) | [nosso] exploratório | idem, B, 5 |
+| B, B8: bola parada F1 0,593, `R*` 3,0 em todos, Δ 0,032, Δ nível 1 0,026, excesso 0,006 (0,031924 − 0,025918) < λ, compensa não, fração 0,100; passe F1 0,814, Δ 0, fração 0,0 | [nosso] exploratório | idem, B, 8 |
+| B, do teto para B8: passe P 0,898, R de 0,897 para 0,745; bola parada P 0,879 → 0,587, R 0,895 → 0,599 | [nosso] exploratório | `tabela1.csv`, `precisao`, `revocacao` |
+| B, A8: passe F1 0,895 (3813/4266/4250); bola parada 0,870 (604/701/688) | [nosso] exploratório | `tabela1.csv`, `variante` = A, `nivel` = 8 |
+| fração recuperada > 1 em B5: o teto escolheu 2,5 m nos jogos 1 e 3 | [nosso] | `tabela2.csv`, AB, 1, bola_parada_micro, `r_estrela` em `jogo_teste` = 1 e 3 |
+| taxa sem GK da Metrica no mesmo nível: B5 0,532, B8 0,368 | [nosso] | `outputs/experimento/tabelas/tabela1.csv`, `taxa_sem_gk` |
+| IDSSE abaixo da Metrica: B3–B8 de 3,0 a 4,8 pontos, B2 1,8; A4–A8 de 2,1 a 2,8, A2 0,2, A3 1,7 | [nosso] | diferença de `taxa_sem_gk` entre as duas `tabela1.csv`, passe_principal |
+| LOGO a 7 jogos: candidato em ≥ 4 de 6 de treino; "ajuda" com Δ_g > 0 em ≥ 5 de 7 | plano 11 §4b | `config.yaml`, `idsse_experimento.trocas.min_jogos_candidato` e `min_jogos_compensa` |
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |

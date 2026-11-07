@@ -2079,6 +2079,10 @@ def main(argv=None) -> int:
                         help="loader e inspecao do IDSSE, sem detector (docs/fatias/11-plano.md, 11a)")
     parser.add_argument("--teto-idsse", action="store_true",
                         help="teto no IDSSE e hipoteses H1-H3 (docs/fatias/11-plano.md §4a, 11b)")
+    parser.add_argument("--statsbomb360", action="store_true",
+                        help="StatsBomb 360 da Copa 2022, medidas por tipo (docs/fatias/12-plano.md §2.1)")
+    parser.add_argument("--visibilidade-eventos", action="store_true",
+                        help="visibilidade no instante dos eventos no simulador, sem detector (plano 12 §2.2)")
     parser.add_argument("--perfil", default=None,
                         help="com --teto-idsse ou --dados idsse: perfil EXPLORATORIO `idsse.perfil_<nome>` "
                              "(ex.: provedor_b)")
@@ -2097,13 +2101,13 @@ def main(argv=None) -> int:
     if not (args.inspect or args.tau or args.posse or args.tau_posse or args.bola_parada or args.passes
             or args.simulador or args.reconstrucao or args.piloto or args.experimento
             or args.tabelas_figuras or args.exploratorio or args.auditoria or args.inspect_idsse
-            or args.teto_idsse):
+            or args.teto_idsse or args.statsbomb360 or args.visibilidade_eventos):
         parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
                      "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras, --exploratorio, "
-                     "--auditoria, --inspect-idsse, --teto-idsse ou --all")
+                     "--auditoria, --inspect-idsse, --teto-idsse, --statsbomb360, --visibilidade-eventos ou --all")
     incompativeis = [m for m in ("inspect", "tau", "posse", "tau_posse", "bola_parada", "passes", "simulador",
                             "reconstrucao", "piloto", "exploratorio", "auditoria", "inspect_idsse", "teto_idsse",
-                            "all") if getattr(args, m)]
+                            "statsbomb360", "visibilidade_eventos", "all") if getattr(args, m)]
     if args.dados == "idsse" and incompativeis:
         parser.error("--dados idsse so com --experimento e/ou --tabelas-figuras (nao com {})".format(incompativeis))
     if args.perfil is not None and not (args.teto_idsse or args.dados == "idsse"):
@@ -2154,6 +2158,12 @@ def main(argv=None) -> int:
         # le `outputs/experimento/tabelas/tabela1.csv` (conferencia AB1), nunca escreve la
         audit.rodar_auditoria(cfg, mapeamento, caminho_config, RAIZ_REPO / "outputs" / "auditoria",
                               saida / "tabelas" / "tabela1.csv")
+    if args.statsbomb360 or args.visibilidade_eventos:
+        from src import statsbomb360
+        if args.statsbomb360:
+            statsbomb360.rodar_copa(cfg, caminho_config)
+        if args.visibilidade_eventos:
+            statsbomb360.rodar_simulador(cfg, mapeamento, caminho_config)
     return 0
 
 
