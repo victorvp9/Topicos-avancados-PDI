@@ -354,3 +354,76 @@ recupera com `R_pz`.
 - **A taxa amostrada sem GK no IDSSE fica abaixo da Metrica** no
   mesmo nível: 3,0 a 4,8 pontos em B3–B8 e 2,1 a 2,8 em A4–A8, mas só 1,8 em B2, 0,2 em A2 e 1,7 em A3; com B5 em 0,502 contra 0,532 e B8 em 0,320 contra 0,368. As
   respostas são dadas por nível, não por taxa.
+
+---
+
+## Apêndice 3 — StatsBomb 360: o simulador contra o broadcast real (Fatia 12)
+
+**Rótulo: validação externa, descritiva.** Não há F1, não há parâmetro livre e o
+simulador não foi recalibrado.
+
+- **Plano:** `docs/fatias/12-plano.md`, inclusive a §5, fixada antes do código.
+- **Dados:** StatsBomb Open Data, FIFA World Cup 2022, 64 jogos (fonte:
+  StatsBomb, `github.com/statsbomb/open-data`).
+- **Saídas:** `outputs/statsbomb360/`, com `comparacao.csv`,
+  `copa2022_por_tipo.csv` e `simulador_por_tipo.csv`, regeneradas a partir do
+  commit limpo `3f7c85d`.
+- **Simulador:** as sementes `[20261104, jogo, rep]` da rodada final da Metrica,
+  nos 3 jogos da Metrica.
+- **Revisão:** independente, com recontagem própria do JSON cru.
+
+| tipo | Copa 2022: n | **sem entrada 360** | visíveis p50 (com 360) | B5: apagão | B8: apagão | B8: visíveis p50 fora do apagão | B8: executor visível |
+|---|---|---|---|---|---|---|---|
+| passe | 62252 | **0,123** | 16 | 0 | 0,158 | 13 | 0,837 |
+| lateral | 2617 | **0,515** | 16 | 0 | 0,605 | 11 | 0,385 |
+| tiro livre | 1768 | **0,518** | 18 | 0 | 0,580 | 12 | 0,415 |
+| tiro de meta | 1002 | **0,788** | 8 | 0 | 0,547 | 1 | 0,433 |
+| escanteio | 569 | **0,473** | 19 | 0 | 0,700 | 4 | 0,300 |
+| pontapé inicial | 307 | **0,492** | 20 | 0 | 0,633 | 15 | 0,367 |
+
+**Validação externa do item 2 da R10, a favor.** No broadcast real, a fração de
+eventos sem imagem utilizável é cerca de 4 vezes maior nas bolas parada (0,47 a
+0,79) que nos passes (0,12). A concentração dos apagões nos reinícios é, portanto,
+um traço real e não só do simulador.
+
+Nesta medida, a B8 é o nível mais parecido com a Copa 2022: os passes dão 0,158
+contra 0,123, e as bolas paradas 0,55–0,70 contra 0,47–0,79. B5, sem cortes, não
+reproduz a medida.
+
+**Ressalva.** "Sem 360" é um *proxy* de apagão. O README da StatsBomb não diz por
+que um evento fica sem 360, e isso é hipótese do plano. Na revisão, nenhum bloco
+longo de passes ficou sem 360 (a maior sequência tem 47 eventos), o que afasta a
+hipótese de tempos inteiros faltando.
+
+**O teste do item 4 da R10 não pode ser feito com o 360.**
+- A StatsBomb sempre põe o `actor` no `freeze_frame`: há 57393 deles nos passes,
+  e em pelo menos 12 o actor fica fora do `visible_area`.
+- Por isso, a fração com o executor visível dá 1 por construção, e a fração com 0
+  visíveis dá 0.
+- Essas duas medidas ficam fora da comparação (`decisoes.md`, 2026-11-07).
+- O item 4, "o simulador mostra demais quem corre", continua apoiado só na
+  validação 5(a) contra o Bassek.
+
+**Leitura descritiva da contagem de jogadores fora do apagão.**
+- **Diferença grande nos reinícios.** No escanteio, o 360 mostra mediana de 19
+  jogadores, contra 4 no simulador em B8 (3,5 em B5). No tiro de meta, 8 contra 1.
+- **A direção é a oposta à do item 4.** Nos reinícios, o simulador mostra *menos*
+  jogadores que o broadcast real.
+- **Leitura, não verificada:**
+  - no escanteio, a câmera real enquadra a área cheia, enquanto o frustum do
+    simulador segue a bola na bandeirinha;
+  - no tiro de meta, a câmera real mostra o campo, e o simulador fica no
+    goleiro.
+- **No passe a diferença é menor:** 16 contra 13.
+- **Medidas não equivalentes.** O p50 do 360 conta sempre o actor, enquanto o do
+  simulador conta o executor só quando ele está visível; a diferença é de no
+  máximo 1 jogador. As populações de passe também diferem: na Copa entram os
+  passes errados (17,2 %), e na Metrica entram só os completos.
+
+**Consequência para a leitura do projeto.** Nas bolas paradas, o simulador
+erra para os dois lados:
+- a fração de eventos em apagão em B8 é parecida com a real;
+- fora do apagão, ele mostra menos gente do que o broadcast real.
+
+Isso pode tornar a perda de bola parada fora do apagão mais pessimista do que no
+mundo. Não medi o efeito no F1.
