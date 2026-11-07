@@ -271,9 +271,10 @@ Fontes:
 ### Hipóteses da auditoria (Fatia 10), testadas no teto do IDSSE (11b, LIMPO)
 
 **H1 — reprovada.** Com o estado da bola booleano, a precisão de bola parada
-micro é 0,685, abaixo do limiar pré-registrado de 0,75. Na Metrica, 168 dos 198
-falsos positivos vinham de buracos de NaN com menos de 1 s. Removida essa fonte,
-a precisão sobe, mas não chega ao previsto.
+micro é 0,685, abaixo do limiar pré-registrado de 0,75. Na Metrica, das 198
+detecções sem reinício anotado, 168 tinham corrida morta com menos de 1 s (162
+classificadas como buraco de rastreamento; o total de falsos positivos é 249).
+Removida essa fonte, a precisão sobe (0,482 → 0,685), mas não chega ao previsto.
 
 **H2 — confirmada.** A supressão que exige a perda do executor (regra D) dá
 +0,0249 no F1 do passe principal, com ganho em 7 de 7 jogos. A correção do
@@ -298,7 +299,7 @@ A configuração A é a pré-registrada: os hiperparâmetros do provedor A,
 
 **Leitura.** `R_pz` maior ajuda muito, mas ajuda igual ou mais sem degradação.
 É afinação de um `R0` errado para este provedor, não compensação da perda. O
-diagnóstico da 11b explica por quê: 22,6 % dos passes completos têm a distância
+diagnóstico da 11b explica por quê: 22,0 % dos passes completos (937 de 4250) têm a distância
 mínima passador–bola entre 0,5 e 1 m, e com `R0` = 0,5 m a revocação deles é 0.
 
 ### Configuração B — EXPLORATÓRIA
@@ -324,8 +325,8 @@ Na configuração B (exploratória), do teto para B8:
   de 0,897 para 0,745.
 - **Bola parada:** cai de 0,887 para 0,593, com precisão e revocação caindo
   juntas.
-- **B5:** igual ao teto nos dois alvos.
-- **Variante A (A8):** o passe fica igual ao teto, e a bola parada cai para 0,870.
+- **B5:** a 0,001 do teto nos dois alvos (0,886 contra 0,887; 0,895 contra 0,896).
+- **Variante A (A8):** o passe fica a 1 acerto do teto (3813 contra 3814), e a bola parada cai para 0,870.
 
 É o mesmo padrão da §2: no simulador, o que derruba a detecção são os cortes, não
 o campo de visão estreito.
@@ -350,6 +351,6 @@ recupera com `R_pz`.
   contado do lado do gabarito. P/R/F1 usam sempre `tp_diag`.
 - **A variante A rodou com 1 semente,** porque é determinística (`decisoes.md`,
   2026-11-07).
-- **A taxa amostrada sem GK no IDSSE fica 2 a 5 pontos abaixo da Metrica** no
-  mesmo nível, com B5 em 0,502 contra 0,532 e B8 em 0,320 contra 0,368. As
+- **A taxa amostrada sem GK no IDSSE fica abaixo da Metrica** no
+  mesmo nível: 3,0 a 4,8 pontos em B3–B8 e 2,1 a 2,8 em A4–A8, mas só 1,8 em B2, 0,2 em A2 e 1,7 em A3; com B5 em 0,502 contra 0,532 e B8 em 0,320 contra 0,368. As
   respostas são dadas por nível, não por taxa.
