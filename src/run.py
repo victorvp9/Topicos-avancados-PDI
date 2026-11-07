@@ -45,6 +45,8 @@ grade inteira (so na rodada final); `--tabelas-figuras` so le os CSV de
 `--exploratorio` roda o apendice EXPLORATORIO da Fatia 9 (fora do `--all`) e
 grava em `outputs/exploratorio/`. `--auditoria` roda a auditoria EXPLORATORIA de
 erros no teto da Fatia 10 (fora do `--all`) e grava em `outputs/auditoria/`.
+`--inspect-idsse` le e inspeciona o IDSSE (Fatia 11a, fora do `--all`), sem
+detector, e grava `outputs/idsse/inspecao.csv`.
 
 `python -m src.run --reconstrucao` reconstroi (interpolacao linear) o tracking
 de cada (variante, nivel) do simulador e imprime os seis blocos do
@@ -1931,6 +1933,119 @@ def rodar_reconstrucao(cfg: dict, mapeamento: dict, jogos, gravar_em=None, nivei
     return csv
 
 
+def _tau_idsse(tabela: pd.DataFrame, cfg: dict) -> dict:
+    """Portao tau do plano 11 §3: percentis de |tau| (`relatorio.percentis`) e
+    max, e a fracao de |tau| acima de cada degrau de `tau_posse.escada_janela_s`.
+    Denominador = TODOS os passes (o sem medida conta, como em `tau.resumir`).
+    Nao escolhe a janela: isso e do orquestrador."""
+    a = tabela["tau_s"].abs().to_numpy()
+    n = a.size
+    medido = np.isfinite(a).any()
+    linha = {"tau_n": n, "tau_n_medidos": int(np.isfinite(a).sum())}
+    for q in cfg["relatorio"]["percentis"]:
+        linha["abs_tau_p{:02d}_s".format(q)] = float(np.nanpercentile(a, q)) if medido else np.nan
+    linha["abs_tau_max_s"] = float(np.nanmax(a)) if medido else np.nan
+    for degrau in cfg["tau_posse"]["escada_janela_s"]:
+        linha["frac_abs_tau_gt_{:g}s".format(degrau)] = float((a > degrau).sum()) / n if n else np.nan
+    return linha
+
+
+def inspecionar_idsse(cfg: dict, gravar_em=None, pasta_cache=None) -> pd.DataFrame:
+    """`--inspect-idsse` (plano 11 §5, 11a): por jogo, contagens por tipo e
+    `Delete`, tipos `fora_do_escopo`, transicoes morto -> vivo contra bolas
+    paradas, fracao viva, NaN, ancoragem e o portao tau. NENHUM detector roda.
+    Grava `outputs/idsse/inspecao.csv` (uma linha por jogo e `game = 0`, o
+    agregado do tau). Um jogo na memoria por vez."""
+    from src.io import idsse
+
+    tipos_bp = list(cfg["idsse"]["bola_parada"].values())
+    linhas, taus, taus_c = [], [], []
+    for game in range(1, len(cfg["idsse"]["jogos"]) + 1):
+        t0 = time.perf_counter()
+        j = idsse.carregar_jogo(game, cfg, pasta_cache)
+        parede = time.perf_counter() - t0
+        frames, tracking, ev = j["frames"], j["tracking"], j["eventos"]
+        vivo = frames["ball_live"].to_numpy()
+        period = frames["period"].to_numpy()
+        entra = vivo[1:] & ~vivo[:-1] & (period[1:] == period[:-1])
+        bp = ev[ev["type"].isin(tipos_bp)]
+        por_quadro = tracking.groupby("frame").size().reindex(frames["frame"], fill_value=0).to_numpy()
+        gk = tracking[tracking["is_gk"]].groupby(["frame", "team"]).size().groupby("frame").size()
+        gk = gk.reindex(frames["frame"], fill_value=0).to_numpy()
+        fora = ev.loc[ev["type"] == gabarito.FORA_DO_ESCOPO, "metrica_type"].value_counts()
+        sem_morto = bp[bp["no_dead_ball_before"]]
+        # Portao tau em TODOS os passes (`pass_secundario`: todo `Play` de topo,
+        # completo ou nao), como na 11a original; e uma linha so dos completos
+        # (`type == pass`, I1 de decisoes.md 2026-11-07).
+        todos = ev.assign(type=np.where(ev["pass_secundario"], "pass", ev["type"]))
+        tab_tau = tau_mod.medir(game, todos, frames, tracking, cfg)
+        tab_tau_c = tau_mod.medir(game, ev, frames, tracking, cfg)
+        taus.append(tab_tau)
+        taus_c.append(tab_tau_c)
+        linha = {"game": game, "match_id": j["match_id"], "cache": j["cache"], "parede_s": parede,
+                 "n_quadros": len(frames), "frac_viva": float(vivo.mean()), "n_delete": j["n_delete"]}
+        for tipo in tipos_bp + ["pass", gabarito.FORA_DO_ESCOPO]:
+            linha["n_" + tipo] = int((ev["type"] == tipo).sum())
+        for p in (1, 2):
+            linha["transicoes_p{}".format(p)] = int(entra[period[1:] == p].sum())
+            linha["comeca_vivo_p{}".format(p)] = bool(vivo[np.flatnonzero(period == p)[0]])
+            linha["bolas_paradas_p{}".format(p)] = int((bp["period"] == p).sum())
+        linha.update({
+            "fora_do_escopo_tipos": ";".join("{}={}".format(k, v) for k, v in fora.items()),
+            "nan_jogador_linhas": j["nan"]["jogador_linhas"], "nan_bola_quadros": j["nan"]["bola_quadros"],
+            "quadros_sem_22": int((por_quadro != 22).sum()),
+            "jogadores_por_quadro": ";".join("{}={}".format(k, v) for k, v in
+                                              pd.Series(por_quadro).value_counts().sort_index().items()),
+            "quadros_sem_2_goleiros": int((gk != 2).sum()),
+            "eventos_fora_da_grade": int((ev["dt_sync_s"].abs() > 0.5 / cfg["tracking"]["fps"]).sum()),
+            "bp_anotada_em_morto": int(bp["anotado_em_morto"].sum()),
+            "bp_avancada": int((bp["anchor_shift"] > 0).sum()),
+            "no_dead_ball_before": len(sem_morto),
+            "no_dead_ball_before_lista": ";".join(
+                "{}@{}{}".format(r.type, r.annotated_frame, "(morto)" if r.anotado_em_morto else "")
+                for r in sem_morto.itertuples()),
+        })
+        resumo_tau = _tau_idsse(tab_tau, cfg)
+        resumo_c = {"completos_" + k: v for k, v in _tau_idsse(tab_tau_c, cfg).items()}
+        linha.update(resumo_tau)
+        linha.update(resumo_c)
+        linhas.append(linha)
+        print("=" * 78)
+        print("IDSSE jogo {} ({}) | cache {} | {:.1f} s".format(game, j["match_id"], j["cache"], parede))
+        print("  quadros {} | viva {:.2%} | Delete {}".format(len(frames), vivo.mean(), j["n_delete"]))
+        print("  tipos: " + "  ".join("{}={}".format(t, linha["n_" + t]) for t in tipos_bp + ["pass"]))
+        print("  fora_do_escopo ({}): {}".format(linha["n_" + gabarito.FORA_DO_ESCOPO],
+                                                linha["fora_do_escopo_tipos"]))
+        for p in (1, 2):
+            print("  periodo {}: transicoes morto->vivo {} (comeca vivo: {}) | bolas paradas {}".format(
+                p, linha["transicoes_p%d" % p], linha["comeca_vivo_p%d" % p], linha["bolas_paradas_p%d" % p]))
+        print("  NaN: jogador {} linhas, bola {} quadros | quadros sem 22 jogadores {} ({}) | "
+              "sem 2 goleiros {}".format(linha["nan_jogador_linhas"], linha["nan_bola_quadros"],
+                                         linha["quadros_sem_22"], linha["jogadores_por_quadro"],
+                                         linha["quadros_sem_2_goleiros"]))
+        print("  eventos fora da grade de posicoes: {}".format(linha["eventos_fora_da_grade"]))
+        print("  bolas paradas anotadas em quadro morto {} (avancadas {}) | no_dead_ball_before {}: {}".format(
+            linha["bp_anotada_em_morto"], linha["bp_avancada"], linha["no_dead_ball_before"],
+            linha["no_dead_ball_before_lista"]))
+        print("  tau (todos os passes): " + "  ".join("{}={:.4g}".format(k, v) for k, v in resumo_tau.items()))
+        print("  tau (so completos):    " + "  ".join("{}={:.4g}".format(k, v) for k, v in resumo_c.items()))
+        del j, frames, tracking, ev
+    agregado = {"game": 0, "match_id": "agregado"}
+    agregado.update(_tau_idsse(pd.concat(taus, ignore_index=True), cfg))
+    agregado.update({"completos_" + k: v for k, v in _tau_idsse(pd.concat(taus_c, ignore_index=True), cfg).items()})
+    linhas.append(agregado)
+    print("=" * 78)
+    print("PORTAO TAU agregado (plano 11 §3; a janela NAO e escolhida aqui):")
+    print("  " + "  ".join("{}={:.4g}".format(k, v) for k, v in agregado.items()
+                           if k not in ("game", "match_id")))
+    saida = pd.DataFrame(linhas)
+    destino = RAIZ_REPO / "outputs" / "idsse" / "inspecao.csv" if gravar_em is None else gravar_em
+    destino.parent.mkdir(parents=True, exist_ok=True)
+    saida.to_csv(destino, index=False)
+    print("gravado: {} ({} linhas)".format(destino, len(saida)))
+    return saida
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="python -m src.run", description=__doc__)
     parser.add_argument("--inspect", action="store_true", help="imprime o resumo dos jogos")
@@ -1956,6 +2071,8 @@ def main(argv=None) -> int:
                         help="apendice EXPLORATORIO da Fatia 9 (docs/fatias/09-plano.md)")
     parser.add_argument("--auditoria", action="store_true",
                         help="auditoria EXPLORATORIA de erros no teto da Fatia 10 (docs/fatias/10-plano.md)")
+    parser.add_argument("--inspect-idsse", action="store_true",
+                        help="loader e inspecao do IDSSE, sem detector (docs/fatias/11-plano.md, 11a)")
     parser.add_argument("--all", action="store_true",
                         help="todos os modos em ordem, mais --experimento e --tabelas-figuras, sem cache")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
@@ -1968,10 +2085,10 @@ def main(argv=None) -> int:
             setattr(args, modo, True)
     if not (args.inspect or args.tau or args.posse or args.tau_posse or args.bola_parada or args.passes
             or args.simulador or args.reconstrucao or args.piloto or args.experimento
-            or args.tabelas_figuras or args.exploratorio or args.auditoria):
+            or args.tabelas_figuras or args.exploratorio or args.auditoria or args.inspect_idsse):
         parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
                      "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras, --exploratorio, "
-                     "--auditoria ou --all")
+                     "--auditoria, --inspect-idsse ou --all")
     mapeamento = carregar_mapeamento(cfg)
     caminho_config = args.config or RAIZ_REPO / "config.yaml"
     saida = RAIZ_REPO / "outputs" / "experimento"
@@ -2004,6 +2121,8 @@ def main(argv=None) -> int:
         # le `outputs/experimento/pontos.csv` (linha base), nunca escreve la
         experiment.rodar_exploratorio(cfg, mapeamento, caminho_config, RAIZ_REPO / "outputs" / "exploratorio",
                                       cache, saida / "pontos.csv")
+    if args.inspect_idsse:
+        inspecionar_idsse(cfg, pasta_cache=cache)
     if args.auditoria:
         from src import audit
         # le `outputs/experimento/tabelas/tabela1.csv` (conferencia AB1), nunca escreve la

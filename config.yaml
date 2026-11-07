@@ -400,3 +400,50 @@ auditoria:
   janela_png_s: 3.0
   amostra_por_categoria: 10
   semente: 20261106
+
+# IDSSE (Fatia 11a). Plano docs/fatias/11-plano.md §1, §2 e §5. Leitor em
+# src/io/idsse.py; nada aqui muda o caminho da Metrica.
+idsse:
+  raiz: data/idsse                       # plano 11 §1
+  # jogo 1..7 = esta ordem (MatchId em ordem alfabetica, a dos arquivos em
+  # data/idsse). NOSSA, so numeracao.
+  jogos: [J03WMX, J03WN1, J03WOH, J03WOY, J03WPY, J03WQQ, J03WR9]
+  # Ficha DFL: `PlayingPosition` do goleiro (Torwart). Inspecao do codificador
+  # 2026-11-07: 14 jogadores com TW nos 7 jogos, 2 por jogo.
+  posicao_goleiro: TW
+  team_id_bola: BALL                     # plano 11 §1 (`TeamId="BALL"`)
+  # FrameSet de arbitro no XML de posicoes (3 por tempo). Inspecao 2026-11-07.
+  team_ids_ignorados: [referee]
+  ball_status_vivo: 1                    # plano 11 §2: ball_live = BallStatus == 1
+  bola_parada:                           # plano 11 §2, tabela
+    KickOff: kickoff
+    ThrowIn: throw_in
+    CornerKick: corner_kick
+    GoalKick: goal_kick
+    FreeKick: free_kick
+    Penalty: penalty
+  passe:
+    tag: Play                            # plano 11 §2
+    filhos: [Pass, Cross]                # plano 11 §2 (CROSS fundido, como na Metrica)
+    # `type = pass` so com estes; todo `Play` de topo e `pass_secundario`.
+    # decisoes.md 2026-11-07, I1 (alinhado ao D10 da Metrica)
+    evaluation_completo: [successfullyCompleted, successful]
+    # `fora_do_escopo` + `pass_secundario`; outro valor estoura.
+    # decisoes.md 2026-11-07, I1
+    evaluation_incompleto: [unsuccessful]
+  descartar: [Delete]                    # plano 11 §2 ("sem informacao")
+  # Filho da bola parada que da o executor (`Player`). Plano 11 §2: `Play`.
+  # [LACUNA] ShotAtGoal (FreeKick x4, Penalty x3), FairPlay (ThrowIn x2) e
+  # FaultExecution (ThrowIn x1) aparecem como filho unico da bola parada nos 7
+  # jogos (inspecao 2026-11-07); todos tem `Player`. Aceitos com o mesmo papel
+  # do `Play` (analogo a SET PIECE + SHOT fundidos na Metrica). Decisao do
+  # codificador, a confirmar no G3.
+  executor_bola_parada: [Play, ShotAtGoal, FairPlay, FaultExecution]
+  # Lista literal das tags-filho de `Event` nos 7 jogos (inspecao do
+  # codificador, 2026-11-07). Fora desta lista: erro duro, nunca fora_do_escopo.
+  tipos_conhecidos: [BallClaiming, BallDeflection, Caution, CautionTeamofficial, ChanceWithoutShot,
+                     CornerKick, Delete, FairPlay, FinalWhistle, Foul, FreeKick, GoalDisallowed, GoalKick,
+                     KickOff, Nutmeg, Offside, OtherBallAction, OtherPlayerAction, Penalty,
+                     PenaltyNotAwarded, Play, PlayerNotSentOff, PossessionLossBeforeGoal, RefereeBall,
+                     Run, ShotAtGoal, SitterPrevented, SpectacularPlay, Substitution, TacklingGame,
+                     ThrowIn, VideoAssistantAction]
