@@ -104,8 +104,8 @@ def unidades(cfg: dict) -> list:
 
 
 def rodar_unidade(variante: str, nivel: int, rep: int, jogo: int, cfg: dict, base: dict) -> tuple:
-    """Uma unidade: degrada o teto, reconstroi e mede os eventos. `cfg` ja de
-    `cfg` com `simulador.semente_base`; `base` de `run._base_leve`. Saida: (tabela de
+    """Uma unidade: degrada o teto, reconstroi e mede os eventos. A semente e
+    `[simulador.semente_base, jogo, rep]`; `base` de `run._base_leve`. Saida: (tabela de
     `visibilidade_eventos` com `variante`, `nivel`, `rep`, `jogo`;
     linhas visiveis sem GK; linhas do teto sem GK)."""
     d = base[jogo]

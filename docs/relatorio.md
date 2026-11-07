@@ -382,7 +382,7 @@ simulador não foi recalibrado.
 | pontapé inicial | 307 | **0,492** | 20 | 0 | 0,633 | 15 | 0,367 |
 
 **Validação externa do item 2 da R10, a favor.** No broadcast real, a fração de
-eventos sem imagem utilizável é cerca de 4 vezes maior nas bolas paradas (0,47 a
+eventos sem imagem utilizável é de 3,9 a 6,4 vezes maior (4,5 vezes no agregado) nas bolas paradas (0,47 a
 0,79) que nos passes (0,12). A concentração dos apagões nos reinícios é, portanto,
 um traço real e não só do simulador.
 

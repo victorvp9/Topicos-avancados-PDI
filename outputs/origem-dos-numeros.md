@@ -656,6 +656,36 @@ de `selecao_logo.csv`, sem `papel`/`rotulo`).
 | IDSSE abaixo da Metrica: B3–B8 de 3,0 a 4,8 pontos, B2 1,8; A4–A8 de 2,1 a 2,8, A2 0,2, A3 1,7 | [nosso] | diferença de `taxa_sem_gk` entre as duas `tabela1.csv`, passe_principal |
 | LOGO a 7 jogos: candidato em ≥ 4 de 6 de treino; "ajuda" com Δ_g > 0 em ≥ 5 de 7 | plano 11 §4b | `config.yaml`, `idsse_experimento.trocas.min_jogos_candidato` e `min_jogos_compensa` |
 
+## Fatia 12 — StatsBomb 360 (descritivo) (2026-11-07)
+
+**Descritivo:** não há F1 nem parâmetro livre (plano `docs/fatias/12-plano.md`).
+Os números vêm de `python -m src.run --statsbomb360` e `--visibilidade-eventos`,
+pasta `outputs/statsbomb360/`. As saídas foram regeneradas a partir do commit
+limpo `3f7c85d`. Copa = `copa2022_por_tipo.csv`, uma linha por `tipo`.
+Simulador = `simulador_por_tipo.csv`, `condicao` reconstruido, somado nos 3 jogos
+e nas sementes. Os tipos são `pass`, `throw_in`, `free_kick`, `goal_kick`,
+`corner_kick` e `kickoff`.
+
+| número | origem | arquivo / filtro / coluna |
+|---|---|---|
+| 64 jogos; 129 JSON com sha256 conferido contra `SHA256SUMS.txt` | [dado] | `manifesto.json`, seção `copa2022`, `dados.n_jogos` e `dados.n_arquivos_conferidos`; `commit` = `3f7c85d`, `working_tree_sujo` = False |
+| sementes `[20261104, jogo, rep]`, 3 jogos da Metrica, 72 unidades | [nosso] | `manifesto.json`, seção `simulador`: `semente_base`, `unidades[].semente_efetiva` e `unidades[].jogo` (1, 2, 3); `commit` = `3f7c85d`, `working_tree_sujo` = False |
+| Copa, n de eventos: passe 62252, lateral 2617, tiro livre 1768, tiro de meta 1002, escanteio 569, pontapé inicial 307 | [dado] | `copa2022_por_tipo.csv`, `n_eventos` |
+| Copa, fração sem entrada 360: 0,123 / 0,515 / 0,518 / 0,788 / 0,473 / 0,492 (7648, 1348, 916, 790, 269 e 151 eventos) | [dado] | idem, `frac_sem_360` (`n_sem_360` / `n_eventos`) |
+| Copa, visíveis p50 com 360: 16 / 16 / 18 / 8 / 19 / 20 | [dado] | idem, `visiveis_p50` |
+| B5, fração em apagão: 0 nos 6 tipos | [nosso] | `simulador_por_tipo.csv`, `variante` = B, `nivel` = 5, `frac_apagao` |
+| B8, fração em apagão: 0,158 / 0,605 / 0,580 / 0,547 / 0,700 / 0,633 | [nosso] | idem, `nivel` = 8, `frac_apagao`; também `comparacao.csv`, `B8_frac_apagao` |
+| B8, visíveis p50 fora do apagão: 13 / 11 / 12 / 1 / 4 / 15 | [nosso] | idem, `visiveis_p50_cond`; também `comparacao.csv`, `B8_visiveis_p50_cond` |
+| B8, executor visível: 0,837 / 0,385 / 0,415 / 0,433 / 0,300 / 0,367 | [nosso] | idem, `frac_executor_visivel` |
+| "cerca de 4 vezes maior nas bolas paradas (0,47 a 0,79) que nos passes (0,12)" | [dado] | `frac_sem_360` do tipo dividida pela do passe: 3,85 (escanteio), 4,00 (pontapé inicial), 4,19 (lateral), 4,22 (tiro livre), 6,42 (tiro de meta). Somando as 5 bolas paradas: 3474/6263 = 0,555, ou 4,5 vezes |
+| B8 parecido com a Copa: passe 0,158 contra 0,123; bolas paradas 0,55–0,70 contra 0,47–0,79 | [nosso] / [dado] | `B8_frac_apagao` (mínimo 0,547, no tiro de meta; máximo 0,700, no escanteio) contra `copa2022_frac_sem_360` (0,473 a 0,788), em `comparacao.csv` |
+| escanteio: 360 com mediana de 19 contra 4 em B8 e 3,5 em B5; tiro de meta: 8 contra 1; passe: 16 contra 13 | [dado] / [nosso] | `copa2022_por_tipo.csv`, `visiveis_p50`, contra `simulador_por_tipo.csv`, `visiveis_p50_cond` (B8; B5 no escanteio) |
+| fração com executor visível = 1 e fração com 0 visíveis = 0 no 360, nos 6 tipos | [dado] | `copa2022_por_tipo.csv`, `frac_actor_visivel` = 1,0 e `frac_0_visiveis` = 0,0 |
+| 57393 `freeze_frame` de passe com exatamente 1 actor | **sem arquivo**, recontagem do revisor | não está em CSV. A coerência confere com a soma de `n_com_360` nos 6 tipos: 54604 + 1269 + 852 + 212 + 300 + 156 = 57393 |
+| ≥ 12 casos de actor fora do `visible_area` | **sem arquivo**, recontagem do revisor | não conferi |
+| maior sequência de passes sem 360: 47 eventos | **sem arquivo**, recontagem do revisor | não conferi |
+| 17,2 % de passes não completos na Copa | **sem arquivo**, recontagem do revisor | não conferi (o leitor não lê `pass.outcome`) |
+
 ## Números pendentes de medição, com gatilho de portão
 
 | número | quando | gatilho |
