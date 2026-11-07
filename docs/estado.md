@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-07 (Fatia 11 IDSSE concluída, tag `final-idsse`; próxima: Fatia 12 StatsBomb 360. O resultado limpo da Metrica continua na tag `final`)
+Atualizado: 2026-11-07 (Fatias 10–12 concluídas; tags `final` (Metrica, limpo) e `final-idsse`. Relatório com Apêndices 1–3)
 
 ## Onde estamos
 
@@ -250,10 +250,19 @@ por decisão do Victor.
     - config B, EXPLORATÓRIA, provedor B: também **não compensa**.
   - O "sim" da bola parada em B8 da Metrica **não replicou**.
   - Detalhe no Apêndice 2 de `docs/relatorio.md`.
-- **Próximo:** a Fatia 12, StatsBomb 360 (`docs/fatias/12-plano.md`), é
-  descritiva e não tem F1. Os dados já estão em `data/statsbomb/wc2022/`.
-- **Pendente:** a seção 11 de `outputs/origem-dos-numeros.md`, que fica com o
-  codificador.
+- **Fatia 12 (StatsBomb 360, descritiva):** commit `3f7c85d`, revisada, com
+  as saídas regeneradas a partir do commit limpo.
+  - A fração de eventos sem 360 é 0,12 nos passes e 0,47–0,79 nas bolas
+    paradas. Isso valida por fora o item 2 da R10, e a B8 é o nível mais
+    parecido com a Copa.
+  - O teste do item 4 não pode ser feito com o 360, porque o `actor` vem sempre
+    no `freeze_frame`.
+  - Fora do apagão, o simulador mostra menos jogadores que o broadcast real nos
+    reinícios (no escanteio, 4 contra 19).
+  - Detalhe no Apêndice 3.
+- **Origem dos números:** as seções das Fatias 10 e 11 estão em
+  `origem-dos-numeros.md`; a da Fatia 12 está com o codificador.
+- **Nada mais planejado.** O próximo passo depende do Victor.
 
 ## Portões
 
