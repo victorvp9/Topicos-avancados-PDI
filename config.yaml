@@ -372,3 +372,31 @@ exploratorio:
     B: {chave: bola_some_no_apagao, condicoes: [reconstruido]}
     C: {chave: presentes_por_visible, condicoes: [reconstruido, bruto]}
     D: {chave: supressao_exige_executor, condicoes: [reconstruido]}
+
+# Auditoria EXPLORATORIA de erros no teto (Fatia 10). Plano docs/fatias/10-plano.md.
+# Diagnostico: nada aqui e regra do detector nem entra em F1.
+auditoria:
+  # Plano 10 §3.1, 4a: bola "fora do campo" = |x| ou |y| ESTRITAMENTE acima
+  # destes, sem margem. Iguais a campo.comprimento_m / 2 e campo.largura_m / 2.
+  limite_x_m: 52.5
+  limite_y_m: 34.0
+  # Plano 10 §3.1, 4a e 4b: evento cru a <= isto ANTES do inicio da corrida
+  # morta. NOSSO, de diagnostico, sem fonte.
+  janela_evento_cru_s: 2.0
+  # Plano 10 §3.1, 4c: corrida morta mais curta que isto = buraco de
+  # rastreamento. NOSSO, de diagnostico; e o 1 s da sensibilidade ja declarada
+  # (Bassek, Metodos, p. 4).
+  corrida_curta_s: 1.0
+  # Plano 10 §3.1: nomes crus da Metrica (docs/inspecao-metrica.md §3.1, §3.5 e
+  # §5.2, conferidos no dado dos 3 jogos). "CHALLENGE com falta" = CHALLENGE
+  # cujo subtipo tem o atomo FAULT (AERIAL-FAULT-WON, FAULT+GROUND+LOST, ...).
+  eventos_saida: ["BALL OUT"]
+  eventos_falta: ["FAULT RECEIVED"]
+  challenge_falta: {type: CHALLENGE, atomo: FAULT}
+  # Plano 10 §3.4: evento cru do MESMO jogador a <= isto de um passe FP.
+  janela_fp_passe_s: 1.0
+  # Plano 10 §3.5: PNGs com +- isto em volta da ancora, ate N casos por
+  # categoria, sorteados com semente fixa (nossa).
+  janela_png_s: 3.0
+  amostra_por_categoria: 10
+  semente: 20261106

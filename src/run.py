@@ -43,7 +43,8 @@ degradado: nenhum P/R/F1 e nenhuma contagem de deteccao (plano §6).
 grade inteira (so na rodada final); `--tabelas-figuras` so le os CSV de
 `outputs/experimento/`; `--all` roda tudo em ordem, sem cache.
 `--exploratorio` roda o apendice EXPLORATORIO da Fatia 9 (fora do `--all`) e
-grava em `outputs/exploratorio/`.
+grava em `outputs/exploratorio/`. `--auditoria` roda a auditoria EXPLORATORIA de
+erros no teto da Fatia 10 (fora do `--all`) e grava em `outputs/auditoria/`.
 
 `python -m src.run --reconstrucao` reconstroi (interpolacao linear) o tracking
 de cada (variante, nivel) do simulador e imprime os seis blocos do
@@ -1953,6 +1954,8 @@ def main(argv=None) -> int:
                         help="tabelas e figuras do plano 08 §5, so lendo os CSV")
     parser.add_argument("--exploratorio", action="store_true",
                         help="apendice EXPLORATORIO da Fatia 9 (docs/fatias/09-plano.md)")
+    parser.add_argument("--auditoria", action="store_true",
+                        help="auditoria EXPLORATORIA de erros no teto da Fatia 10 (docs/fatias/10-plano.md)")
     parser.add_argument("--all", action="store_true",
                         help="todos os modos em ordem, mais --experimento e --tabelas-figuras, sem cache")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
@@ -1965,9 +1968,10 @@ def main(argv=None) -> int:
             setattr(args, modo, True)
     if not (args.inspect or args.tau or args.posse or args.tau_posse or args.bola_parada or args.passes
             or args.simulador or args.reconstrucao or args.piloto or args.experimento
-            or args.tabelas_figuras or args.exploratorio):
+            or args.tabelas_figuras or args.exploratorio or args.auditoria):
         parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
-                     "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras, --exploratorio ou --all")
+                     "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras, --exploratorio, "
+                     "--auditoria ou --all")
     mapeamento = carregar_mapeamento(cfg)
     caminho_config = args.config or RAIZ_REPO / "config.yaml"
     saida = RAIZ_REPO / "outputs" / "experimento"
@@ -2000,6 +2004,11 @@ def main(argv=None) -> int:
         # le `outputs/experimento/pontos.csv` (linha base), nunca escreve la
         experiment.rodar_exploratorio(cfg, mapeamento, caminho_config, RAIZ_REPO / "outputs" / "exploratorio",
                                       cache, saida / "pontos.csv")
+    if args.auditoria:
+        from src import audit
+        # le `outputs/experimento/tabelas/tabela1.csv` (conferencia AB1), nunca escreve la
+        audit.rodar_auditoria(cfg, mapeamento, caminho_config, RAIZ_REPO / "outputs" / "auditoria",
+                              saida / "tabelas" / "tabela1.csv")
     return 0
 
 
