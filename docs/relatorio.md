@@ -1,6 +1,6 @@
 # Relatório — Quanto da detecção de eventos sobrevive ao broadcast?
 
-Data: 2026-11-05. Rodada final única no commit `48224e0` (código e config da tag
+Data: 2026-11-05 (Apêndice 2, IDSSE: 2026-11-07). Rodada final única no commit `48224e0` (código e config da tag
 `pre-rodada-final`), 60 min de parede, revisada de forma independente. Todo número
 abaixo vem de `outputs/` e tem linha em `outputs/origem-dos-numeros.md` (seção
 "Fatia 8b"); números da literatura vêm das seções "Literatura" do mesmo arquivo.
@@ -239,3 +239,117 @@ por isso fica no apêndice, não no resultado limpo.
 legítima recupera o que se perde nos apagões. O limite da detecção, sob broadcast
 com cortes, é a fração de eventos que cai num corte. A regra D vale como correção
 do detector em qualquer condição, a confirmar em dado novo.
+
+---
+
+## Apêndice 2 — Replicação no IDSSE (Fatias 10 e 11)
+
+Dado novo, nunca visto no desenvolvimento: 7 jogos da Bundesliga, TRACAB Gen5 a
+25 Hz, com estado da bola booleano do provedor (Bassek et al. 2025, *Scientific
+Data*, DOI 10.1038/s41597-025-04505-y, CC-BY 4.0). Planos:
+`docs/fatias/10-plano.md`, `10-hipoteses.md` e `11-plano.md`, inclusive a emenda §7.
+O simulador ficou congelado com a calibração da Metrica.
+
+**Diferenças de método em relação à §1, todas decididas antes de qualquer F1 do
+IDSSE:**
+- O critério principal é `vidal_codina` (jogador anotado, ±10 s). O portão τ
+  reprovou o ±1 s: os eventos da DFL são codificados ao vivo, e
+  `decisoes.md` registra o portão em 2026-11-07.
+- O LOGO tem 7 jogos: o candidato precisa ganhar em ≥ 4 de 6 jogos de treino, e
+  "ajuda" exige Δ_g > 0 em ≥ 5 de 7.
+- O passe principal são só os passes completos (I1).
+
+Por essas diferenças, **os números não se comparam um a um com os da §1.**
+
+Fontes:
+- `outputs/idsse/teto/` (11b);
+- `outputs/idsse/experimento_A/` e `experimento_B/` (11c), com `tabela1.csv`,
+  `tabela2.csv` e `selecao_logo.csv`;
+- rodada única no commit `4812ee4` (tag `pre-rodada-final-idsse`), revisada de
+  forma independente, com o LOGO recomputado a partir de `pontos.csv`.
+
+### Hipóteses da auditoria (Fatia 10), testadas no teto do IDSSE (11b, LIMPO)
+
+**H1 — reprovada.** Com o estado da bola booleano, a precisão de bola parada
+micro é 0,685, abaixo do limiar pré-registrado de 0,75. Na Metrica, 168 dos 198
+falsos positivos vinham de buracos de NaN com menos de 1 s. Removida essa fonte,
+a precisão sobe, mas não chega ao previsto.
+
+**H2 — confirmada.** A supressão que exige a perda do executor (regra D) dá
++0,0249 no F1 do passe principal, com ganho em 7 de 7 jogos. A correção do
+apêndice anterior vale também em dado novo.
+
+**H3 — confirmada.** A precisão pela via `padrao` é 0,965, contra 0,756 na
+reserva 1 e 0,630 na reserva 3.
+
+### O experimento (11c), configuração A — LIMPO
+
+A configuração A é a pré-registrada: os hiperparâmetros do provedor A,
+`R0` = 0,50 m, `eps_s` = 0,05 m e `eps_v` = 1,0 m/s.
+
+| nível (taxa sem GK) | alvo | F1 em `R0` | `R*` por jogo (1–7) | Δ agregado | Δ no nível 1 | ajuda | **compensa** | fração recuperada |
+|---|---|---|---|---|---|---|---|---|
+| teto | bola parada | 0,691 | 2,5/2/2,5/2/2/2/2 | 0,222 | — | sim | — | — |
+| teto | passe | 0,621 | 1,0 em todos | 0,247 | — | sim | — | — |
+| B5 (0,502) | bola parada | 0,693 | 2,0 em todos | 0,222 | 0,222 | sim | **não** | 1,007 |
+| B5 (0,502) | passe | 0,621 | 1,0 em todos | 0,247 | 0,247 | sim | **não** | 0,999 |
+| B8 (0,320) | bola parada | 0,521 | 3/3/3/3/2/3/3 | 0,099 | 0,222 | sim | **não** | 0,253 |
+| B8 (0,320) | passe | 0,558 | 1,0 em todos | 0,238 | 0,247 | sim | **não** | 0,765 |
+
+**Leitura.** `R_pz` maior ajuda muito, mas ajuda igual ou mais sem degradação.
+É afinação de um `R0` errado para este provedor, não compensação da perda. O
+diagnóstico da 11b explica por quê: 22,6 % dos passes completos têm a distância
+mínima passador–bola entre 0,5 e 1 m, e com `R0` = 0,5 m a revocação deles é 0.
+
+### Configuração B — EXPLORATÓRIA
+
+A configuração B usa os hiperparâmetros que o artigo dá para o provedor B:
+`R0` = 1,00 m, `eps_s` = 0,10 m e `eps_v` = 5 m/s (supl. S4.1, p. 6; S4.2, p. 8).
+Ela foi escolhida depois de ver o teto da 11b; o "ERRO MEU" está registrado em
+`decisoes.md`, 2026-11-07.
+
+| nível | alvo | F1 em `R0` | `R*` por jogo | Δ agregado | Δ no nível 1 | ajuda | **compensa** | fração recuperada |
+|---|---|---|---|---|---|---|---|---|
+| teto | bola parada | 0,887 | — | 0,026 | — | sim | — | — |
+| teto | passe | 0,896 | `R0` em todos | 0 | — | não | — | — |
+| B5 | bola parada | 0,886 | 2,0 em todos | 0,029 | 0,026 | sim | **não** | 1,053 |
+| B5 | passe | 0,895 | `R0` em todos | 0 | 0 | não | **não** | — |
+| B8 | bola parada | 0,593 | 3,0 em todos | 0,032 | 0,026 | sim | **não** (excesso 0,006 < λ) | 0,100 |
+| B8 | passe | 0,814 | `R0` em todos | 0 | 0 | não | **não** | 0,0 |
+
+### Quanto se perde no IDSSE
+
+Na configuração B (exploratória), do teto para B8:
+- **Passe:** cai de 0,896 para 0,814. A precisão fica em 0,898, e a revocação vai
+  de 0,897 para 0,745.
+- **Bola parada:** cai de 0,887 para 0,593, com precisão e revocação caindo
+  juntas.
+- **B5:** igual ao teto nos dois alvos.
+- **Variante A (A8):** o passe fica igual ao teto, e a bola parada cai para 0,870.
+
+É o mesmo padrão da §2: no simulador, o que derruba a detecção são os cortes, não
+o campo de visão estreito.
+
+### Resposta no dado novo
+
+Nas duas configurações, nos dois alvos e em B5 e B8, aumentar `R_pz` **não
+compensa** a degradação. A única diferença em relação à Metrica é o "sim" da
+bola parada em B8. Lá ele já tinha margem pequena (§1); aqui ele não se repete
+em nenhuma das duas configurações. **Leitura:** o "sim" da Metrica não replicou,
+e a conclusão robusta do projeto é que a perda sob broadcast com cortes não se
+recupera com `R_pz`.
+
+### Notas de leitura
+
+- **Fração recuperada acima de 1.** Em B5, na bola parada, ela fica acima de 1
+  (1,007 em A e 1,053 em B). A causa: o F1_LOGO do teto escolheu 2,5 m nos jogos 1
+  e 3 e ficou abaixo do F1_LOGO degradado. A regra da §8, item 5, foi cumprida à
+  letra; o valor reflete ruído na escolha de `R*`, não recuperação real.
+- **A coluna `tp` de `pontos.csv` é diagnóstica.** Nas linhas `vidal_codina` de
+  tipos isolados ela pode passar de `n_detectado`, porque o casamento por grupo é
+  contado do lado do gabarito. P/R/F1 usam sempre `tp_diag`.
+- **A variante A rodou com 1 semente,** porque é determinística (`decisoes.md`,
+  2026-11-07).
+- **A taxa amostrada sem GK no IDSSE fica 2 a 5 pontos abaixo da Metrica** no
+  mesmo nível, com B5 em 0,502 contra 0,532 e B8 em 0,320 contra 0,368. As
+  respostas são dadas por nível, não por taxa.

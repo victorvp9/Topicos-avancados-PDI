@@ -1,6 +1,6 @@
 # Estado do projeto
 
-Atualizado: 2026-11-06 (REABERTO pelo Victor: Fatia 10 auditoria em curso; depois 11 IDSSE e 12 StatsBomb 360. O resultado limpo continua na tag `final`)
+Atualizado: 2026-11-07 (Fatia 11 IDSSE concluída, tag `final-idsse`; próxima: Fatia 12 StatsBomb 360. O resultado limpo da Metrica continua na tag `final`)
 
 ## Onde estamos
 
@@ -238,6 +238,23 @@ estes dados. A regra D (supressão exige executor) corrige o detector também no
 teto, a confirmar em dado novo (Bassek 2025, licença não conferida). Encerrado
 por decisão do Victor.
 
+**Reaberto pelo Victor (2026-11-06/07).**
+- **Fatia 10 (auditoria, EXPLORATÓRIA):** hipóteses H1–H3 congeladas em
+  `docs/fatias/10-hipoteses.md`.
+- **Fatia 11 (IDSSE, 7 jogos):**
+  - **teto (11b, LIMPO):** H1 não, H2 sim, H3 sim;
+  - **experimento (11c):** rodada única por configuração, commit `4812ee4`,
+    revisada (ACEITAR) e com tag `final-idsse`:
+    - config A, LIMPA: `R_pz` maior ajuda, mas **não compensa**, em B5 e B8,
+      nos dois alvos;
+    - config B, EXPLORATÓRIA, provedor B: também **não compensa**.
+  - O "sim" da bola parada em B8 da Metrica **não replicou**.
+  - Detalhe no Apêndice 2 de `docs/relatorio.md`.
+- **Próximo:** a Fatia 12, StatsBomb 360 (`docs/fatias/12-plano.md`), é
+  descritiva e não tem F1. Os dados já estão em `data/statsbomb/wc2022/`.
+- **Pendente:** a seção 11 de `outputs/origem-dos-numeros.md`, que fica com o
+  codificador.
+
 ## Portões
 
 **2026-10-30: o Victor delegou todos os portões ao orquestrador até o fim do
@@ -272,6 +289,6 @@ código.
 - ~~Não medi a distribuição de `eps_s`, `eps_v`, `eps_theta` na Metrica.~~ **Fechada** na Fatia 3.
 - Não baixei a SkillCorner nem o suplementar do Bassek. A calibração usa os alvos
   publicados (tabela em `docs/02-dados.md`).
-- Dataset alternativo não avaliado: Bassek et al. 2025, 7 partidas da Bundesliga
+- ~~Dataset alternativo não avaliado~~ **Fechada** (Fatia 11, IDSSE CC-BY 4.0): Bassek et al. 2025, 7 partidas da Bundesliga
   com verdade de terreno multicâmera e eventos (FOOTPASS §2.1, p. 4). Licença e
   disponibilidade não conferidas. Decidir depois da Fatia 5 (G3).
