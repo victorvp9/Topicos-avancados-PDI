@@ -11,3 +11,6 @@ outputs/cache/
 outputs/experimento/
 outputs/exploratorio/
 outputs/auditoria/
+# Fatia 11b: saidas do teto no IDSSE (regeneraveis por --teto-idsse)
+outputs/idsse/teto/
+outputs/idsse/teto_provedor_b/

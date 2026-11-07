@@ -286,3 +286,271 @@ def test_6_metrica_padrao_reproduz_a_rodada_final(jogo, eventos, cfg, u):
     c = ex._trocar(cfg, posse__grade_r_pz_m=[cfg["experimento"]["r0_m"]])
     tab = ex._ler_tabela(ex.rodar_unidade(1, u[1], u[2], u[3], u[0], c, base).to_csv(index=False))
     assert ex.conferir_linha_base(tab, PONTOS_EXP, cfg) == len(tab) > 0
+
+
+# --- Fatia 11b: teto no IDSSE ------------------------------------------------------
+
+def _jogo_sintetico(d):
+    """Ficha + posicoes + eventos de um jogo minimo para o `--teto-idsse`: 2
+    goleiros e 2 de linha, 100 quadros por tempo, bola morta nos 10 primeiros
+    do 1o tempo e nos 5 primeiros do 2o; um lateral anotado em quadro morto
+    (avanca, D1), um passe completo e um errado."""
+    ficha = f"""<?xml version="1.0" encoding="UTF-8"?>
+<PutDataRequest><MatchInformation><Environment PitchX="105.00" PitchY="68.00"/><Teams>
+ <Team TeamId="{HOME}" Role="home"><Players><Player PersonId="H1" PlayingPosition="TW"/>
+  <Player PersonId="H2" PlayingPosition="STZ"/></Players></Team>
+ <Team TeamId="{AWAY}" Role="guest"><Players><Player PersonId="A1" PlayingPosition="TW"/>
+  <Player PersonId="A2" PlayingPosition="STZ"/></Players></Team>
+</Teams></MatchInformation></PutDataRequest>"""
+    (d / "ficha.xml").write_text(ficha, encoding="utf-8")
+    pos = {"H1": (HOME, -50.0, 0.0), "H2": (HOME, 10.0, 34.0), "A1": (AWAY, 50.0, 0.0), "A2": (AWAY, 20.0, 10.0)}
+    fs = []
+    for secao, n0, t0, mortos in (("firstHalf", 10000, 0.0, 10), ("secondHalf", 100000, 60.0, 5)):
+        bola = []
+        for k in range(100):
+            x = 10.0 + 0.2 * max(k - mortos, 0)
+            bola.append(f'<Frame N="{n0 + k}" T="{_t(t0 + 0.04 * k)}" X="{x:.2f}" Y="34.00" '
+                        f'BallStatus="{0 if k < mortos else 1}"/>')
+        for pessoa, (team, x, y) in pos.items():
+            fs.append(_frameset(secao, team, pessoa, [f'<Frame N="{n0 + k}" T="{_t(t0 + 0.04 * k)}" X="{x:.2f}" '
+                                                      f'Y="{y:.2f}"/>' for k in range(100)]))
+        fs.append(_frameset(secao, "BALL", "B", bola))
+    (d / "posicoes.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n<PutDataRequest><Positions>\n'
+                                    + "\n".join(fs) + "\n</Positions></PutDataRequest>", encoding="utf-8")
+    _eventos(d, [
+        ("2023-05-27T15:30:12.800+02:00",       # quadro 6, morto
+         f'<ThrowIn Team="{HOME}"><Play Player="H2" Team="{HOME}"><Pass/></Play></ThrowIn>'),
+        ("2023-05-27T15:30:13.200+02:00",
+         f'<Play Player="H2" Team="{HOME}" Evaluation="successfullyCompleted"><Pass/></Play>'),
+        ("2023-05-27T15:30:14.000+02:00",
+         f'<Play Player="A2" Team="{AWAY}" Evaluation="unsuccessful"><Pass/></Play>'),
+    ])
+    return {"ficha": d / "ficha.xml", "posicoes": d / "posicoes.xml", "eventos": d / "eventos.xml"}
+
+
+@pytest.fixture
+def teto_sintetico(tmp_path, cfg, monkeypatch):
+    """(rodar, cfg_1jogo): `rodar(cfg)` roda o `--teto-idsse` inteiro no jogo sintetico."""
+    from src import teto_idsse
+    arq = _jogo_sintetico(tmp_path)
+    monkeypatch.setattr(idsse, "caminhos", lambda c, g: arq)
+    c = copy.deepcopy(cfg)
+    c["idsse"]["jogos"] = ["SINT"]
+    return (lambda cc, **kw: teto_idsse.rodar_teto_idsse(cc, saida=tmp_path / "teto", **kw)), c, tmp_path
+
+
+def test_11b_ponta_a_ponta_no_xml_sintetico(teto_sintetico):
+    rodar, c, d = teto_sintetico
+    r = rodar(c)
+    for nome in ("pontos", "pontos_h2", "eps_c", "tabela", "via", "mortos", "hipoteses"):
+        assert (d / "teto" / (nome + ".csv")).exists()
+    t = r["tabela"].set_index(["criterio", "alvo"])
+    assert set(t.index.get_level_values(0)) == set(c["avaliacao"]["criterios"])
+    for crit in c["avaliacao"]["criterios"]:                 # nenhum evento descartado
+        assert t.loc[(crit, "throw_in"), "n_gabarito"] == 1
+        assert t.loc[(crit, "passe_principal"), "n_gabarito"] == 1      # so o completo
+        assert t.loc[(crit, "passe_secundario"), "n_gabarito"] == 2     # completo + errado
+    assert (t["tp_diag"] <= t[["n_detectado", "n_gabarito"]].min(axis=1)).all()
+    p = r["pontos"]
+    assert p.loc[p["alvo"] == "throw_in", "n_gabarito"].eq(1).all()
+    assert sorted(r["curva"]["eps_c_m"].unique()) == sorted(c["bola_parada"]["grade_eps_c_m"])
+    assert set(r["hipoteses"]["hipotese"]) == {"H1", "H2", "H3"}
+    assert c["avaliacao"]["criterio_principal"] == "estrito"         # a Metrica nao muda
+
+
+def test_11b_criterio_principal_do_idsse_muda_o_resultado(teto_sintetico):
+    """`idsse.criterio_principal` decide onde caem as colunas R9 e de onde sai a H1."""
+    rodar, c, _ = teto_sintetico
+    linhas_r9 = {}
+    for crit in ("vidal_codina", "estrito"):
+        cc = copy.deepcopy(c)
+        cc["idsse"]["criterio_principal"] = crit
+        p = rodar(cc)["pontos"]
+        com_r9 = p.loc[p["gab_exec_visivel"].notna(), ["criterio", "ancora"]].drop_duplicates()
+        linhas_r9[crit] = sorted(map(tuple, com_r9.to_numpy()))
+    assert linhas_r9 == {"vidal_codina": [("vidal_codina", "frame")], "estrito": [("estrito", "frame")]}
+
+
+def test_11b_cfg_teto_nao_mexe_na_metrica(cfg):
+    from src import teto_idsse
+    antes = copy.deepcopy(cfg)
+    c, h2 = teto_idsse.cfg_teto(cfg), teto_idsse.cfg_teto(cfg, h2=True)
+    assert cfg == antes and cfg["avaliacao"]["criterio_principal"] == "estrito"
+    assert c["avaliacao"]["criterio_principal"] == cfg["idsse"]["criterio_principal"] == "vidal_codina"
+    assert c["posse"]["grade_r_pz_m"] == [cfg["experimento"]["r0_m"]]
+    assert not any(c["exploratorio"][k] for k in ex.EXPLORATORIO_LIDO)
+    assert h2["exploratorio"]["supressao_exige_executor"] and not h2["exploratorio"]["bola_some_no_apagao"]
+
+
+def test_11b_hipoteses_limiares_do_config():
+    """H1 e H2 leem os limiares do config; NaN nunca passa."""
+    from src import teto_idsse
+    base = pd.DataFrame([dict(condicao="reconstruido", jogo=g, variante="AB", nivel=1, rep=0, r_pz=0.5,
+                              politica="acompanha_r_pz", lacuna5="com", criterio="vidal_codina", ancora="frame",
+                              alvo=a, n_gabarito=10, n_detectado=10, tp_diag=tp, tp=tp)
+                         for g in (1, 2) for a, tp in (("bola_parada_micro", 8), ("passe_principal", 5))])
+    h2 = base.assign(tp_diag=np.where(base["alvo"] == "passe_principal", [6, 6, 4, 4][:len(base)], base["tp_diag"]))
+    h2.loc[(h2["jogo"] == 2) & (h2["alvo"] == "passe_principal"), "tp_diag"] = 4
+    h2.loc[(h2["jogo"] == 1) & (h2["alvo"] == "passe_principal"), "tp_diag"] = 7
+    via = pd.DataFrame({"via": ["padrao", "reserva_1", "reserva_2", "reserva_3"], "n_detectado": [4, 2, 0, 2],
+                        "tp_diag": [4, 1, 0, 1]})
+    cfg = {"idsse": {"criterio_principal": "vidal_codina",
+                     "hipoteses": {"h1_precisao_micro_min": 0.75, "h2_min_jogos": 1}},
+           "posse": {"r_dz_politica": "acompanha_r_pz"}}
+    h = teto_idsse.hipoteses(base, h2, via, cfg).set_index("medida")
+    assert h.loc["precisao_micro", "valor"] == 0.8 and h.loc["precisao_micro", "passa"]
+    assert h.loc["delta_f1_passe_agregado", "valor"] == pytest.approx(0.05)
+    assert h.loc["jogos_com_delta_pos", "valor"] == 1 and h.loc["jogos_com_delta_pos", "passa"]
+    assert np.isnan(h.loc["precisao_via_reserva_2", "valor"])
+    assert h.loc["padrao_maior_que_reserva_1_e_3", "passa"] and not h.loc["padrao_maior_de_todas", "passa"]
+    cfg["idsse"]["hipoteses"] = {"h1_precisao_micro_min": 0.85, "h2_min_jogos": 2}
+    h = teto_idsse.hipoteses(base, h2, via, cfg).set_index("medida")
+    assert not h.loc["precisao_micro", "passa"] and not h.loc["jogos_com_delta_pos", "passa"]
+
+
+# --- revisao da 11b: mutantes -------------------------------------------------------
+
+def _pontos_h(linhas):
+    """`linhas`: [(jogo, criterio, alvo, n_gab, n_det, tp)] -> pontos do teto."""
+    return pd.DataFrame([dict(condicao="reconstruido", jogo=g, variante="AB", nivel=1, rep=0, r_pz=0.5,
+                              politica="acompanha_r_pz", lacuna5="com", criterio=cr, ancora="frame", alvo=a,
+                              n_gabarito=ng, n_detectado=nd, tp_diag=tp, tp=tp)
+                         for g, cr, a, ng, nd, tp in linhas])
+
+
+def _cfg_h(principal="vidal_codina", h1=0.75, h2=1):
+    return {"idsse": {"criterio_principal": principal,
+                      "hipoteses": {"h1_precisao_micro_min": h1, "h2_min_jogos": h2}},
+            "posse": {"r_dz_politica": "acompanha_r_pz"}}
+
+
+VIA_OK = pd.DataFrame({"via": ["padrao", "reserva_1", "reserva_2", "reserva_3"], "n_detectado": [4, 2, 0, 2],
+                       "tp_diag": [4, 1, 0, 1]})
+VC, ES, MI, PP = "vidal_codina", "estrito", "bola_parada_micro", "passe_principal"
+
+
+def test_11b_hipoteses_leem_o_criterio_principal_do_config():
+    """(a) H1 e H2 saem das linhas de `idsse.criterio_principal`, nao de um nome fixo."""
+    from src import teto_idsse
+    base = _pontos_h([(1, VC, MI, 10, 10, 9), (1, ES, MI, 10, 10, 6), (1, VC, PP, 10, 10, 5), (1, ES, PP, 10, 10, 5)])
+    h2 = base.copy()
+    h2.loc[(h2["criterio"] == ES) & (h2["alvo"] == PP), "tp_diag"] = 4
+    for principal, h1, dh2 in ((VC, 0.9, 0.0), (ES, 0.6, -0.1)):
+        h = teto_idsse.hipoteses(base, h2, VIA_OK, _cfg_h(principal)).set_index("medida")
+        assert h.loc["precisao_micro", "valor"] == pytest.approx(h1)
+        assert h.loc["delta_f1_passe_agregado", "valor"] == pytest.approx(dh2)
+
+
+def test_11b_h2_exige_delta_agregado_positivo():
+    """(c) Simpson: Delta > 0 nos dois jogos e < 0 no agregado -> H2 nao passa."""
+    from src import teto_idsse
+    base = _pontos_h([(1, VC, PP, 50, 50, 1), (2, VC, PP, 100, 100, 90), (1, VC, MI, 1, 1, 1), (2, VC, MI, 1, 1, 1)])
+    h2 = _pontos_h([(1, VC, PP, 50, 950, 50), (2, VC, PP, 100, 100, 91), (1, VC, MI, 1, 1, 1), (2, VC, MI, 1, 1, 1)])
+    h = teto_idsse.hipoteses(base, h2, VIA_OK, _cfg_h(h2=1)).set_index("medida")
+    assert h.loc["jogos_com_delta_pos", "valor"] == 2
+    assert h.loc["delta_f1_passe_agregado", "valor"] < 0
+    assert not h.loc["jogos_com_delta_pos", "passa"]
+
+
+def test_11b_h3_exige_as_duas_reservas():
+    """(d) `padrao` acima de uma reserva e abaixo da outra -> H3 nao passa."""
+    from src import teto_idsse
+    base = _pontos_h([(1, VC, PP, 10, 10, 5), (1, VC, MI, 10, 10, 8)])
+    for tps in ([6, 5, 0, 7], [6, 7, 0, 5]):
+        via = VIA_OK.assign(n_detectado=[10, 10, 0, 10], tp_diag=tps)
+        h = teto_idsse.hipoteses(base, base, via, _cfg_h()).set_index("medida")
+        assert not h.loc["padrao_maior_que_reserva_1_e_3", "passa"]
+
+
+def _espiao(monkeypatch, mexe=None):
+    """Troca `experiment.rodar_unidade` por um espiao que registra
+    (supressao_exige_executor, eps_c_m, r0_m) de cada chamada e, se `mexe`,
+    altera a saida."""
+    chamadas, original = [], ex.rodar_unidade
+
+    def espiao(jogo, variante, nivel, rep, condicao, c, base):
+        chamadas.append((c["exploratorio"]["supressao_exige_executor"], c["bola_parada"]["eps_c_m"],
+                         c["experimento"]["r0_m"]))
+        out = original(jogo, variante, nivel, rep, condicao, c, base)
+        return mexe(out) if mexe else out
+    monkeypatch.setattr(ex, "rodar_unidade", espiao)
+    return chamadas
+
+
+def test_11b_h2_liga_a_chave_e_a_curva_varre_eps_c(teto_sintetico, monkeypatch, cfg):
+    """(b) a unidade da H2 tem `supressao_exige_executor` ligada; (f) cada ponto
+    da curva roda com o seu `eps_c`, e a coluna `eps_c_m` e o valor rodado."""
+    rodar, c, _ = teto_sintetico
+    chamadas = _espiao(monkeypatch)
+    r = rodar(c)
+    eps0, r0 = cfg["bola_parada"]["eps_c_m"], cfg["experimento"]["r0_m"]
+    grade = cfg["bola_parada"]["grade_eps_c_m"]
+    assert chamadas == [(False, eps0, r0), (True, eps0, r0)] + [(False, e, r0) for e in grade]
+    assert sorted(r["eps_c"]["eps_c_m"].unique()) == sorted(grade)
+
+
+def test_11b_conferencia_do_gabarito_estoura(teto_sintetico, monkeypatch):
+    """(e) `n_gabarito` diferente do gabarito, mas igual em todas as rodadas (o
+    `conferir_n_gabarito` nao pega), estoura no `conferir_gabarito`."""
+    rodar, c, _ = teto_sintetico
+    _espiao(monkeypatch, lambda p: p.assign(n_gabarito=p["n_gabarito"] + 1))
+    with pytest.raises(RuntimeError, match="!= gabarito"):
+        rodar(c)
+
+
+def test_11b_guarda_tp_diagnostico_contra_unidade_estoura(teto_sintetico, monkeypatch):
+    """(e) o `tp_diag` micro da unidade diferente do da deteccao refeita estoura."""
+    rodar, c, _ = teto_sintetico
+    _espiao(monkeypatch, lambda p: p.assign(tp_diag=p["tp_diag"] + 1, tp=p["tp"] + 1,
+                                            n_detectado=p["n_detectado"] + 1))
+    with pytest.raises(RuntimeError, match="tp micro"):
+        rodar(c)
+
+
+def test_11b_via_exclui_o_penalti(teto_sintetico, monkeypatch):
+    """(e) a populacao da H3 e a do micro: a deteccao de penalti (acerto) nao
+    entra em `via` nem em `tp_micro`."""
+    from src import run as run_mod, teto_idsse
+    _, c, _ = teto_sintetico
+    j = idsse.carregar_jogo(1, c)
+    ev = j["eventos"]
+    lat = ev[ev["type"] == "throw_in"].iloc[0]
+    pen = lat.copy()
+    pen[["type", "frame", "annotated_frame", "source_rows"]] = ["penalty", 50, 50, "PEN"]
+    ev_diag = pd.concat([ev, pen.to_frame().T], ignore_index=True).astype(ev.dtypes.to_dict())
+    base = {1: {"frames": j["frames"], "tracking": j["tracking"], "periods": j["periods"],
+                "eventos": ev_diag[list(schema.EVENTS)]}}
+    det = pd.DataFrame({"game": 1, "period": 1, "frame": [int(lat["frame"]), 50], "t": [lat["frame"] / 25, 2.0],
+                        "type": ["throw_in", "penalty"], "team": "home", "player_id": lat["player_id"],
+                        "via": ["reserva_3", "padrao"]})
+    monkeypatch.setattr(run_mod, "detectar_jogos", lambda b, cc, jogos, **k: det)
+    via, _, conf = teto_idsse.diagnostico_jogo(1, base, ev_diag, teto_idsse.cfg_teto(c))
+    v = via.set_index("via")
+    assert v["n_detectado"].sum() == 1 and v.loc["reserva_3", "tp_diag"] == 1
+    assert v.loc["padrao", "n_detectado"] == 0 and conf["tp_micro"] == 1
+
+
+# --- sensibilidade EXPLORATORIA do provedor B --------------------------------------
+
+def test_perfil_provedor_b_troca_r0_e_eps(cfg):
+    from src import teto_idsse
+    p = cfg["idsse"]["perfil_provedor_b"]
+    assert (p["r_pz_m"], p["eps_s_m"], p["eps_v_ms"]) == (1.0, 0.10, 5.0)
+    assert (p["eps_s_m"], p["eps_v_ms"]) == (cfg["posse"]["diagnostico_eps_s_alt_m"],
+                                             cfg["posse"]["diagnostico_eps_v_alt_ms"])
+    c = teto_idsse.cfg_teto(teto_idsse.aplicar_perfil(cfg, "provedor_b"))
+    assert c["posse"]["grade_r_pz_m"] == [1.0] and c["experimento"]["r0_m"] == 1.0
+    assert (c["posse"]["eps_s_m"], c["posse"]["eps_v_ms"]) == (0.10, 5.0)
+    assert cfg["experimento"]["r0_m"] == 0.5 and cfg["posse"]["eps_s_m"] == 0.05      # o cfg nao muda
+
+
+def test_perfil_provedor_b_ponta_a_ponta(teto_sintetico, monkeypatch):
+    rodar, c, d = teto_sintetico
+    chamadas = _espiao(monkeypatch)
+    r = rodar(c, perfil="provedor_b")
+    assert chamadas == [(False, c["bola_parada"]["eps_c_m"], 1.0)]      # so a base: sem H2, sem curva
+    assert (r["pontos"]["r_pz"] == 1.0).all()
+    for nome in ("pontos", "tabela", "via", "mortos"):
+        assert (r[nome]["rotulo"] == "EXPLORATORIO").all()
+        assert (d / "teto" / (nome + ".csv")).exists()
+    assert not (d / "teto" / "hipoteses.csv").exists()

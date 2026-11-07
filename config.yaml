@@ -447,3 +447,19 @@ idsse:
                      PenaltyNotAwarded, Play, PlayerNotSentOff, PossessionLossBeforeGoal, RefereeBall,
                      Run, ShotAtGoal, SitterPrevented, SpectacularPlay, Substitution, TacklingGame,
                      ThrowIn, VideoAssistantAction]
+  # Fatia 11b. Criterio principal NO IDSSE; o da Metrica continua em
+  # avaliacao.criterio_principal. decisoes.md 2026-11-07 (portao tau reprovado).
+  criterio_principal: vidal_codina
+  # Hipoteses congeladas, docs/fatias/10-hipoteses.md (2026-11-07).
+  hipoteses:
+    h1_precisao_micro_min: 0.75   # H1: precisao micro de bola parada >= isto
+    h2_min_jogos: 5               # H2: delta F1 > 0 em >= isto dos 7 (plano 11 §4a, ceil(2/3 * 7))
+  # Sensibilidade EXPLORATORIA do provedor B (decisoes.md 2026-11-07, "ERRO MEU
+  # no plano 11"): `--teto-idsse --perfil provedor_b`. Valores dos provedores B
+  # e C: R_pz supl. S4.1, p. 6; eps_s/eps_v supl. S4.2, p. 8 (os mesmos de
+  # posse.diagnostico_eps_*_alt). Com acompanha_r_pz, R_dz = max(1, 1) = 1,0.
+  perfil_provedor_b:
+    rotulo: EXPLORATORIO
+    r_pz_m: 1.00
+    eps_s_m: 0.10
+    eps_v_ms: 5.0

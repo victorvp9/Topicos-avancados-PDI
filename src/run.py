@@ -46,7 +46,9 @@ grade inteira (so na rodada final); `--tabelas-figuras` so le os CSV de
 grava em `outputs/exploratorio/`. `--auditoria` roda a auditoria EXPLORATORIA de
 erros no teto da Fatia 10 (fora do `--all`) e grava em `outputs/auditoria/`.
 `--inspect-idsse` le e inspeciona o IDSSE (Fatia 11a, fora do `--all`), sem
-detector, e grava `outputs/idsse/inspecao.csv`.
+detector, e grava `outputs/idsse/inspecao.csv`. `--teto-idsse` roda o teto no
+IDSSE e as hipoteses H1-H3 (Fatia 11b, fora do `--all`) e grava em
+`outputs/idsse/teto/`.
 
 `python -m src.run --reconstrucao` reconstroi (interpolacao linear) o tracking
 de cada (variante, nivel) do simulador e imprime os seis blocos do
@@ -2073,6 +2075,10 @@ def main(argv=None) -> int:
                         help="auditoria EXPLORATORIA de erros no teto da Fatia 10 (docs/fatias/10-plano.md)")
     parser.add_argument("--inspect-idsse", action="store_true",
                         help="loader e inspecao do IDSSE, sem detector (docs/fatias/11-plano.md, 11a)")
+    parser.add_argument("--teto-idsse", action="store_true",
+                        help="teto no IDSSE e hipoteses H1-H3 (docs/fatias/11-plano.md §4a, 11b)")
+    parser.add_argument("--perfil", default=None,
+                        help="com --teto-idsse: perfil EXPLORATORIO `idsse.perfil_<nome>` (ex.: provedor_b)")
     parser.add_argument("--all", action="store_true",
                         help="todos os modos em ordem, mais --experimento e --tabelas-figuras, sem cache")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
@@ -2085,10 +2091,11 @@ def main(argv=None) -> int:
             setattr(args, modo, True)
     if not (args.inspect or args.tau or args.posse or args.tau_posse or args.bola_parada or args.passes
             or args.simulador or args.reconstrucao or args.piloto or args.experimento
-            or args.tabelas_figuras or args.exploratorio or args.auditoria or args.inspect_idsse):
+            or args.tabelas_figuras or args.exploratorio or args.auditoria or args.inspect_idsse
+            or args.teto_idsse):
         parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
                      "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras, --exploratorio, "
-                     "--auditoria, --inspect-idsse ou --all")
+                     "--auditoria, --inspect-idsse, --teto-idsse ou --all")
     mapeamento = carregar_mapeamento(cfg)
     caminho_config = args.config or RAIZ_REPO / "config.yaml"
     saida = RAIZ_REPO / "outputs" / "experimento"
@@ -2123,6 +2130,9 @@ def main(argv=None) -> int:
                                       cache, saida / "pontos.csv")
     if args.inspect_idsse:
         inspecionar_idsse(cfg, pasta_cache=cache)
+    if args.teto_idsse:
+        from src import teto_idsse
+        teto_idsse.rodar_teto_idsse(cfg, pasta_cache=cache, perfil=args.perfil)
     if args.auditoria:
         from src import audit
         # le `outputs/experimento/tabelas/tabela1.csv` (conferencia AB1), nunca escreve la
