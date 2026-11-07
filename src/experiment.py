@@ -47,6 +47,7 @@ import scipy
 from src import broadcast, evaluate, possession, reconstruct, run
 from src.config import RAIZ_REPO
 from src.events import bola_parada, hierarquia, passes as passes_mod
+from src.io import idsse, schema
 
 CONDICOES = ("reconstruido", "bruto")
 VARIANTE_TETO = "AB"
@@ -413,7 +414,8 @@ def _sim_nao(v: bool) -> str:
 def conclusoes(n_pos: int, d_agg: float, d_agg_teto: float, cfg: dict) -> tuple:
     """(ajuda, compensa) da R6, plano 08 §8, item 4, com `lambda` =
     `experimento.ep_max_f1`. "ajuda": `Delta_g > 0` em >=
-    `experimento.min_jogos_compensa` jogos de teste e `Delta_agregado > lambda`.
+    `experimento.min_jogos_compensa` jogos de teste (2 dos 3 na Metrica, 5 dos
+    7 no IDSSE, plano 11 §4b) e `Delta_agregado > lambda`.
     "compensa": "ajuda" e `Delta_agregado(nivel) - Delta_agregado(nivel 1) >
     lambda`; `d_agg_teto = None` (o proprio nivel 1) da "nao_se_aplica". NaN
     nunca passa."""
@@ -431,8 +433,10 @@ def selecionar_logo(pontos: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     principal, com lacuna 5; `penalty` fica fora (n = 1). F1 sempre de `_prf`
     (`2 tp / (n_det + n_gab)`). Uma linha por jogo de teste `g`:
 
-    `r_estrela`: candidatos = `R` com F1_t(R) > F1_t(R0) em CADA jogo de treino
-    `t` E F1_T(R) > F1_T(R0) no treino somado (guarda contra Simpson); F1 NaN
+    `r_estrela`: candidatos = `R` com F1_t(R) > F1_t(R0) em pelo menos
+    `experimento.min_jogos_candidato` jogos de treino `t` (2 de 2 na Metrica =
+    cada um; 4 de 6 no IDSSE, plano 11 §4b) E F1_T(R) > F1_T(R0) no treino
+    somado (guarda contra Simpson); F1 NaN
     nunca e candidato; argmax de F1_T entre eles, empate -> menor; sem
     candidato -> R0; o jogo `g` nunca entra. Com `f1_teste_r_estrela`,
     `f1_teste_r0`, `delta`.
@@ -447,6 +451,7 @@ def selecionar_logo(pontos: pd.DataFrame, cfg: dict) -> pd.DataFrame:
     ex = cfg["experimento"]
     r0 = float(ex["r0_m"])
     lam = ex["ep_max_f1"]
+    k = int(ex["min_jogos_candidato"])
     sel = _principal(pontos, cfg)
     sel = sel[sel["alvo"] != "penalty"]
     grupo = ["condicao", "variante", "nivel", "alvo"]
@@ -460,7 +465,10 @@ def selecionar_logo(pontos: pd.DataFrame, cfg: dict) -> pd.DataFrame:
         teste = []
         for g in jogos:
             treino = [t for t in jogos if t != g]
-            ganho = (f1[treino].sub(f1.loc[r0, treino], axis=1) > 0).all(axis=1)
+            if k > len(treino):
+                raise ValueError("selecionar_logo: min_jogos_candidato = {} > {} jogos de treino".format(
+                    k, len(treino)))
+            ganho = (f1[treino].sub(f1.loc[r0, treino], axis=1) > 0).sum(axis=1) >= k
             f1_treino = agregar(sub[sub["jogo"].isin(treino)], grupo + ["r_pz"]).set_index("r_pz")["f1"]
             ganho &= (f1_treino > f1_treino.loc[r0]).reindex(ganho.index, fill_value=False)
             cand = f1_treino[ganho.reindex(f1_treino.index, fill_value=False)]
@@ -541,8 +549,22 @@ def _hashes_jogo(raiz: str, jogo: int) -> tuple:
     return tuple((p.name, _sha(p)) for p in sorted(pasta.iterdir()) if p.is_file())
 
 
+# TODO(divida): sha256 memorizado por (caminho, mtime, tamanho) no processo; um
+# XML reescrito com o mesmo mtime e tamanho passaria sem ser visto. Aceito porque
+# data/ e somente leitura; refazer o sha a cada chamada custa ~2,5 GB por chave.
+@lru_cache(maxsize=None)
+def _sha_arquivo(caminho: str, mtime_ns: int, tamanho: int) -> str:
+    return _sha(Path(caminho))
+
+
 def hashes_dados(cfg: dict, jogos) -> dict:
-    """sha256 dos arquivos de `data/` de cada jogo e do mapeamento de eventos."""
+    """sha256 dos arquivos de `data/` de cada jogo e do mapeamento de eventos.
+    No IDSSE, os 3 XML do jogo (o mapeamento DFL vive em `idsse:`, que entra
+    no config lido)."""
+    if cfg["dados"]["conjunto"] == "idsse":
+        arqs = {g: idsse.caminhos(cfg, int(g)).values() for g in jogos}
+        return {f"jogo_{g}": {p.name: _sha_arquivo(str(p), p.stat().st_mtime_ns, p.stat().st_size)
+                              for p in sorted(a)} for g, a in arqs.items()}
     out = {f"jogo_{g}": dict(_hashes_jogo(str(cfg["dados"]["raiz"]), int(g))) for g in jogos}
     out["mapeamento"] = _sha(Path(cfg["gabarito"]["mapeamento"]))
     return out
@@ -568,6 +590,8 @@ def config_lido(cfg: dict) -> dict:
     sub["simulador"].pop("n_sementes")
     sub["experimento"] = {k: cfg["experimento"][k] for k in EXPERIMENTO_LIDO}
     sub["exploratorio"] = {k: cfg["exploratorio"][k] for k in EXPLORATORIO_LIDO}
+    if cfg["dados"]["conjunto"] == "idsse":
+        sub["idsse"] = copy.deepcopy(cfg["idsse"])     # o leitor e o mapeamento DFL
     return sub
 
 
@@ -610,29 +634,47 @@ def gravar_cache(pasta: Path, material: dict, chave: str, texto: str, tempo_s: f
 _TRABALHO = {}
 
 
-def _iniciar(cfg, mapeamento, jogos):
+def base_idsse(jogo: int, cfg: dict, pasta_cache=None) -> dict:
+    """`{jogo: {frames, tracking, periods, eventos}}` do IDSSE, como
+    `run._base_leve` (eventos no esquema EVENTS, sem o diagnostico)."""
+    j = idsse.carregar_jogo(jogo, cfg, pasta_cache)
+    return {jogo: {"frames": j["frames"], "tracking": j["tracking"], "periods": j["periods"],
+                   "eventos": j["eventos"][list(schema.EVENTS)]}}
+
+
+def _iniciar(cfg, mapeamento, jogos, pasta_cache=None):
     _TRABALHO["cfg"] = cfg
-    _TRABALHO["base"] = run._base_leve(cfg, mapeamento, jogos)
+    if cfg["dados"]["conjunto"] == "idsse":
+        # um jogo por vez por processo, carregado sob demanda em `_trabalhar`:
+        # os 7 jogos nao cabem em cada worker (16 GB)
+        _TRABALHO["base"], _TRABALHO["pasta_cache"] = {}, pasta_cache
+    else:
+        _TRABALHO["base"] = run._base_leve(cfg, mapeamento, jogos)
 
 
 def _trabalhar(unidade):
+    base = _TRABALHO["base"]
+    if _TRABALHO["cfg"]["dados"]["conjunto"] == "idsse" and unidade[1] not in base:
+        base.clear()
+        base.update(base_idsse(unidade[1], _TRABALHO["cfg"], _TRABALHO["pasta_cache"]))
     t0 = time.perf_counter()
     tab = rodar_unidade(*unidade[1:], unidade[0], _TRABALHO["cfg"], _TRABALHO["base"])
     return unidade, tab.to_csv(index=False), time.perf_counter() - t0
 
 
-def _calcular(faltam, cfg, mapeamento, n_workers):
-    """Gera `(unidade, csv, tempo_s)` na ordem em que as unidades terminam."""
+def _calcular(faltam, cfg, mapeamento, n_workers, pasta_cache=None):
+    """Gera `(unidade, csv, tempo_s)` na ordem em que as unidades terminam.
+    `pasta_cache` so serve ao leitor do IDSSE (a conversao do XML)."""
     if not faltam:
         return
     jogos = sorted({u[1] for u in faltam})
     if n_workers <= 1:
-        _iniciar(cfg, mapeamento, jogos)
+        _iniciar(cfg, mapeamento, jogos, pasta_cache)
         for u in faltam:
             yield _trabalhar(u)
         return
     with ProcessPoolExecutor(max_workers=n_workers, initializer=_iniciar,
-                             initargs=(cfg, mapeamento, jogos)) as pool:
+                             initargs=(cfg, mapeamento, jogos, pasta_cache)) as pool:
         for futuro in as_completed([pool.submit(_trabalhar, u) for u in faltam]):
             yield futuro.result()
 
@@ -658,7 +700,7 @@ def rodar_unidades(unidades, cfg: dict, mapeamento: dict, n_workers: int, pasta_
             info[u] = ("hit", achado[1])
     # Cada unidade vai ao cache assim que termina (uma rodada interrompida nao
     # perde o que ja fez); a montagem abaixo e na ordem ordenada, nao na de chegada.
-    for u, texto, tempo in _calcular(faltam, cfg, mapeamento, n_workers):
+    for u, texto, tempo in _calcular(faltam, cfg, mapeamento, n_workers, pasta_cache):
         if pasta_cache is not None:
             gravar_cache(pasta_cache, *chaves[u], texto, tempo)
         textos[u] = _ler_tabela(texto)
@@ -676,6 +718,7 @@ def manifesto(cfg: dict, caminho_config: Path, unidades: list) -> dict:
         return subprocess.run(["git", *args], cwd=RAIZ_REPO, capture_output=True, text=True).stdout.strip()
     return {"commit": git("rev-parse", "HEAD"), "working_tree_sujo": bool(git("status", "--porcelain")),
             "sha256_config": _sha(Path(caminho_config)), "dados": hashes_dados(cfg, cfg["dados"]["jogos"]),
+            **{k: cfg["dados"][k] for k in ("conjunto", "perfil", "rotulo") if k in cfg["dados"]},
             "versoes": {"python": platform.python_version(), "numpy": np.__version__,
                         "pandas": pd.__version__, "scipy": scipy.__version__},
             "unidades": unidades}
@@ -829,11 +872,49 @@ def unidades_eps_c(cfg: dict) -> list:
             for eps in cfg["bola_parada"]["grade_eps_c_m"]]
 
 
+def cfg_idsse(cfg: dict, perfil: str = None) -> dict:
+    """Copia do `cfg` para o experimento no IDSSE (plano 11 §4b e §7). O `cfg`
+    de entrada (o da Metrica) nao muda.
+
+    - `dados` = `{conjunto: idsse, perfil, rotulo, jogos: 1..7}`;
+    - `simulador.semente_base` = `idsse_experimento.semente_base`: sementes
+      `[20261107, jogo, rep]`; o resto do simulador (a calibracao da Metrica)
+      fica congelado;
+    - `avaliacao.criterio_principal` = `idsse.criterio_principal`;
+    - `idsse_experimento.trocas` sobre `experimento` (condicoes, k/n do LOGO,
+      sem curva de `eps_c`);
+    - com `perfil`: `idsse.perfil_<perfil>` (`R0`, `eps_s`, `eps_v`;
+      `teto_idsse.aplicar_perfil`) e o rotulo dele; sem, o rotulo da A."""
+    from src import teto_idsse     # importa este modulo; aqui evita o ciclo
+    ie = cfg["idsse_experimento"]
+    fora = sorted(set(ie["trocas"]) - set(cfg["experimento"]))
+    if fora:
+        raise ValueError("idsse_experimento.trocas fora de `experimento`: {}".format(fora))
+    c = copy.deepcopy(cfg) if perfil is None else teto_idsse.aplicar_perfil(cfg, perfil)
+    c["dados"] = {"conjunto": "idsse", "perfil": perfil,
+                  "rotulo": ie["rotulo"] if perfil is None else cfg["idsse"]["perfil_" + perfil]["rotulo"],
+                  "jogos": list(range(1, len(cfg["idsse"]["jogos"]) + 1))}
+    c["simulador"]["semente_base"] = ie["semente_base"]
+    c["avaliacao"]["criterio_principal"] = cfg["idsse"]["criterio_principal"]
+    c["experimento"].update(copy.deepcopy(ie["trocas"]))
+    # TODO(divida): o plano 11 §7 diz "5 sementes"; a variante A continua so com
+    # rep 0 (`experimento.variantes_sem_semente`, decisoes.md 2026-11-05: a
+    # mascara de A nao depende da semente). E a maquina da Fatia 8 sem mudanca.
+    return c
+
+
+def saida_idsse(cfg: dict, perfil: str = None) -> Path:
+    """Pasta do experimento no IDSSE: A sem perfil, a do perfil com ele."""
+    ie = cfg["idsse_experimento"]
+    return RAIZ_REPO / (ie["saida"] if perfil is None else ie["saida_perfil"][perfil])
+
+
 def rodar_experimento(cfg: dict, mapeamento: dict, caminho_config: Path, saida: Path, pasta_cache) -> None:
     """A grade inteira (R3, `experimento.condicoes`, `simulador.n_sementes`), a
-    selecao R6, a curva de `eps_c` (R7) e a sensibilidade da ancora. Grava
-    `pontos.csv`, `selecao_logo.csv`, `eps_c.csv`, `ancora.csv` e o
-    `manifesto.json`. SO na rodada final (8b)."""
+    selecao R6, a curva de `eps_c` (R7, se `experimento.curva_eps_c`) e a
+    sensibilidade da ancora. Grava `pontos.csv`, `selecao_logo.csv`,
+    `eps_c.csv`, `ancora.csv` e o `manifesto.json`. SO na rodada final (8b).
+    No IDSSE, com o `cfg` de `cfg_idsse`."""
     ex = cfg["experimento"]
     pontos, lista = rodar_unidades(grade(cfg), cfg, mapeamento, ex["n_workers"], pasta_cache)
     conferir_n_gabarito(pontos)
@@ -841,12 +922,14 @@ def rodar_experimento(cfg: dict, mapeamento: dict, caminho_config: Path, saida: 
     _gravar(selecionar_logo(pontos, cfg), saida / "selecao_logo.csv")
     _gravar(pontos[(pontos["nivel"] == 1) & (pontos["r_pz"] == ex["r0_m"])
                    & (pontos["politica"] == cfg["posse"]["r_dz_politica"])], saida / "ancora.csv")
-    curva = []
-    for eps, cfg_e, unid in unidades_eps_c(cfg):
-        p, l = rodar_unidades(unid, cfg_e, mapeamento, ex["n_workers"], pasta_cache)
-        curva.append(p[(p["ancora"] == "frame") & p["alvo"].isin(["corner_kick", ALVO_MICRO])].assign(eps_c_m=eps))
-        lista += [{**u, "eps_c_m": eps} for u in l]
-    _gravar(pd.concat(curva, ignore_index=True), saida / "eps_c.csv")
+    if ex["curva_eps_c"]:          # fora no IDSSE (plano 11 §7)
+        curva = []
+        for eps, cfg_e, unid in unidades_eps_c(cfg):
+            p, l = rodar_unidades(unid, cfg_e, mapeamento, ex["n_workers"], pasta_cache)
+            curva.append(p[(p["ancora"] == "frame") & p["alvo"].isin(["corner_kick", ALVO_MICRO])]
+                         .assign(eps_c_m=eps))
+            lista += [{**u, "eps_c_m": eps} for u in l]
+        _gravar(pd.concat(curva, ignore_index=True), saida / "eps_c.csv")
     _gravar_manifesto(cfg, caminho_config, lista, saida / "manifesto.json")
 
 
@@ -978,7 +1061,9 @@ def papel(tabela: pd.DataFrame, cfg: dict) -> pd.Series:
 
 def tabelas_figuras(cfg: dict, saida: Path) -> None:
     """Le `pontos.csv`, `selecao_logo.csv` e `eps_c.csv` de `saida` e grava
-    `saida/tabelas/tabela{1..5}.csv` e `saida/figuras/figura{1,2}.png`. Toda
+    `saida/tabelas/tabela{1..5}.csv` e `saida/figuras/figura{1,2}.png` (sem
+    `eps_c.csv` nem Tabela 4 se `experimento.curva_eps_c` for falso; com a
+    coluna `rotulo` e o rotulo nos titulos se `dados` tiver `rotulo`). Toda
     agregacao passa por `agregar`. `penalty` sai so com contagens (P/R/F1 NaN).
     As Tabelas 1, 2, 3 e 5 levam a coluna `papel` (`responde`/`secundario`);
     a 4 (R7) e toda descritiva.
@@ -993,8 +1078,11 @@ def tabelas_figuras(cfg: dict, saida: Path) -> None:
     r0 = float(ex["r0_m"])
     pontos = pd.read_csv(saida / "pontos.csv")
     selecao = pd.read_csv(saida / "selecao_logo.csv")
-    eps = pd.read_csv(saida / "eps_c.csv")
     tab_dir, fig_dir = saida / "tabelas", saida / "figuras"
+    rotulo_cfg = cfg["dados"].get("rotulo")     # so no IDSSE (cfg_idsse)
+
+    def gravar(tabela, destino):
+        _gravar(tabela if rotulo_cfg is None else tabela.assign(rotulo=rotulo_cfg), destino)
     principal = _principal(pontos, cfg)
     rec = principal[(principal["condicao"] == CONDICOES[0]) & (principal["r_pz"] == r0)]
 
@@ -1003,19 +1091,21 @@ def tabelas_figuras(cfg: dict, saida: Path) -> None:
         return t
 
     t1 = sem_f1_penalti(agregar(rec, ["condicao", "variante", "nivel", "alvo"]))
-    _gravar(t1.assign(papel=papel(t1, cfg)), tab_dir / "tabela1.csv")
-    _gravar(selecao.assign(papel=papel(selecao, cfg)), tab_dir / "tabela2.csv")
+    gravar(t1.assign(papel=papel(t1, cfg)), tab_dir / "tabela1.csv")
+    gravar(selecao.assign(papel=papel(selecao, cfg)), tab_dir / "tabela2.csv")
     usados = selecao[["condicao", "variante", "nivel", "alvo", "r_estrela"]].drop_duplicates()
     t3 = agregar(principal[principal["alvo"] != "penalty"], ["condicao", "variante", "nivel", "alvo", "r_pz"])
     t3 = t3.merge(usados.rename(columns={"r_estrela": "r_pz"}).assign(papel_r_estrela=True), how="left")
     t3 = t3[(t3["r_pz"] == r0) | t3["papel_r_estrela"].fillna(False).astype(bool)]
-    _gravar(t3.assign(papel_r0=t3["r_pz"] == r0, papel=papel(t3, cfg)), tab_dir / "tabela3.csv")
-    jogos_vistos = eps["jogo"].isin([1, 2])
-    t4 = pd.concat([agregar(eps[jogos_vistos], ["eps_c_m", "lacuna5", "criterio", "alvo"]).assign(jogos="1+2"),
-                    agregar(eps[~jogos_vistos], ["eps_c_m", "lacuna5", "criterio", "alvo"]).assign(jogos="3")])
-    _gravar(t4.assign(papel="secundario"), tab_dir / "tabela4.csv")
+    gravar(t3.assign(papel_r0=t3["r_pz"] == r0, papel=papel(t3, cfg)), tab_dir / "tabela3.csv")
+    if ex["curva_eps_c"]:
+        eps = pd.read_csv(saida / "eps_c.csv")
+        jogos_vistos = eps["jogo"].isin([1, 2])
+        t4 = pd.concat([agregar(eps[jogos_vistos], ["eps_c_m", "lacuna5", "criterio", "alvo"]).assign(jogos="1+2"),
+                        agregar(eps[~jogos_vistos], ["eps_c_m", "lacuna5", "criterio", "alvo"]).assign(jogos="3")])
+        gravar(t4.assign(papel="secundario"), tab_dir / "tabela4.csv")
     t5 = sem_f1_penalti(agregar(pontos, [c for c in CHAVES_PONTO if c not in SOMA_SOBRE]))
-    _gravar(t5.assign(papel=papel(t5, cfg)), tab_dir / "tabela5.csv")
+    gravar(t5.assign(papel=papel(t5, cfg)), tab_dir / "tabela5.csv")
 
     fig_dir.mkdir(parents=True, exist_ok=True)
     alvos = [a for a in rec["alvo"].unique() if a not in ("penalty", hierarquia.FREE_KICK_DUVIDA)]
@@ -1028,8 +1118,10 @@ def tabelas_figuras(cfg: dict, saida: Path) -> None:
         eixo.legend(fontsize=7)
     virg = lambda x, f="{:g}": f.format(x).replace(".", ",")   # decimal com virgula so na figura
     criterio = cfg["avaliacao"]["criterio_principal"]
-    fig.suptitle("F1 x taxa amostrada: condicao {}, criterio {}, ancora frame, R0 = {} m; "
-                 "cada ponto e uma semente (3 jogos somados)".format(CONDICOES[0], criterio, virg(r0)), fontsize=10)
+    prefixo = "" if rotulo_cfg is None else rotulo_cfg + ": "
+    fig.suptitle(prefixo + "F1 x taxa amostrada: condicao {}, criterio {}, ancora frame, R0 = {} m; "
+                 "cada ponto e uma semente ({} jogos somados)".format(
+                     CONDICOES[0], criterio, virg(r0), len(cfg["dados"]["jogos"])), fontsize=10)
     fig.tight_layout()
     fig.savefig(fig_dir / "figura1.png", dpi=120)
     plt.close(fig)
@@ -1056,7 +1148,7 @@ def tabelas_figuras(cfg: dict, saida: Path) -> None:
                  yticks=range(m.shape[0]),
                  yticklabels=["{} ({})".format(rotulo[n], virg(t, "{:.2f}")) for n, t in taxa.items()])
         fig.colorbar(im, ax=eixo)
-    fig.suptitle("F1(taxa, R_pz): condicao {}, criterio {}, lacuna 5 com, politica {}; "
+    fig.suptitle(prefixo + "F1(taxa, R_pz): condicao {}, criterio {}, lacuna 5 com, politica {}; "
                  "escala de cor por painel".format(CONDICOES[0], criterio, cfg["posse"]["r_dz_politica"]),
                  fontsize=10)
     fig.tight_layout()

@@ -48,7 +48,9 @@ erros no teto da Fatia 10 (fora do `--all`) e grava em `outputs/auditoria/`.
 `--inspect-idsse` le e inspeciona o IDSSE (Fatia 11a, fora do `--all`), sem
 detector, e grava `outputs/idsse/inspecao.csv`. `--teto-idsse` roda o teto no
 IDSSE e as hipoteses H1-H3 (Fatia 11b, fora do `--all`) e grava em
-`outputs/idsse/teto/`.
+`outputs/idsse/teto/`. `--experimento --dados idsse [--perfil provedor_b]` roda
+a maquina da Fatia 8 no IDSSE (Fatia 11c, configuracao A ou B) e grava em
+`outputs/idsse/experimento_A/` ou `_B/`; `--tabelas-figuras --dados idsse` le de la.
 
 `python -m src.run --reconstrucao` reconstroi (interpolacao linear) o tracking
 de cada (variante, nivel) do simulador e imprime os seis blocos do
@@ -2078,7 +2080,10 @@ def main(argv=None) -> int:
     parser.add_argument("--teto-idsse", action="store_true",
                         help="teto no IDSSE e hipoteses H1-H3 (docs/fatias/11-plano.md §4a, 11b)")
     parser.add_argument("--perfil", default=None,
-                        help="com --teto-idsse: perfil EXPLORATORIO `idsse.perfil_<nome>` (ex.: provedor_b)")
+                        help="com --teto-idsse ou --dados idsse: perfil EXPLORATORIO `idsse.perfil_<nome>` "
+                             "(ex.: provedor_b)")
+    parser.add_argument("--dados", choices=("metrica", "idsse"), default="metrica",
+                        help="conjunto do --experimento e do --tabelas-figuras (Fatia 11c); padrao metrica")
     parser.add_argument("--all", action="store_true",
                         help="todos os modos em ordem, mais --experimento e --tabelas-figuras, sem cache")
     parser.add_argument("--config", default=None, help="caminho alternativo do config.yaml")
@@ -2096,9 +2101,20 @@ def main(argv=None) -> int:
         parser.error("escolha --inspect, --tau, --posse, --tau-posse, --bola-parada, --passes, "
                      "--simulador, --reconstrucao, --piloto, --experimento, --tabelas-figuras, --exploratorio, "
                      "--auditoria, --inspect-idsse, --teto-idsse ou --all")
+    incompativeis = [m for m in ("inspect", "tau", "posse", "tau_posse", "bola_parada", "passes", "simulador",
+                            "reconstrucao", "piloto", "exploratorio", "auditoria", "inspect_idsse", "teto_idsse",
+                            "all") if getattr(args, m)]
+    if args.dados == "idsse" and incompativeis:
+        parser.error("--dados idsse so com --experimento e/ou --tabelas-figuras (nao com {})".format(incompativeis))
+    if args.perfil is not None and not (args.teto_idsse or args.dados == "idsse"):
+        parser.error("--perfil so com --teto-idsse ou --dados idsse")
     mapeamento = carregar_mapeamento(cfg)
     caminho_config = args.config or RAIZ_REPO / "config.yaml"
     saida = RAIZ_REPO / "outputs" / "experimento"
+    if args.dados == "idsse":
+        from src import experiment
+        saida = experiment.saida_idsse(cfg, args.perfil)
+        cfg = experiment.cfg_idsse(cfg, args.perfil)
     # `--all` e a rodada do zero (docs/03, "Saida"): sem cache.
     cache = None if args.all else RAIZ_REPO / "outputs" / "cache"
     if args.inspect:

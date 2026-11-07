@@ -5,6 +5,9 @@ dados:
   raiz: data/metrica-sample-data/data
   commit: e706dd506b360d69d9d123d5b8026e7294b13996   # inspecao-metrica.md §1
   jogos: [1, 2, 3]
+  # Fatia 11c: o conjunto que a maquina do experimento le (`metrica` | `idsse`).
+  # So o `--dados idsse` troca, numa copia (experiment.cfg_idsse). Plano 11 §5, 11c.
+  conjunto: metrica
 
 tracking:
   fps: 25            # medido: todos os dt = 0,04 s; max|Time - Frame/25| = 0
@@ -335,6 +338,12 @@ experimento:
   # R6: "ajuda" exige Delta_g > 0 em pelo menos isto dos 3 jogos de teste (e
   # Delta_agregado > lambda); "compensa" exige "ajuda". Plano 08 R6 e §8, item 4.
   min_jogos_compensa: 2
+  # R6: candidato exige F1_t(R) > F1_t(R0) em pelo menos isto dos jogos de
+  # treino (e F1_T(R) > F1_T(R0) no treino somado). Na Metrica, k = n = 2: "nos
+  # dois jogos de treino". Plano 08 R6 e §8, item 1.
+  min_jogos_candidato: 2
+  # R7: a curva de eps_c roda no `--experimento`. Plano 08 R7 e §8.
+  curva_eps_c: true
   # Os pontos que RESPONDEM a pergunta do projeto: alvos primarios, condicao
   # `reconstruido`, B5 ("Camera 1") e B8 ("PGM"), os dois niveis ancorados em
   # alvo publicado (Fatia 6). O resto e secundario. Plano 08 §8, item 6.
@@ -463,3 +472,20 @@ idsse:
     r_pz_m: 1.00
     eps_s_m: 0.10
     eps_v_ms: 5.0
+
+# Fatia 11c: experimento de degradacao no IDSSE (`--experimento --dados idsse
+# [--perfil provedor_b]`). Plano 11 §4b e §7. Secao propria, FORA de `idsse:`,
+# porque a chave do cache do leitor (src/io/idsse.py) le `idsse:` inteira.
+idsse_experimento:
+  semente_base: 20261107                 # plano 11 §4b, item 3: [20261107, jogo, rep]
+  # Chaves de `experimento` trocadas no IDSSE (o resto da maquina e o da Fatia 8).
+  trocas:
+    condicoes: [reconstruido]            # plano 11 §7 ("condicao `reconstruido` apenas")
+    min_jogos_candidato: 4               # plano 11 §4b, item 1: >= 4 dos 6 de treino (ceil(2/3 * 6))
+    min_jogos_compensa: 5                # plano 11 §4b, item 2: Delta_g > 0 em >= 5 dos 7 (ceil(2/3 * 7))
+    curva_eps_c: false                   # plano 11 §7, "Fora: a curva de eps_c"
+  # Configuracao A (sem perfil, pre-registrada) e B (`idsse.perfil_provedor_b`,
+  # rotulo dele, EXPLORATORIO). Plano 11 §7, tabela ("limpa" / "EXPLORATORIA").
+  rotulo: LIMPO
+  saida: outputs/idsse/experimento_A
+  saida_perfil: {provedor_b: outputs/idsse/experimento_B}
